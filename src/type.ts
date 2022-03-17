@@ -19,6 +19,16 @@ export type TenantAccessToken = LarkData<
     }
 >;
 
+export interface SheetMeta {
+    sheetId: string;
+    title: string;
+    rowCount: number;
+    frozenRowCount: number;
+    columnCount: number;
+    frozenColCount: number;
+    index: number;
+}
+
 export type SpreadSheetMeta = LarkData<{
     spreadsheetToken: string;
     properties: {
@@ -27,16 +37,17 @@ export type SpreadSheetMeta = LarkData<{
         ownerUser: number;
         sheetCount: number;
     };
-    sheets: {
-        sheetId: string;
-        title: string;
-        rowCount: number;
-        frozenRowCount: number;
-        columnCount: number;
-        frozenColCount: number;
-        index: number;
-    }[];
+    sheets: SheetMeta[];
 }>;
+
+export interface LarkMedia {
+    type: 'url';
+    cellPosition: null;
+    text: string;
+    link?: string;
+}
+
+export type CellValue = string | LarkMedia;
 
 export type SheetRangeData = LarkData<{
     revision: number;
@@ -45,6 +56,6 @@ export type SheetRangeData = LarkData<{
         revision: string;
         majorDimension: string;
         range: `${string}!${string}:${string}`;
-        values: string[][];
+        values: CellValue[][];
     };
 }>;

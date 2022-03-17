@@ -19,11 +19,11 @@ describe('Lark SDK', async () => {
 
     const spreadSheet =
         await it('should get Meta data of a SpreadSheet document', async expect => {
-            const spreadSheet = app.getSpreadSheet(SPREADSHEET_ID!);
+            const spreadSheet = await app.getSpreadSheet(SPREADSHEET_ID!);
 
-            const { sheets } = await spreadSheet.getMetaInfo();
+            const { meta } = spreadSheet;
 
-            expect(typeof sheets[0]?.sheetId === 'string');
+            expect(typeof meta?.sheets[0]?.sheetId === 'string');
 
             return spreadSheet;
         });
@@ -31,10 +31,12 @@ describe('Lark SDK', async () => {
     await it('should get a row of the first sheet', async expect => {
         const [sheet] = spreadSheet.sheets;
 
-        const {
-            valueRange: { values }
-        } = await sheet.getData('A1', 'U1');
+        const data = await sheet.getData({
+            columnRange: ['G', 'R'],
+            keys: Array.from(new Array(12), (_, index) => `k${++index}`)
+        });
+        expect(data instanceof Array);
 
-        expect(values instanceof Array);
+        console.log(JSON.stringify(data, null, 4));
     });
 });

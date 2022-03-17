@@ -57,7 +57,11 @@ export class Lark implements LarkOptions {
         return body!.tenant_access_token;
     }
 
-    getSpreadSheet(id: string) {
-        return new SpreadSheet(this, id);
+    async getSpreadSheet(id: string) {
+        const spreadsheet = new SpreadSheet(this, id);
+
+        await spreadsheet.getMetaInfo();
+
+        return spreadsheet;
     }
 }
