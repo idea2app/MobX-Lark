@@ -4,5 +4,12 @@
         "target": "ES5",
         "moduleResolution": "Node",
         "lib": ["ES2021", "DOM"]
+    },
+    "typedocOptions": {
+        "name": "Lark SDK",
+        "excludeExternals": true,
+        "excludePrivate": true,
+        "readme": "./ReadMe.md",
+        "out": "docs/"
     }
 }
