@@ -1,6 +1,6 @@
 {
     "name": "lark-ts-sdk",
-    "version": "0.3.4",
+    "version": "0.3.8",
     "license": "LGPL-3.0",
     "author": "shiy2008@gmail.com",
     "description": "Unofficial TypeScript SDK for FeiShu/Lark API",
@@ -26,7 +26,8 @@
     "dependencies": {
         "@swc/helpers": "^0.3.8",
         "koajax": "^0.8.0-rc.0",
-        "regenerator-runtime": "^0.13.9"
+        "regenerator-runtime": "^0.13.9",
+        "ts-toolbelt": "^9.6.0"
     },
     "devDependencies": {
         "@parcel/packager-ts": "2.3.2",
@@ -35,7 +36,7 @@
         "dotenv": "^16.0.0",
         "husky": "^7.0.4",
         "jsdom": "^19.0.0",
-        "lint-staged": "^12.3.6",
+        "lint-staged": "^12.3.7",
         "parcel": "^2.3.2",
         "prettier": "^2.6.0",
         "ts-node": "^10.7.0",

@@ -19,6 +19,9 @@ jobs:
               run: yarn  &&  yarn publish
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  APP_ID: ${{ secrets.APP_ID }}
+                  APP_SECRET: ${{ secrets.APP_SECRET }}
+                  SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
             - name: Deploy
               uses: peaceiris/actions-gh-pages@v3
               with:

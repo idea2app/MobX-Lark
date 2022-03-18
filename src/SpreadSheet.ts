@@ -1,3 +1,5 @@
+import { List } from 'ts-toolbelt';
+
 import { Lark } from './Lark';
 import { SpreadSheetMeta, SheetMeta, SheetRangeData, CellValue } from './type';
 
@@ -32,13 +34,15 @@ export class SpreadSheet {
     }
 }
 
-export interface SheetQuery<K extends string> {
+export interface SheetQuery<K extends List.List> {
     columnRange: [string, string];
-    keys: K[];
+    keys: K;
     headerRows?: number;
     pageSize?: number;
     pageIndex?: number;
 }
+
+export type RowData<K extends List.List> = Record<List.UnionOf<K>, CellValue>;
 
 export class Sheet {
     document: SpreadSheet;
@@ -60,7 +64,7 @@ export class Sheet {
         return body!.data;
     }
 
-    async getData<K extends string>({
+    async getData<K extends List.List>({
         columnRange: [startColumn, endColumn],
         keys,
         headerRows = 1,
@@ -68,7 +72,7 @@ export class Sheet {
         pageIndex = 1
     }: SheetQuery<K>) {
         const start = 1 + headerRows + pageSize * (pageIndex - 1);
-        const end = Math.min(this.meta.rowCount, start, start + pageSize - 1);
+        const end = Math.min(this.meta.rowCount, start + pageSize - 1);
 
         if (end < start) return [];
 
@@ -80,7 +84,7 @@ export class Sheet {
             row =>
                 Object.fromEntries(
                     row.map((value, index) => [keys[index], value])
-                ) as Record<K, CellValue>
+                ) as RowData<K>
         );
     }
 }

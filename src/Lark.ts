@@ -1,3 +1,4 @@
+import { cache } from 'web-utility';
 import { HTTPClient, polyfill } from 'koajax';
 
 import { TenantAccessToken } from './type';
@@ -43,10 +44,10 @@ export class Lark implements LarkOptions {
     async getAccessToken() {
         await polyfill(new URL(this.client.baseURI).origin);
 
-        return (this.accessToken ||= await this.getTenantAccessToken());
+        return (this.accessToken = await this.getTenantAccessToken());
     }
 
-    protected async getTenantAccessToken() {
+    getTenantAccessToken = cache(async clean => {
         const { body } = await this.client.post<TenantAccessToken>(
             'auth/v3/tenant_access_token/internal',
             {
@@ -54,10 +55,14 @@ export class Lark implements LarkOptions {
                 app_secret: this.appSecret
             }
         );
+        setTimeout(clean, body!.expire * 1000);
+
         return body!.tenant_access_token;
-    }
+    }, 'Tenant Access Token');
 
     async getSpreadSheet(id: string) {
+        await this.getAccessToken();
+
         const spreadsheet = new SpreadSheet(this, id);
 
         await spreadsheet.getMetaInfo();

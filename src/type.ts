@@ -47,7 +47,7 @@ export interface LarkMedia {
     link?: string;
 }
 
-export type CellValue = string | LarkMedia;
+export type CellValue = string | number | LarkMedia[] | null;
 
 export type SheetRangeData = LarkData<{
     revision: number;

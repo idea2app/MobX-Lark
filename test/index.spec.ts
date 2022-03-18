@@ -39,4 +39,6 @@ describe('Lark SDK', async () => {
 
         console.log(JSON.stringify(data, null, 4));
     });
+
+    process.exit();
 });

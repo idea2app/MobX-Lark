@@ -6,8 +6,14 @@ Unofficial [TypeScript][1] SDK for [FeiShu/Lark API][2]
 
 [![NPM](https://nodei.co/npm/lark-ts-sdk.png?downloads=true&downloadRank=true&stars=true)][4]
 
--   [Usage](test/index.spec.ts)
+## Usage
+
+-   [Example](test/index.spec.ts)
 -   [API document](https://ideapp.dev/Lark-TS-SDK/)
+
+## User cases
+
+1. [China Open Source map](https://kaiyuanshe.vercel.app/organization)
 
 [1]: https://www.typescriptlang.org/
 [2]: https://open.feishu.cn/
