@@ -3,6 +3,7 @@
         "strict": true,
         "target": "ES5",
         "moduleResolution": "Node",
+        "skipLibCheck": true,
         "lib": ["ES2021", "DOM"]
     },
     "typedocOptions": {
