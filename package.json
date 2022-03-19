@@ -1,6 +1,6 @@
 {
     "name": "lark-ts-sdk",
-    "version": "0.3.9",
+    "version": "0.4.0",
     "license": "LGPL-3.0",
     "author": "shiy2008@gmail.com",
     "description": "Unofficial TypeScript SDK for FeiShu/Lark API",
@@ -31,7 +31,9 @@
         "web-utility": "^3.6.0"
     },
     "devDependencies": {
+        "@parcel/config-default": "^2.3.2",
         "@parcel/packager-ts": "2.3.2",
+        "@parcel/transformer-typescript-tsc": "^2.3.2",
         "@parcel/transformer-typescript-types": "2.3.2",
         "@types/node": "^17.0.21",
         "dotenv": "^16.0.0",

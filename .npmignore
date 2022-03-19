@@ -1,5 +1,6 @@
 .env
 test/
+.parcelrc
 .parcel-cache/
 docs/
 .husky/
