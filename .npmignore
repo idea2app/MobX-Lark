@@ -1,7 +1,6 @@
 .env
 test/
 .parcel-cache/
-dist/
 docs/
 .husky/
 .github/

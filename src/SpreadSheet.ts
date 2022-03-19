@@ -59,7 +59,11 @@ export class Sheet {
         const { document } = this;
 
         const { body } = await document.core.client.get<SheetRangeData>(
-            `${document.baseURI}/values/${this.id}!${startCell}:${endCell}`
+            `${document.baseURI}/values/${
+                this.id
+            }!${startCell}:${endCell}?${new URLSearchParams({
+                dateTimeRenderOption: 'FormattedString'
+            })}`
         );
         return body!.data;
     }
