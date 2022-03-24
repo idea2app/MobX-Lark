@@ -7,6 +7,13 @@ export type LarkData<
     data: D;
 };
 
+export type LarkPageData<D extends Record<string, any> = {}> = LarkData<{
+    page_token: string;
+    items: D[];
+    has_more: boolean;
+    total: number;
+}>;
+
 export function isLarkError(data?: any): data is LarkData {
     return !!(data as LarkData)?.code;
 }
@@ -58,4 +65,30 @@ export type SheetRangeData = LarkData<{
         range: `${string}!${string}:${string}`;
         values: CellValue[][];
     };
+}>;
+
+export type BITableMeta = LarkData<{
+    app: {
+        app_token: string;
+        name: string;
+        revision: number;
+    };
+}>;
+
+export type BITableList = LarkPageData<{
+    table_id: string;
+    name: string;
+    revision: number;
+}>;
+
+export type TableViewList = LarkPageData<{
+    view_type: 'grid' | 'form';
+    view_id: string;
+    view_name: string;
+}>;
+
+export type TableRecordList = LarkPageData<{
+    id: string;
+    record_id: string;
+    fields: Record<string, any>;
 }>;

@@ -3,6 +3,7 @@ import { HTTPClient, polyfill } from 'koajax';
 
 import { TenantAccessToken } from './type';
 import { SpreadSheet } from './SpreadSheet';
+import { BITable } from './BITable';
 
 export interface LarkOptions {
     appId: string;
@@ -68,5 +69,15 @@ export class Lark implements LarkOptions {
         await spreadsheet.getMetaInfo();
 
         return spreadsheet;
+    }
+
+    async getBITable(id: string) {
+        await this.getAccessToken();
+
+        const biTable = new BITable(this, id);
+
+        await biTable.getMetaInfo();
+
+        return biTable;
     }
 }
