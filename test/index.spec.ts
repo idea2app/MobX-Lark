@@ -1,9 +1,10 @@
 import 'dotenv/config';
 import { describe, it } from 'web-utility';
 
-import { Lark } from '../src';
+import { Lark, Table } from '../src';
 
-const { APP_ID, APP_SECRET, SPREADSHEET_ID } = process.env;
+const { APP_ID, APP_SECRET, SPREADSHEET_ID, BITABLE_ID, BITABLE_TABLE_ID } =
+    process.env;
 
 const app = new Lark({
     appId: APP_ID!,
@@ -38,6 +39,39 @@ describe('Lark SDK', async () => {
         expect(data instanceof Array);
 
         console.log(JSON.stringify(data, null, 4));
+    });
+
+    const biTable =
+        await it('should get Meta data of a BITable document', async expect => {
+            const biTable = await app.getBITable(BITABLE_ID!);
+
+            const { meta, id, tables } = biTable;
+
+            expect(meta?.app_token === id);
+            expect(tables[0] instanceof Table);
+
+            return biTable;
+        });
+
+    const table =
+        await it('should get a table of a BITable document', async expect => {
+            const table = await biTable.getTable(BITABLE_TABLE_ID!);
+
+            expect(table instanceof Table);
+
+            return table!;
+        });
+
+    await it('should get all views of a BITable table', async expect => {
+        const [view] = await table.getViews();
+
+        expect(['grid', 'form'].includes(view.view_type));
+    });
+
+    await it('should get records of a BITable view', async expect => {
+        const [record] = await table.getRecords();
+
+        expect(typeof Object.keys(record.fields)[0] === 'string');
     });
 
     process.exit();
