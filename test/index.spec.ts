@@ -3,8 +3,14 @@ import { describe, it } from 'web-utility';
 
 import { Lark, Table } from '../src';
 
-const { APP_ID, APP_SECRET, SPREADSHEET_ID, BITABLE_ID, BITABLE_TABLE_ID } =
-    process.env;
+const {
+    APP_ID,
+    APP_SECRET,
+    SPREADSHEET_ID,
+    BITABLE_ID,
+    BITABLE_TABLE_ID,
+    MEDIA_ID
+} = process.env;
 
 const app = new Lark({
     appId: APP_ID!,
@@ -73,5 +79,11 @@ describe('Lark SDK', async () => {
         const [record] = await table.getNextPage();
 
         expect(typeof record.id === 'string');
+    });
+
+    await it('should download a file', async expect => {
+        const file = await app.downloadFile(MEDIA_ID!);
+
+        expect(file.size > 0);
     });
 }).then(() => process.exit());

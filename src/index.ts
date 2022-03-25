@@ -1,4 +1,4 @@
 export * from './type';
-export * from './Lark';
-export * from './SpreadSheet';
-export * from './BITable';
+export { LarkOptions, Lark } from './Lark';
+export { SpreadSheet, SheetQuery, RowData, Sheet } from './SpreadSheet';
+export { BITable, Table } from './BITable';

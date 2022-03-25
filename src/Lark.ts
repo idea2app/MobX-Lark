@@ -83,4 +83,15 @@ export class Lark implements LarkOptions {
 
         return biTable;
     }
+
+    /**
+     * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/drive-v1/media/download
+     */
+    async downloadFile(id: string) {
+        const { body } = await this.client.request<Blob>({
+            path: `drive/v1/medias/${id}/download`,
+            responseType: 'blob'
+        });
+        return body!;
+    }
 }

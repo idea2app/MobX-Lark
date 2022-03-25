@@ -1527,12 +1527,13 @@ jsonc-parser@^3.0.0:
   resolved "https://registry.yarnpkg.com/jsonc-parser/-/jsonc-parser-3.0.0.tgz#abdd785701c7e7eaca8a9ec8cf070ca51a745a22"
   integrity sha512-fQzRfAbIBnR0IQvftw9FJveWiHp72Fg20giDrHz6TdfB12UH/uue0D3hm57UB5KgAVuniLMCaS8P1IMj9NR7cA==
 
-koajax@^0.8.0-rc.0:
-  version "0.8.0-rc.0"
-  resolved "https://registry.yarnpkg.com/koajax/-/koajax-0.8.0-rc.0.tgz#d41201cfca2fc1fc8c9e3a65a2379cefb7635797"
-  integrity sha512-B/B0Nkf0VKZMoLMKI7rAUx0ZRxK2Hj6yM72HEofSaNQm6YcLJZ6cXg83O3wj5WjZaLNXcskSp1FzYRE8Eo/RlQ==
+koajax@^0.8.0-rc.2:
+  version "0.8.0-rc.2"
+  resolved "https://registry.yarnpkg.com/koajax/-/koajax-0.8.0-rc.2.tgz#a324d0c87e9f267fed505abcdce4c019f0d6919e"
+  integrity sha512-zeuluRYkPCfKQjZ6bOb4LQBJfSfpC/VE92He+Gdsp1I9kKYcCbV2w1NMEkcQeo1Pua9f0NC8P2mpgoyPJjKu6Q==
   dependencies:
     iterable-observer "1.0.0-rc.0"
+    web-utility "^3.6.1"
 
 levn@~0.3.0:
   version "0.3.0"

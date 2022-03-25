@@ -4,4 +4,5 @@ test/
 .parcel-cache/
 docs/
 .husky/
+.vscode/
 .github/
