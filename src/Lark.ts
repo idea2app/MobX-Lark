@@ -48,6 +48,9 @@ export class Lark implements LarkOptions {
         return (this.accessToken = await this.getTenantAccessToken());
     }
 
+    /**
+     * @see https://open.feishu.cn/document/ukTMukTMukTM/ukDNz4SO0MjL5QzM/auth-v3/auth/tenant_access_token_internal
+     */
     getTenantAccessToken = cache(async clean => {
         const { body } = await this.client.post<TenantAccessToken>(
             'auth/v3/tenant_access_token/internal',

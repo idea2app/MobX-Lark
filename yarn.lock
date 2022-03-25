@@ -1187,10 +1187,10 @@ electron-to-chromium@^1.4.84:
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.85.tgz#a3666ba42147026b9f34d4d8d4caf0740e80f751"
   integrity sha512-K9AsQ41WS2bjZUFpRWfvaS4RjEcRCamEkBJN1Z1TQILBfP1H8QnJ9ti0wiLiMv0sRjX3EHKzgs9jDnmGFx2jXg==
 
-element-internals-polyfill@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/element-internals-polyfill/-/element-internals-polyfill-1.0.3.tgz#ac0e9fcd40b8fb85aa31a53d5b01051321554724"
-  integrity sha512-SIH0Dj6Ss4OlQF/5C6bHNDAeHkQbFbWYBvTKVpOXhnPTXgB9MPhzKtqFj6KghMGeFZ1YdOwAXtZMxIcBApbC7w==
+element-internals-polyfill@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/element-internals-polyfill/-/element-internals-polyfill-1.1.2.tgz#81f48b3a70aa31e13941747afb066c47429f3a26"
+  integrity sha512-fLWEbGeYIT2NXrNQepFPYuwBcGaJLtms4JaG4h//bpmk4ivW8ESa95PfqHjqb1UO0/gU5G2pg6rEVPrabTQ3cQ==
 
 emoji-regex@^8.0.0:
   version "8.0.0"
@@ -1899,10 +1899,10 @@ prelude-ls@~1.1.2:
   resolved "https://registry.yarnpkg.com/prelude-ls/-/prelude-ls-1.1.2.tgz#21932a549f5e52ffd9a827f570e04be62a97da54"
   integrity sha1-IZMqVJ9eUv/ZqCf1cOBL5iqX2lQ=
 
-prettier@^2.6.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.6.0.tgz#12f8f504c4d8ddb76475f441337542fa799207d4"
-  integrity sha512-m2FgJibYrBGGgQXNzfd0PuDGShJgRavjUoRCw1mZERIWVSXF0iLzLm+aOqTAbLnC3n6JzUhAA8uZnFVghHJ86A==
+prettier@^2.6.1:
+  version "2.6.1"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.6.1.tgz#d472797e0d7461605c1609808e27b80c0f9cfe17"
+  integrity sha512-8UVbTBYGwN37Bs9LERmxCPjdvPxlEowx2urIL6urHzdb3SDq4B/Z6xLFCblrSnE4iKWcS6ziJ3aOYrc1kz/E2A==
 
 psl@^1.1.33:
   version "1.8.0"
@@ -2235,10 +2235,10 @@ typedoc@^0.22.13:
     minimatch "^5.0.1"
     shiki "^0.10.1"
 
-typescript@^4.6.2:
-  version "4.6.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.6.2.tgz#fe12d2727b708f4eef40f51598b3398baa9611d4"
-  integrity sha512-HM/hFigTBHZhLXshn9sN37H085+hQGeJHJ/X7LpBWLID/fbc2acUMfU+lGD98X81sKP+pFa9f0DZmCwB9GnbAg==
+typescript@^4.6.3:
+  version "4.6.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.6.3.tgz#eefeafa6afdd31d725584c67a0eaba80f6fc6c6c"
+  integrity sha512-yNIatDa5iaofVozS/uQJEl3JRWLKKGJKh6Yaiv0GLGSuhpFJe7P3SbHZ8/yjAHRQwKRoA6YZqlfjXWmVzoVSMw==
 
 universalify@^0.1.2:
   version "0.1.2"
@@ -2289,13 +2289,13 @@ weak-lru-cache@^1.2.2:
   resolved "https://registry.yarnpkg.com/weak-lru-cache/-/weak-lru-cache-1.2.2.tgz#fdbb6741f36bae9540d12f480ce8254060dccd19"
   integrity sha512-DEAoo25RfSYMuTGc9vPJzZcZullwIqRDSI9LOy+fkCJPi6hykCnfKaXTuPBDuXAUcqHXyOgFtHNp/kB2FjYHbw==
 
-web-utility@^3.6.0:
-  version "3.6.0"
-  resolved "https://registry.yarnpkg.com/web-utility/-/web-utility-3.6.0.tgz#bf33f7197cf0ce11c6671600136cca108cbf7c9d"
-  integrity sha512-sn2Dv49Qd0SJufmQnnpTzYhaYV1FrMpGjvniL7OnF9vaN1zk3zLHa5PApMqjO9cucI4JiU0L/pjuww89v8xSDA==
+web-utility@^3.6.1:
+  version "3.6.1"
+  resolved "https://registry.yarnpkg.com/web-utility/-/web-utility-3.6.1.tgz#85c0b62007b783c80b28a86d8fee1f84b6a83168"
+  integrity sha512-jhaAKs0v+xVuOVpL1woexU7d3J2sjG+0i3q5A0dSos6ePfhTdy+mWzBktiSqbIUSGh9khVZq8VUs+2XcK3ycGw==
   dependencies:
     "@swc/helpers" "^0.3.8"
-    element-internals-polyfill "^1.0.3"
+    element-internals-polyfill "^1.1.2"
     regenerator-runtime "^0.13.9"
 
 webidl-conversions@^7.0.0:
