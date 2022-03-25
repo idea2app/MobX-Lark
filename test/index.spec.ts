@@ -55,8 +55,9 @@ describe('Lark SDK', async () => {
 
     const table =
         await it('should get a table of a BITable document', async expect => {
-            const table = await biTable.getTable(BITABLE_TABLE_ID!);
-
+            const table = await biTable.getTable<{ name: string }>(
+                BITABLE_TABLE_ID!
+            );
             expect(table instanceof Table);
 
             return table!;
@@ -71,6 +72,6 @@ describe('Lark SDK', async () => {
     await it('should get a page of records in a BITable view', async expect => {
         const [record] = await table.getNextPage();
 
-        expect(typeof Object.keys(record.fields)[0] === 'string');
+        expect(typeof record.id === 'string');
     });
 }).then(() => process.exit());

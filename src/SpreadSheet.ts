@@ -1,7 +1,12 @@
 import { List } from 'ts-toolbelt';
 
 import { Lark } from './Lark';
-import { SpreadSheetMeta, SheetMeta, SheetRangeData, CellValue } from './type';
+import {
+    SpreadSheetMeta,
+    SheetMeta,
+    SheetRangeData,
+    SheetCellValue
+} from './type';
 
 export class SpreadSheet {
     core: Lark;
@@ -45,7 +50,10 @@ export interface SheetQuery<K extends List.List> {
     pageIndex?: number;
 }
 
-export type RowData<K extends List.List> = Record<List.UnionOf<K>, CellValue>;
+export type RowData<K extends List.List> = Record<
+    List.UnionOf<K>,
+    SheetCellValue
+>;
 
 export class Sheet {
     document: SpreadSheet;

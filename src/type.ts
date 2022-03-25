@@ -47,14 +47,14 @@ export type SpreadSheetMeta = LarkData<{
     sheets: SheetMeta[];
 }>;
 
-export interface LarkMedia {
+export interface SheetCellMedia {
     type: 'url';
     cellPosition: null;
     text: string;
     link?: string;
 }
 
-export type CellValue = string | number | LarkMedia[] | null;
+export type SheetCellValue = string | number | SheetCellMedia[] | null;
 
 export type SheetRangeData = LarkData<{
     revision: number;
@@ -63,7 +63,7 @@ export type SheetRangeData = LarkData<{
         revision: string;
         majorDimension: string;
         range: `${string}!${string}:${string}`;
-        values: CellValue[][];
+        values: SheetCellValue[][];
     };
 }>;
 
@@ -87,8 +87,78 @@ export type TableViewList = LarkPageData<{
     view_name: string;
 }>;
 
-export type TableRecordList = LarkPageData<{
+export interface TableCellText {
+    type: 'text';
+    text: string;
+}
+
+export interface TableCellLink {
+    type: 'url';
+    link: string;
+    text: string;
+}
+
+export interface TableCellMedia {
+    file_token: string;
+    name: string;
+    type: `${string}/${string}`;
+    size: number;
+    url: string;
+    tmp_url: string;
+}
+
+export interface TableCellUser {
     id: string;
+    name: string;
+    en_name: string;
+    email: string;
+}
+
+export interface TableCellMetion {
+    type: 'mention';
+    mentionType: string;
+    text: string;
+}
+
+export interface TableCellUserMetion extends TableCellMetion {
+    token: string;
+    mentionType: 'User';
+    mentionNotify: boolean;
+    name: string;
+}
+
+export interface TableCellDocumentMetion extends TableCellMetion {
+    token: string;
+    mentionType: 'Bitable';
+    link: string;
+}
+
+export interface TableCellRelation extends TableCellText {
+    table_id: string;
+    record_ids: [string, string?];
+}
+
+export type TableCellValue =
+    | string
+    | number
+    | boolean
+    | TableCellLink
+    | (
+          | string
+          | TableCellText
+          | TableCellLink
+          | TableCellMedia
+          | TableCellUser
+          | TableCellUserMetion
+          | TableCellDocumentMetion
+          | TableCellRelation
+      )[]
+    | null;
+
+export type TableRecordFields = Record<string, TableCellValue>;
+
+export type TableRecordList<D extends TableRecordFields = {}> = LarkPageData<{
+    id?: string;
     record_id: string;
-    fields: Record<string, any>;
+    fields: D;
 }>;

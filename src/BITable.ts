@@ -5,7 +5,8 @@ import {
     BITableMeta,
     BITableList,
     TableViewList,
-    TableRecordList
+    TableRecordList,
+    TableRecordFields
 } from './type';
 
 export class BITable {
@@ -42,23 +43,25 @@ export class BITable {
     /**
      * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table/list
      */
-    async getTables() {
+    async getTables<D extends TableRecordFields = {}>() {
         const { body } = await this.core.client.get<BITableList>(
             `${this.baseURI}/tables?page_size=100`
         );
         return (this.tables = body!.data.items.map(
-            ({ table_id }) => new Table(this, table_id)
+            ({ table_id }) => new Table<D>(this, table_id)
         ));
     }
 
-    async getTable(id: string) {
-        if (!this.tables[0]) await this.getTables();
+    async getTable<D extends TableRecordFields = {}>(id: string) {
+        if (!this.tables[0]) await this.getTables<D>();
 
-        return this.tables.find(({ id: ID }) => ID === id);
+        return this.tables.find(({ id: ID }) => ID === id) as
+            | Table<D>
+            | undefined;
     }
 }
 
-export class Table {
+export class Table<D extends TableRecordFields = {}> {
     document: BITable;
     id: string;
 
@@ -67,7 +70,7 @@ export class Table {
     }
     views: TableViewList['data']['items'] = [];
 
-    records: TableRecordList['data']['items'] = [];
+    records: ({ id: string } & D)[] = [];
     lastPage?: string;
     hasMore?: boolean;
     totalCount?: number;
@@ -90,27 +93,37 @@ export class Table {
     /**
      * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-record/list
      */
-    async getNextPage() {
-        const { body } = await this.document.core.client.get<TableRecordList>(
+    async getNextPage(text2array?: boolean) {
+        const { body } = await this.document.core.client.get<
+            TableRecordList<D>
+        >(
             `${this.baseURI}/records?${buildURLData({
+                text_field_as_array: text2array,
                 page_size: 100,
                 page_token: this.lastPage
             })}`
         );
         const { items, page_token, has_more, total } = body!.data;
 
-        this.records.push(...items);
+        const list = items.map(
+            ({ id, record_id, fields }) =>
+                ({
+                    id: id || record_id,
+                    ...fields
+                } as { id: string } & D)
+        );
+        this.records.push(...list);
 
         this.lastPage = page_token;
         this.hasMore = has_more;
         this.totalCount = total;
 
-        return items;
+        return list;
     }
 
-    async getAllRecords() {
+    async getAllRecords(text2array?: boolean) {
         do {
-            await this.getNextPage();
+            await this.getNextPage(text2array);
         } while (this.hasMore);
 
         return this.records;
