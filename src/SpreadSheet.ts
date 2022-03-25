@@ -19,6 +19,9 @@ export class SpreadSheet {
         this.id = id;
     }
 
+    /**
+     * @see https://open.feishu.cn/document/ukTMukTMukTM/uETMzUjLxEzM14SMxMTN
+     */
     async getMetaInfo() {
         if (!this.meta) {
             const { body } = await this.core.client.get<SpreadSheetMeta>(
@@ -55,6 +58,9 @@ export class Sheet {
         this.meta = meta;
     }
 
+    /**
+     * @see https://open.feishu.cn/document/ukTMukTMukTM/ugTMzUjL4EzM14COxMTN
+     */
     async getRange(startCell: string, endCell: string) {
         const { document } = this;
 

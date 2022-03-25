@@ -68,11 +68,9 @@ describe('Lark SDK', async () => {
         expect(['grid', 'form'].includes(view.view_type));
     });
 
-    await it('should get records of a BITable view', async expect => {
-        const [record] = await table.getRecords();
+    await it('should get a page of records in a BITable view', async expect => {
+        const [record] = await table.getNextPage();
 
         expect(typeof Object.keys(record.fields)[0] === 'string');
     });
-
-    process.exit();
-});
+}).then(() => process.exit());
