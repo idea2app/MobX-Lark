@@ -1,4 +1,3 @@
-import 'tslib';
 import { cache } from 'web-utility';
 import { HTTPClient, polyfill } from 'koajax';
 
