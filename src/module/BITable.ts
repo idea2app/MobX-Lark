@@ -1,29 +1,21 @@
 import { buildURLData } from 'web-utility';
 
-import { Lark } from './Lark';
+import { LarkModule } from './base';
 import {
     BITableMeta,
     BITableList,
     TableViewList,
     TableRecordList,
     TableRecordFields
-} from './type';
+} from '../type';
 
-export class BITable {
-    core: Lark;
-    id: string;
-
+export class BITable extends LarkModule {
     get baseURI() {
         return `bitable/v1/apps/${this.id}`;
     }
     meta?: BITableMeta['data']['app'];
 
     tables: Table[] = [];
-
-    constructor(core: Lark, id: string) {
-        this.core = core;
-        this.id = id;
-    }
 
     /**
      * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app/get

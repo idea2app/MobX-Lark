@@ -1,4 +1,5 @@
 export * from './type';
 export { LarkOptions, Lark } from './Lark';
-export { SpreadSheet, SheetQuery, RowData, Sheet } from './SpreadSheet';
-export { BITable, Table } from './BITable';
+export { InstantMessenger, Chat } from './module/InstantMessenger';
+export { SpreadSheet, SheetQuery, RowData, Sheet } from './module/SpreadSheet';
+export { BITable, Table } from './module/BITable';

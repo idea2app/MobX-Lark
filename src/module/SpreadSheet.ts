@@ -1,28 +1,20 @@
 import { List } from 'ts-toolbelt';
 
-import { Lark } from './Lark';
+import { LarkModule } from './base';
 import {
     SpreadSheetMeta,
     SheetMeta,
     SheetRangeData,
     SheetCellValue
-} from './type';
+} from '../type';
 
-export class SpreadSheet {
-    core: Lark;
-    id: string;
-
+export class SpreadSheet extends LarkModule {
     get baseURI() {
         return `sheets/v2/spreadsheets/${this.id}`;
     }
     meta?: SpreadSheetMeta['data'];
 
     sheets: Sheet[] = [];
-
-    constructor(core: Lark, id: string) {
-        this.core = core;
-        this.id = id;
-    }
 
     /**
      * @see https://open.feishu.cn/document/ukTMukTMukTM/uETMzUjLxEzM14SMxMTN

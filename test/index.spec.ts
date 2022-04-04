@@ -84,6 +84,6 @@ describe('Lark SDK', async () => {
     await it('should download a file', async expect => {
         const file = await app.downloadFile(MEDIA_ID!);
 
-        expect(file.size > 0);
+        expect(file.byteLength > 0);
     });
-}).then(() => process.exit());
+}).finally(() => process.exit());

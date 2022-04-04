@@ -1,9 +1,11 @@
+import 'tslib';
 import { cache } from 'web-utility';
 import { HTTPClient, polyfill } from 'koajax';
 
-import { TenantAccessToken } from './type';
-import { SpreadSheet } from './SpreadSheet';
-import { BITable } from './BITable';
+import { TenantAccessToken, JSTicket, UserMeta } from './type';
+import { InstantMessenger } from './module/InstantMessenger';
+import { SpreadSheet } from './module/SpreadSheet';
+import { BITable } from './module/BITable';
 
 export interface LarkOptions {
     appId: string;
@@ -14,6 +16,8 @@ export class Lark implements LarkOptions {
     appId: string;
     appSecret: string;
     accessToken?: string;
+
+    messenger = new InstantMessenger(this);
 
     constructor({ appId, appSecret }: LarkOptions) {
         this.appId = appId;
@@ -64,6 +68,24 @@ export class Lark implements LarkOptions {
         return body!.tenant_access_token;
     }, 'Tenant Access Token');
 
+    getUserMeta = cache(async (clean, code: string) => {
+        const { body } = await this.client.post<UserMeta>(
+            'authen/v1/access_token',
+            { grant_type: 'authorization_code', code }
+        );
+        setTimeout(clean, body!.data.expires_in);
+
+        return body!.data;
+    }, 'User Access Token');
+
+    getJSTicket = cache(async clean => {
+        const { body } = await this.client.get<JSTicket>('jssdk/ticket/get');
+
+        setTimeout(clean, body!.data.expire_in * 1000);
+
+        return body!.data.ticket;
+    }, 'JS-SDK ticket');
+
     async getSpreadSheet(id: string) {
         await this.getAccessToken();
 
@@ -88,9 +110,11 @@ export class Lark implements LarkOptions {
      * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/drive-v1/media/download
      */
     async downloadFile(id: string) {
-        const { body } = await this.client.request<Blob>({
+        await this.getAccessToken();
+
+        const { body } = await this.client.request<ArrayBuffer>({
             path: `drive/v1/medias/${id}/download`,
-            responseType: 'blob'
+            responseType: 'arraybuffer'
         });
         return body!;
     }
