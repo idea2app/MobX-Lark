@@ -1,4 +1,4 @@
-import { cache } from 'web-utility';
+import { buildURLData, cache } from 'web-utility';
 import { HTTPClient, polyfill } from 'koajax';
 
 import { TenantAccessToken, JSTicket, UserMeta } from './type';
@@ -67,23 +67,36 @@ export class Lark implements LarkOptions {
         return body!.tenant_access_token;
     }, 'Tenant Access Token');
 
-    getUserMeta = cache(async (clean, code: string) => {
+    /**
+     * @see https://open.feishu.cn/document/ukTMukTMukTM/ukzN4UjL5cDO14SO3gTN
+     */
+    getWebSignInURL(redirect_uri: string, state?: string) {
+        return `${this.client.baseURI}/authen/v1/index?${buildURLData({
+            app_id: this.appId,
+            redirect_uri,
+            state
+        })}`;
+    }
+
+    /**
+     * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/authen-v1/authen/access_token
+     */
+    async getUserMeta(code: string) {
         const { body } = await this.client.post<UserMeta>(
             'authen/v1/access_token',
             { grant_type: 'authorization_code', code }
         );
-        setTimeout(clean, body!.data.expires_in);
+        return body!.data;
+    }
+
+    /**
+     * @see https://open.feishu.cn/document/ukTMukTMukTM/uYTM5UjL2ETO14iNxkTN/h5_js_sdk/authorization
+     */
+    async getJSTicket() {
+        const { body } = await this.client.post<JSTicket>('jssdk/ticket/get');
 
         return body!.data;
-    }, 'User Access Token');
-
-    getJSTicket = cache(async clean => {
-        const { body } = await this.client.get<JSTicket>('jssdk/ticket/get');
-
-        setTimeout(clean, body!.data.expire_in * 1000);
-
-        return body!.data.ticket;
-    }, 'JS-SDK ticket');
+    }
 
     async getSpreadSheet(id: string) {
         await this.getAccessToken();

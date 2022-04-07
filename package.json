@@ -1,9 +1,9 @@
 {
     "name": "lark-ts-sdk",
-    "version": "0.7.0",
+    "version": "0.7.2",
     "license": "LGPL-3.0",
     "author": "shiy2008@gmail.com",
-    "description": "Unofficial TypeScript SDK for FeiShu/Lark API",
+    "description": "Unofficial Node.js TypeScript SDK for FeiShu/Lark API",
     "keywords": [
         "feishu",
         "lark",
@@ -25,6 +25,7 @@
     },
     "dependencies": {
         "@swc/helpers": "^0.3.8",
+        "jsdom": "^19.0.0",
         "koajax": "^0.8.0-rc.2",
         "regenerator-runtime": "^0.13.9",
         "ts-toolbelt": "^9.6.0",
@@ -32,19 +33,13 @@
         "web-utility": "^3.6.1"
     },
     "devDependencies": {
-        "@parcel/config-default": "^2.4.1",
-        "@parcel/packager-ts": "^2.4.1",
-        "@parcel/transformer-typescript-tsc": "^2.4.1",
-        "@parcel/transformer-typescript-types": "^2.4.1",
         "@types/node": "^14.18.12",
         "dotenv": "^16.0.0",
         "husky": "^7.0.4",
-        "jsdom": "^19.0.0",
         "lint-staged": "^12.3.7",
-        "parcel": "^2.4.1",
         "prettier": "^2.6.2",
         "ts-node": "^10.7.0",
-        "typedoc": "^0.22.13",
+        "typedoc": "^0.22.14",
         "typedoc-plugin-mdn-links": "^1.0.5",
         "typescript": "^4.6.3"
     },
@@ -57,13 +52,12 @@
     "lint-staged": {
         "*.{md,json,yml,ts}": "prettier --write"
     },
-    "browserslist": "> 0.5%, last 2 versions, not dead",
     "scripts": {
         "prepare": "husky install",
         "lint": "lint-staged",
         "debug": "ts-node test/index.spec.ts",
         "test": "npm run lint  &&  npm run debug",
-        "pack-code": "rm -rf dist/  &&  parcel build src/index.ts",
+        "pack-code": "rm -rf dist/  &&  tsc",
         "pack-docs": "rm -rf docs/  &&  typedoc src/",
         "build": "npm run pack-code  &&  npm run pack-docs",
         "start": "npm run pack-docs  &&  open-cli docs/index.html",

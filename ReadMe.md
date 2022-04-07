@@ -1,6 +1,6 @@
 # Lark TS SDK
 
-Unofficial [TypeScript][1] SDK for [FeiShu/Lark API][2]
+Unofficial Node.js [TypeScript][1] SDK for [FeiShu/Lark API][2]
 
 [![CI & CD](https://github.com/idea2app/Lark-TS-SDK/actions/workflows/main.yml/badge.svg)][3]
 
