@@ -15,6 +15,10 @@ Unofficial Node.js [TypeScript][1] SDK for [FeiShu/Lark API][2]
 
 1. [China Open Source map](https://kaiyuanshe.vercel.app/organization)
 
+## Related with
+
+-   Lark client API: https://github.com/idea2app/Lark-client-API
+
 [1]: https://www.typescriptlang.org/
 [2]: https://open.feishu.cn/
 [3]: https://github.com/idea2app/Lark-TS-SDK/actions/workflows/main.yml

@@ -4,19 +4,19 @@ on:
         tags:
             - v*
 jobs:
-    Build-and-Deploy:
+    Test-Build-Publish-Deploy:
         runs-on: ubuntu-latest
         steps:
-            - name: Checkout
-              uses: actions/checkout@v2
-            - name: Use Node.js
-              uses: actions/setup-node@v2
+            - uses: actions/checkout@v2
+            - uses: actions/setup-node@v2
               with:
                   node-version: 14
                   registry-url: https://registry.npmjs.org
                   cache: yarn
-            - name: Install, Build & Publish
-              run: yarn  &&  yarn publish
+            - name: Install packages
+              run: yarn
+            - name: Test, Build & Publish
+              run: yarn publish
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
                   APP_ID: ${{ secrets.APP_ID }}
@@ -25,7 +25,7 @@ jobs:
                   BITABLE_ID: ${{ secrets.BITABLE_ID }}
                   BITABLE_TABLE_ID: ${{ secrets.BITABLE_TABLE_ID }}
                   MEDIA_ID: ${{ secrets.MEDIA_ID }}
-            - name: Deploy
+            - name: Deploy document
               uses: peaceiris/actions-gh-pages@v3
               with:
                   publish_dir: ./docs

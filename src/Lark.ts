@@ -1,7 +1,7 @@
 import { buildURLData, cache } from 'web-utility';
-import { HTTPClient, polyfill } from 'koajax';
+import { HTTPClient } from 'koajax';
 
-import { TenantAccessToken, JSTicket, UserMeta } from './type';
+import { isLarkError, TenantAccessToken, JSTicket, UserMeta } from './type';
 import { InstantMessenger } from './module/InstantMessenger';
 import { SpreadSheet } from './module/SpreadSheet';
 import { BITable } from './module/BITable';
@@ -34,20 +34,22 @@ export class Lark implements LarkOptions {
                 ...request.headers,
                 Authorization: `Bearer ${accessToken}`
             };
-
         try {
             await next();
-        } catch (error) {
+
             const { body } = response;
 
-            console.error(body);
+            if (isLarkError(body)) {
+                console.error(body);
+                throw new URIError(body.msg);
+            }
+        } catch (error) {
+            console.error(response.body);
             throw error;
         }
     });
 
     async getAccessToken() {
-        await polyfill(new URL(this.client.baseURI).origin);
-
         return (this.accessToken = await this.getTenantAccessToken());
     }
 
@@ -71,7 +73,7 @@ export class Lark implements LarkOptions {
      * @see https://open.feishu.cn/document/ukTMukTMukTM/ukzN4UjL5cDO14SO3gTN
      */
     getWebSignInURL(redirect_uri: string, state?: string) {
-        return `${this.client.baseURI}/authen/v1/index?${buildURLData({
+        return `${this.client.baseURI}authen/v1/index?${buildURLData({
             app_id: this.appId,
             redirect_uri,
             state
@@ -82,6 +84,8 @@ export class Lark implements LarkOptions {
      * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/authen-v1/authen/access_token
      */
     async getUserMeta(code: string) {
+        await this.getAccessToken();
+
         const { body } = await this.client.post<UserMeta>(
             'authen/v1/access_token',
             { grant_type: 'authorization_code', code }
@@ -92,11 +96,16 @@ export class Lark implements LarkOptions {
     /**
      * @see https://open.feishu.cn/document/ukTMukTMukTM/uYTM5UjL2ETO14iNxkTN/h5_js_sdk/authorization
      */
-    async getJSTicket() {
-        const { body } = await this.client.post<JSTicket>('jssdk/ticket/get');
+    getJSTicket = cache(async clean => {
+        await this.getAccessToken();
 
-        return body!.data;
-    }
+        const { body } = await this.client.post<JSTicket>('jssdk/ticket/get');
+        const { expire_in, ticket } = body!.data;
+
+        setTimeout(clean, expire_in * 1000);
+
+        return ticket;
+    }, 'JS ticket');
 
     async getSpreadSheet(id: string) {
         await this.getAccessToken();

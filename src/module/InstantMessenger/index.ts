@@ -22,6 +22,8 @@ export class InstantMessenger extends LarkModule {
      * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/chat/create
      */
     async createGroup(meta?: Partial<CreateChatMeta>) {
+        await this.core.getAccessToken();
+
         const { body } = await this.core.client.post<LarkData<ChatMeta>>(
             `${this.baseURI}/chats?${new URLSearchParams({
                 set_bot_manager: true + ''
@@ -36,10 +38,12 @@ export class InstantMessenger extends LarkModule {
 
         if (old) return old;
 
+        await this.core.getAccessToken();
+
         const { body } = await this.core.client.get<LarkData<ChatMeta>>(
             `${this.baseURI}/chats/${id}`
         );
-        return this.cacheChat(body!.data);
+        return this.cacheChat({ ...body!.data, chat_id: id });
     }
 }
 
