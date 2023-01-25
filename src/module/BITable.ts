@@ -20,7 +20,7 @@ export class BITable extends LarkModule {
     /**
      * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app/get
      */
-    async getMetaInfo() {
+    async getMetaInfo(): Promise<BITable['meta']> {
         if (!this.meta) {
             const { body } = await this.core.client.get<BITableMeta>(
                 this.baseURI

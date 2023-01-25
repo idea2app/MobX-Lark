@@ -4,6 +4,7 @@
         "target": "ES5",
         "module": "CommonJS",
         "moduleResolution": "Node",
+        "experimentalDecorators": true,
         "importHelpers": true,
         "declaration": true,
         "skipLibCheck": true,

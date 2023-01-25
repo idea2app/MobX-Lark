@@ -8,6 +8,8 @@ specifiers:
   husky: ^8.0.3
   koajax: ^0.8.3
   lint-staged: ^13.1.0
+  mobx: ^5.15.7
+  mobx-restful: ^0.6.0
   node-fetch: ^2.6.8
   prettier: ^2.8.3
   regenerator-runtime: ^0.13.11
@@ -21,6 +23,7 @@ specifiers:
 dependencies:
   '@swc/helpers': 0.4.14
   koajax: 0.8.3_typescript@4.9.4
+  mobx-restful: 0.6.0_ko5aw6egmzhmuoydeephv2wbae
   node-fetch: 2.6.8
   regenerator-runtime: 0.13.11
   tslib: 2.4.1
@@ -32,6 +35,7 @@ devDependencies:
   dotenv: 16.0.3
   husky: 8.0.3
   lint-staged: 13.1.0
+  mobx: 5.15.7
   prettier: 2.8.3
   ts-node: 10.9.1_qacynw5b4krdzzrloasmebsynu
   typedoc: 0.23.24_typescript@4.9.4
@@ -95,6 +99,10 @@ packages:
   /@types/node/16.18.11:
     resolution: {integrity: sha512-3oJbGBUWuS6ahSnEq1eN2XrCyf4YsWI8OyCvo7c64zQJNplk3mO84t53o8lfTk+2ji59g5ycfc6qQ3fdHliHuA==}
     dev: true
+
+  /@types/validator/13.7.11:
+    resolution: {integrity: sha512-WqTos+CnAKN64YwyBMhgUYhb5VsTNKwUY6AuzG5qu9/pFZJar/RJFMZBXwX7VS+uzYi+lIAr3WkvuWqEI9F2eg==}
+    dev: false
 
   /acorn-walk/8.2.0:
     resolution: {integrity: sha512-k+iyHEuPgSw6SbuDpGQM+06HQUa04DZ3o+F6CSzXMvvI5KMvnaEqXe+YVe555R9nn6GPt404fos4wcgpw12SDA==}
@@ -173,6 +181,14 @@ packages:
     dependencies:
       fill-range: 7.0.1
     dev: true
+
+  /class-validator/0.14.0:
+    resolution: {integrity: sha512-ct3ltplN8I9fOwUd8GrP8UQixwff129BkEtuWDKL5W45cQuLd19xqmTLu5ge78YDm/fdje6FMt0hGOhl0lii3A==}
+    dependencies:
+      '@types/validator': 13.7.11
+      libphonenumber-js: 1.10.18
+      validator: 13.7.0
+    dev: false
 
   /clean-stack/2.2.0:
     resolution: {integrity: sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==}
@@ -386,6 +402,10 @@ packages:
       - typescript
     dev: false
 
+  /libphonenumber-js/1.10.18:
+    resolution: {integrity: sha512-NS4ZEgNhwbcPz1gfSXCGFnQm0xEiyTSPRthIuWytDzOiEG9xnZ2FbLyfJC4tI2BMAAXpoWbNxHYH75pa3Dq9og==}
+    dev: false
+
   /lilconfig/2.0.6:
     resolution: {integrity: sha512-9JROoBW7pobfsx+Sq2JsASvCo6Pfo6WWoUW79HuB1BCoBXD4PLWJPqDF6fNj67pqBYTbAHkE57M1kS/+L1neOg==}
     engines: {node: '>=10'}
@@ -498,6 +518,26 @@ packages:
       brace-expansion: 2.0.1
     dev: true
 
+  /mobx-restful/0.6.0_ko5aw6egmzhmuoydeephv2wbae:
+    resolution: {integrity: sha512-LtA8qDSHPrX/0+5WaKxj+QRWjzSxrvpzvfDcRF8PcX1Z0dzXfRERdNvN7KhBJ3mHYKYp47gZPNjabBzCqzE4YQ==}
+    peerDependencies:
+      mobx: '>=4 <6'
+    dependencies:
+      '@swc/helpers': 0.4.14
+      class-validator: 0.14.0
+      koajax: 0.8.3_typescript@4.9.4
+      mobx: 5.15.7
+      reflect-metadata: 0.1.13
+      regenerator-runtime: 0.13.11
+      web-utility: 4.0.0_typescript@4.9.4
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+    dev: false
+
+  /mobx/5.15.7:
+    resolution: {integrity: sha512-wyM3FghTkhmC+hQjyPGGFdpehrcX1KOXsDuERhfK2YbJemkUhEB+6wzEN639T21onxlfYBmriA1PFnvxTUhcKw==}
+
   /ms/2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
     dev: true
@@ -577,6 +617,10 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
     dev: true
+
+  /reflect-metadata/0.1.13:
+    resolution: {integrity: sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg==}
+    dev: false
 
   /regenerator-runtime/0.13.11:
     resolution: {integrity: sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==}
@@ -776,6 +820,11 @@ packages:
   /v8-compile-cache-lib/3.0.1:
     resolution: {integrity: sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==}
     dev: true
+
+  /validator/13.7.0:
+    resolution: {integrity: sha512-nYXQLCBkpJ8X6ltALua9dRrZDHVYxjJ1wgskNt1lH9fzGjs3tgojGSCBjmEPwkWS1y29+DrizMTW19Pr9uB2nw==}
+    engines: {node: '>= 0.10'}
+    dev: false
 
   /vscode-oniguruma/1.7.0:
     resolution: {integrity: sha512-L9WMGRfrjOhgHSdOYgCt/yRMsXzLDJSL7BPrOZt73gU0iWO4mpqzqQzOz5srxqTvMBaR0XZTSrVWo4j55Rc6cA==}
