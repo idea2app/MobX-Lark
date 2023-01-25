@@ -1,4 +1,4 @@
-import { List } from 'ts-toolbelt';
+import { objectFrom } from 'web-utility';
 
 import { LarkModule } from './base';
 import {
@@ -34,18 +34,13 @@ export class SpreadSheet extends LarkModule {
     }
 }
 
-export interface SheetQuery<K extends List.List> {
+export interface SheetQuery<K extends string> {
     columnRange: [string, string];
-    keys: K;
+    keys: K[];
     headerRows?: number;
     pageSize?: number;
     pageIndex?: number;
 }
-
-export type RowData<K extends List.List> = Record<
-    List.UnionOf<K>,
-    SheetCellValue
->;
 
 export class Sheet {
     document: SpreadSheet;
@@ -74,27 +69,22 @@ export class Sheet {
         return body!.data;
     }
 
-    async getData<K extends List.List>({
+    async getData<K extends string>({
         columnRange: [startColumn, endColumn],
         keys,
         headerRows = 1,
         pageSize = 10,
         pageIndex = 1
-    }: SheetQuery<K>) {
+    }: SheetQuery<K>): Promise<Record<K, SheetCellValue>[]> {
         const start = 1 + headerRows + pageSize * (pageIndex - 1);
         const end = Math.min(this.meta.rowCount, start + pageSize - 1);
 
         if (end < start) return [];
 
-        const {
-            valueRange: { values }
-        } = await this.getRange(`${startColumn}${start}`, `${endColumn}${end}`);
-
-        return values.map(
-            row =>
-                Object.fromEntries(
-                    row.map((value, index) => [keys[index], value])
-                ) as RowData<K>
+        const { valueRange } = await this.getRange(
+            `${startColumn}${start}`,
+            `${endColumn}${end}`
         );
+        return valueRange.values.map(row => objectFrom(row, keys));
     }
 }

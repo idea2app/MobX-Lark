@@ -44,7 +44,10 @@ export class Lark implements LarkOptions {
                 throw new URIError(body.msg);
             }
         } catch (error) {
-            console.error(response.body);
+            const { method, path } = request,
+                { status, body } = response;
+
+            console.error(method, path, status, body);
             throw error;
         }
     });
