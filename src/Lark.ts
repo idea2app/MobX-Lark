@@ -1,90 +1,107 @@
-import { buildURLData, cache } from 'web-utility';
-import { HTTPClient } from 'koajax';
+import { Context, HTTPClient } from 'koajax';
+import { buildURLData, cache, Second } from 'web-utility';
 
-import { isLarkError, TenantAccessToken, JSTicket, UserMeta } from './type';
-import { InstantMessenger } from './module/InstantMessenger';
-import { SpreadSheet } from './module/SpreadSheet';
-import { BITable } from './module/BITable';
+import { isLarkError, JSTicket, TenantAccessToken, UserMeta } from './type';
 
-export interface LarkOptions {
-    appId: string;
-    appSecret: string;
+export interface LarkAppOption {
+    host?: string;
+    id: string;
+    secret?: string;
 }
 
-export class Lark implements LarkOptions {
-    appId: string;
-    appSecret: string;
+export class LarkApp implements LarkAppOption {
+    host?: string;
+    id: string;
+    secret?: string;
+
+    client: HTTPClient<Context>;
     accessToken?: string;
 
-    messenger = new InstantMessenger(this);
+    constructor({
+        host = 'https://open.feishu.cn/open-apis/',
+        id,
+        secret
+    }: LarkAppOption) {
+        console.assert(
+            !globalThis.window || !secret,
+            "App Secret can't be used in client"
+        );
+        this.host = host;
+        this.id = id;
+        this.secret = secret;
 
-    constructor({ appId, appSecret }: LarkOptions) {
-        this.appId = appId;
-        this.appSecret = appSecret;
+        this.client = new HTTPClient({ baseURI: host, responseType: 'json' });
+
+        this.boot();
     }
 
-    client = new HTTPClient({
-        baseURI: 'https://open.feishu.cn/open-apis/',
-        responseType: 'json'
-    }).use(async ({ request, response }, next) => {
-        const { accessToken } = this;
+    private boot() {
+        this.client.use(async ({ request, response }, next) => {
+            const { accessToken } = this;
 
-        if (accessToken)
-            request.headers = {
-                ...request.headers,
-                Authorization: `Bearer ${accessToken}`
-            };
-        try {
-            await next();
+            if (accessToken)
+                request.headers = {
+                    ...request.headers,
+                    Authorization: `Bearer ${accessToken}`
+                };
+            try {
+                await next();
 
-            const { body } = response;
+                const { body } = response;
 
-            if (isLarkError(body)) {
-                console.error(body);
-                throw new URIError(body.msg);
+                if (isLarkError(body)) {
+                    console.error(body);
+                    throw new URIError(body.msg);
+                }
+            } catch (error) {
+                const { method, path } = request,
+                    { status, body } = response;
+
+                console.error(method, path, status, body);
+                throw error;
             }
-        } catch (error) {
-            const { method, path } = request,
-                { status, body } = response;
+        });
+    }
 
-            console.error(method, path, status, body);
-            throw error;
-        }
-    });
-
-    async getAccessToken() {
-        return (this.accessToken = await this.getTenantAccessToken());
+    getAccessToken() {
+        return this.getTenantAccessToken();
     }
 
     /**
-     * @see https://open.feishu.cn/document/ukTMukTMukTM/ukDNz4SO0MjL5QzM/auth-v3/auth/tenant_access_token_internal
+     * Back-end only
+     *
+     * @see {@link https://open.feishu.cn/document/ukTMukTMukTM/ukDNz4SO0MjL5QzM/auth-v3/auth/tenant_access_token_internal}
      */
     getTenantAccessToken = cache(async clean => {
+        const { id, secret } = this;
+
+        console.assert(id && secret, 'Id & Secret of Lark App are required');
+
         const { body } = await this.client.post<TenantAccessToken>(
             'auth/v3/tenant_access_token/internal',
-            {
-                app_id: this.appId,
-                app_secret: this.appSecret
-            }
+            { app_id: id, app_secret: secret }
         );
-        setTimeout(clean, body!.expire * 1000);
+        setTimeout(() => {
+            delete this.accessToken;
+            clean();
+        }, body!.expire * Second);
 
-        return body!.tenant_access_token;
+        return (this.accessToken = body!.tenant_access_token);
     }, 'Tenant Access Token');
 
     /**
-     * @see https://open.feishu.cn/document/ukTMukTMukTM/ukzN4UjL5cDO14SO3gTN
+     * @see {@link https://open.feishu.cn/document/ukTMukTMukTM/ukzN4UjL5cDO14SO3gTN}
      */
     getWebSignInURL(redirect_uri: string, state?: string) {
         return `${this.client.baseURI}authen/v1/index?${buildURLData({
-            app_id: this.appId,
+            app_id: this.id,
             redirect_uri,
             state
         })}`;
     }
 
     /**
-     * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/authen-v1/authen/access_token
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/authen-v1/authen/access_token}
      */
     async getUserMeta(code: string) {
         await this.getAccessToken();
@@ -97,7 +114,7 @@ export class Lark implements LarkOptions {
     }
 
     /**
-     * @see https://open.feishu.cn/document/ukTMukTMukTM/uYTM5UjL2ETO14iNxkTN/h5_js_sdk/authorization
+     * @see {@link https://open.feishu.cn/document/ukTMukTMukTM/uYTM5UjL2ETO14iNxkTN/h5_js_sdk/authorization}
      */
     getJSTicket = cache(async clean => {
         await this.getAccessToken();
@@ -105,33 +122,13 @@ export class Lark implements LarkOptions {
         const { body } = await this.client.post<JSTicket>('jssdk/ticket/get');
         const { expire_in, ticket } = body!.data;
 
-        setTimeout(clean, expire_in * 1000);
+        setTimeout(clean, expire_in * Second);
 
         return ticket;
     }, 'JS ticket');
 
-    async getSpreadSheet(id: string) {
-        await this.getAccessToken();
-
-        const spreadsheet = new SpreadSheet(this, id);
-
-        await spreadsheet.getMetaInfo();
-
-        return spreadsheet;
-    }
-
-    async getBITable(id: string) {
-        await this.getAccessToken();
-
-        const biTable = new BITable(this, id);
-
-        await biTable.getMetaInfo();
-
-        return biTable;
-    }
-
     /**
-     * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/drive-v1/media/download
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/drive-v1/media/download}
      */
     async downloadFile(id: string) {
         await this.getAccessToken();

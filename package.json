@@ -1,6 +1,6 @@
 {
     "name": "mobx-lark",
-    "version": "1.0.0-alpha.0",
+    "version": "1.0.0-alpha.1",
     "license": "LGPL-3.0",
     "author": "shiy2008@gmail.com",
     "description": "Unofficial TypeScript SDK for FeiShu/Lark API, which is based on MobX-RESTful.",
@@ -44,6 +44,7 @@
         "husky": "^8.0.3",
         "lint-staged": "^13.1.0",
         "mobx": "^5.15.7",
+        "parcel": "~2.8.3",
         "prettier": "^2.8.3",
         "ts-node": "^10.9.1",
         "typedoc": "^0.23.24",
@@ -59,12 +60,19 @@
     "lint-staged": {
         "*.{md,json,yml,ts}": "prettier --write"
     },
+    "browserslist": "> 0.5%, last 2 versions, not dead, IE 11",
+    "targets": {
+        "types": false,
+        "main": {
+            "optimize": true
+        }
+    },
     "scripts": {
         "prepare": "husky install",
         "lint": "lint-staged",
         "debug": "ts-node test/index.spec.ts",
-        "test": "npm run lint  &&  npm run debug",
-        "pack-code": "rm -rf dist/  &&  tsc",
+        "test": "npm run lint",
+        "pack-code": "rm -rf dist/  &&  tsc --emitDeclarationOnly  &&  parcel build",
         "pack-docs": "rm -rf docs/  &&  typedoc src/",
         "build": "npm run pack-code  &&  npm run pack-docs",
         "start": "npm run pack-docs  &&  open-cli docs/index.html",
