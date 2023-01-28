@@ -110,6 +110,13 @@ export interface TableCellMedia
     size: number;
 }
 
+export interface TableCellAttachment
+    extends Pick<TableCellMedia, 'name' | 'size'>,
+        Record<'id' | 'attachmentToken', string>,
+        Record<'height' | 'timeStamp' | 'width', number> {
+    mimeType: TableCellMedia['type'];
+}
+
 export interface TableCellUser extends LocaleUser {
     id: string;
 }
@@ -147,6 +154,7 @@ export type TableCellValue =
           | TableCellText
           | TableCellLink
           | TableCellMedia
+          | TableCellAttachment
           | TableCellUser
           | TableCellUserMetion
           | TableCellDocumentMetion
