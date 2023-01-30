@@ -7,7 +7,8 @@ import {
     TableCellRelation,
     TableCellText,
     TableRecordData,
-    TableRecordList
+    TableRecordList,
+    TableViewList
 } from '../type';
 
 export type FilterOperator = '<' | '<=' | '=' | '!=' | '=>' | '>' | 'contains';
@@ -106,6 +107,40 @@ export function BiDataTable<T extends DataObject>(Base = ListModel) {
         }
     }
     return BiDataTableModel;
+}
+
+export type TableViewItem = TableViewList['data']['items'][number];
+
+export function BiTableView() {
+    abstract class BiTableViewModel extends Stream<TableViewItem>(ListModel) {
+        constructor(appId: string, tableId: string) {
+            super();
+            this.baseURI = `bitable/v1/apps/${appId}/tables/${tableId}/views`;
+        }
+
+        /**
+         * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-view/list}
+         */
+        async *openStream() {
+            var lastPage = '';
+
+            do {
+                const { body } = await this.client.get<TableViewList>(
+                    `${this.baseURI}?${buildURLData({
+                        page_size: 100,
+                        page_token: lastPage
+                    })}`
+                );
+                var { items, total, has_more, page_token } = body!.data;
+
+                lastPage = page_token;
+                this.totalCount = total;
+
+                yield* items || [];
+            } while (has_more);
+        }
+    }
+    return BiTableViewModel;
 }
 
 export type BiDataTableClass<T extends DataObject> = ReturnType<
