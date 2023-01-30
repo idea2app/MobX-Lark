@@ -1,80 +1,82 @@
+import { ListModel, NewData, Stream, toggle } from 'mobx-restful';
+import { buildURLData } from 'web-utility';
+
 import { LarkData } from '../../type';
-import { LarkModule } from '../base';
-import { CreateChatMeta, ChatMeta, SendChatMessage, ChatMessage } from './type';
+import { createPageStream } from '../base';
+import { ChatMessage, ChatMeta, SendChatMessage } from './type';
 
 export * from './type';
 
-export class InstantMessenger extends LarkModule {
-    get baseURI() {
-        return 'im/v1';
-    }
-    chats: Chat[] = [];
+export abstract class ChatListModel extends Stream<ChatMeta>(ListModel) {
+    baseURI = 'im/v1/chats';
 
-    protected cacheChat(meta: ChatMeta) {
-        const chat = new Chat(this, meta);
-
-        this.chats.push(chat);
-
-        return chat;
+    /**
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/chat/list}
+     */
+    async *openStream() {
+        for await (const item of createPageStream<ChatMeta>(
+            this.client,
+            this.baseURI,
+            total => (this.totalCount = total)
+        ))
+            yield item;
     }
 
     /**
      * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/chat/create
      */
-    async createGroup(meta?: Partial<CreateChatMeta>) {
-        await this.core.getAccessToken();
-
-        const { body } = await this.core.client.post<LarkData<ChatMeta>>(
-            `${this.baseURI}/chats?${new URLSearchParams({
-                set_bot_manager: true + ''
-            })}`,
-            meta
-        );
-        return this.cacheChat(body!.data);
-    }
-
-    async getChat(id: string) {
-        const old = this.chats.find(({ meta }) => meta.chat_id === id);
-
-        if (old) return old;
-
-        await this.core.getAccessToken();
-
-        const { body } = await this.core.client.get<LarkData<ChatMeta>>(
-            `${this.baseURI}/chats/${id}`
-        );
-        return this.cacheChat({ ...body!.data, chat_id: id });
+    @toggle('uploading')
+    async updateOne({ chat_id }: NewData<ChatMeta>) {
+        const { body } = await (chat_id
+            ? this.client.put<LarkData<ChatMeta>>(
+                  `${this.baseURI}/chats/${chat_id}`
+              )
+            : this.client.post<LarkData<ChatMeta>>(
+                  `${this.baseURI}/chats?${buildURLData({
+                      set_bot_manager: true
+                  })}`
+              ));
+        return (this.currentOne = body!.data);
     }
 }
 
-export class Chat {
-    messenger: InstantMessenger;
-    meta: ChatMeta;
+export abstract class MessageListModel extends Stream<ChatMessage>(ListModel) {
+    baseURI = 'im/v1/messages';
 
-    constructor(messenger: InstantMessenger, meta: ChatMeta) {
-        this.messenger = messenger;
-        this.meta = meta;
+    constructor(public chatId: string) {
+        super();
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/list}
+     */
+    async *openStream() {
+        for await (const item of createPageStream<ChatMessage>(
+            this.client,
+            this.baseURI,
+            total => (this.totalCount = total)
+        ))
+            yield item;
     }
 
     /**
      * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/create
      */
-    async sendMessage({
+    @toggle('uploading')
+    async createOne({
         msg_type,
         content
     }: Omit<SendChatMessage, 'receive_id'>) {
-        const { body } = await this.messenger.core.client.post<
-            LarkData<ChatMessage>
-        >(
-            `${this.messenger.baseURI}/messages?${new URLSearchParams({
+        const { body } = await this.client.post<LarkData<ChatMessage>>(
+            `${this.baseURI}?${buildURLData({
                 receive_id_type: 'chat_id'
             })}`,
             {
-                receive_id: this.meta.chat_id,
+                receive_id: this.chatId,
                 msg_type,
                 content: JSON.stringify(content)
             }
         );
-        return body!.data;
+        return (this.currentOne = body!.data);
     }
 }

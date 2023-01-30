@@ -1,15 +1,17 @@
 import { DataObject, ListModel, NewData, Stream, toggle } from 'mobx-restful';
-import { buildURLData, isEmpty } from 'web-utility';
+import { isEmpty } from 'web-utility';
 
 import {
     BITableList,
     TableCellLink,
     TableCellRelation,
     TableCellText,
+    TableRecord,
     TableRecordData,
     TableRecordList,
     TableViewList
 } from '../type';
+import { createPageStream } from './base';
 
 export type FilterOperator = '<' | '<=' | '=' | '!=' | '=>' | '>' | 'contains';
 
@@ -82,28 +84,20 @@ export function BiDataTable<T extends DataObject>(Base = ListModel) {
          * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-record/list}
          */
         async *openStream(filter: NewData<T>) {
-            var lastPage = '';
-
-            do {
-                const { body } = await this.client.get<TableRecordList<T>>(
-                    `${this.baseURI}?${buildURLData({
-                        page_size: 100,
-                        page_token: lastPage,
-                        filter: this.makeFilter(filter),
-                        sort: JSON.stringify(
-                            Object.entries(this.sort).map(
-                                ([key, order]) => `${key} ${order}`
-                            )
+            const stream = createPageStream<TableRecord<T>>(
+                this.client,
+                this.baseURI,
+                total => (this.totalCount = total),
+                {
+                    filter: this.makeFilter(filter),
+                    sort: JSON.stringify(
+                        Object.entries(this.sort).map(
+                            ([key, order]) => `${key} ${order}`
                         )
-                    })}`
-                );
-                var { items, total, has_more, page_token } = body!.data;
-
-                lastPage = page_token;
-                this.totalCount = total;
-
-                yield* items?.map(item => this.normalize(item)) || [];
-            } while (has_more);
+                    )
+                }
+            );
+            for await (const item of stream) yield this.normalize(item);
         }
     }
     return BiDataTableModel;
@@ -122,22 +116,12 @@ export function BiTableView() {
          * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-view/list}
          */
         async *openStream() {
-            var lastPage = '';
-
-            do {
-                const { body } = await this.client.get<TableViewList>(
-                    `${this.baseURI}?${buildURLData({
-                        page_size: 100,
-                        page_token: lastPage
-                    })}`
-                );
-                var { items, total, has_more, page_token } = body!.data;
-
-                lastPage = page_token;
-                this.totalCount = total;
-
-                yield* items || [];
-            } while (has_more);
+            for await (const item of createPageStream<TableViewItem>(
+                this.client,
+                this.baseURI,
+                total => (this.totalCount = total)
+            ))
+                yield item;
         }
     }
     return BiTableViewModel;
@@ -176,22 +160,12 @@ export function BiTable<T extends DataObject>() {
          * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table/list}
          */
         async *openStream() {
-            var lastPage = '';
-
-            do {
-                const { body } = await this.client.get<BITableList>(
-                    `${this.baseURI}?${buildURLData({
-                        page_size: 100,
-                        page_token: lastPage
-                    })}`
-                );
-                var { items, total, has_more, page_token } = body!.data;
-
-                lastPage = page_token;
-                this.totalCount = total;
-
-                yield* items || [];
-            } while (has_more);
+            for await (const item of createPageStream<BiTableItem>(
+                this.client,
+                this.baseURI,
+                total => (this.totalCount = total)
+            ))
+                yield item;
         }
     }
     return BiTableModel;

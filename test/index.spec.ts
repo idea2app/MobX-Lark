@@ -63,19 +63,18 @@ describe('MobX Lark SDK', async () => {
         console.log(JSON.stringify(data, null, 4));
     });
 
-    const table =
-        await it('should get a page of tables in a BITable document', async expect => {
-            class ExampleTableModel extends BiTable() {
-                client = app.client;
-            }
-            const biTable = new ExampleTableModel(BITABLE_ID!);
+    await it('should get a page of tables in a BITable document', async expect => {
+        class ExampleTableModel extends BiTable() {
+            client = app.client;
+        }
+        const biTable = new ExampleTableModel(BITABLE_ID!);
 
-            const [table] = await biTable.getList();
+        const [table] = await biTable.getList();
 
-            expect(typeof table.table_id === 'string');
+        expect(typeof table.table_id === 'string');
 
-            return table!;
-        });
+        return table!;
+    });
 
     await it('should get a page of views in a BITable table', async expect => {
         class ExampleTableViewModel extends BiTableView() {

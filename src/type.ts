@@ -11,7 +11,7 @@ export type LarkPageData<D extends Record<string, any> = {}> = LarkData<{
     page_token: string;
     items: D[];
     has_more: boolean;
-    total: number;
+    total?: number;
 }>;
 
 export function isLarkError(data?: any): data is LarkData {
