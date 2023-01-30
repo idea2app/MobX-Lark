@@ -1,90 +1,72 @@
-import { objectFrom } from 'web-utility';
+import { buildURLData, objectFrom } from 'web-utility';
+import { observable } from 'mobx';
+import { DataObject, NewData, ListModel, toggle } from 'mobx-restful';
 
-import { LarkModule } from './base';
-import {
-    SpreadSheetMeta,
-    SheetMeta,
-    SheetRangeData,
-    SheetCellValue
-} from '../type';
+import { SpreadSheetMeta, SheetMeta, SheetRangeData } from '../type';
 
-export class SpreadSheet extends LarkModule {
-    get baseURI() {
-        return `sheets/v2/spreadsheets/${this.id}`;
+export abstract class SpreadSheetModel<
+    D extends DataObject,
+    F extends NewData<D> = NewData<D>
+> extends ListModel<D, F> {
+    baseURI = '';
+
+    offset: [number, number] = [0, 0];
+
+    abstract columnKeys: (keyof D)[];
+
+    @observable
+    meta?: SheetMeta;
+
+    constructor(public id: string, public sheetId: string) {
+        super();
+        this.baseURI = `sheets/v2/spreadsheets/${id}`;
     }
-    meta?: SpreadSheetMeta['data'];
-
-    sheets: Sheet[] = [];
 
     /**
-     * @see https://open.feishu.cn/document/ukTMukTMukTM/uETMzUjLxEzM14SMxMTN
+     * @see {@link https://open.feishu.cn/document/ukTMukTMukTM/uETMzUjLxEzM14SMxMTN}
      */
-    async getMetaInfo() {
-        if (!this.meta) {
-            const { body } = await this.core.client.get<SpreadSheetMeta>(
+    @toggle('downloading')
+    async getMeta() {
+        if (this.meta) return this.meta;
+
+        const { body } = await this.client.get<SpreadSheetMeta>(
                 `${this.baseURI}/metainfo`
-            );
-            this.meta = body!.data;
+            ),
+            { sheetId } = this;
 
-            this.sheets = this.meta.sheets.map(
-                meta => new Sheet(this, meta.sheetId, meta)
-            );
-        }
-        return this.meta;
-    }
-}
+        const sheet = body!.data.sheets.find(
+            ({ sheetId: ID }) => ID === sheetId
+        );
+        console.assert(sheet, `Sheet "${sheetId}" is not found`);
 
-export interface SheetQuery<K extends string> {
-    columnRange: [string, string];
-    keys: K[];
-    headerRows?: number;
-    pageSize?: number;
-    pageIndex?: number;
-}
-
-export class Sheet {
-    document: SpreadSheet;
-    id: string;
-    meta: SheetMeta;
-
-    constructor(document: SpreadSheet, id: string, meta: SheetMeta) {
-        this.document = document;
-        this.id = id;
-        this.meta = meta;
+        return (this.meta = sheet!);
     }
 
     /**
-     * @see https://open.feishu.cn/document/ukTMukTMukTM/ugTMzUjL4EzM14COxMTN
+     * @see {@link https://open.feishu.cn/document/ukTMukTMukTM/ugTMzUjL4EzM14COxMTN}
      */
-    async getRange(startCell: string, endCell: string) {
-        const { document } = this;
+    async loadPage(pageIndex: number, pageSize: number, filter: NewData<D>) {
+        const { columnKeys } = this,
+            [rowOff, columnOff] = this.offset,
+            { rowCount } = await this.getMeta();
 
-        const { body } = await document.core.client.get<SheetRangeData>(
-            `${document.baseURI}/values/${
-                this.id
-            }!${startCell}:${endCell}?${new URLSearchParams({
+        const startRow = rowOff + 1,
+            startColumnNumber = 'A'.charCodeAt(0) + columnOff;
+        const endRow = Math.min(startRow - 1 + pageSize * pageIndex, rowCount),
+            endColumnNumber = startColumnNumber - 1 + columnKeys.length;
+        const startColumn = String.fromCharCode(startColumnNumber),
+            endColumn = String.fromCharCode(endColumnNumber);
+
+        const { body } = await this.client.get<SheetRangeData>(
+            `${this.baseURI}/values/${
+                this.sheetId
+            }!${startColumn}${startRow}:${endColumn}${endRow}?${buildURLData({
                 dateTimeRenderOption: 'FormattedString'
             })}`
         );
-        return body!.data;
-    }
-
-    async getData<K extends string>({
-        columnRange: [startColumn, endColumn],
-        keys,
-        headerRows = 1,
-        pageSize = 10,
-        pageIndex = 1
-    }: SheetQuery<K>): Promise<Record<K, SheetCellValue>[]> {
-        const start = 1 + headerRows + pageSize * (pageIndex - 1);
-        const end = Math.min(this.meta.rowCount, start + pageSize - 1);
-
-        if (end < start) return [];
-
-        const { valueRange } = await this.getRange(
-            `${startColumn}${start}`,
-            `${endColumn}${end}`
+        const pageData = body!.data.valueRange.values.map(
+            row => objectFrom(row, columnKeys as string[]) as D
         );
-        return valueRange.values.map(row => objectFrom(row, keys));
+        return { pageData, totalCount: rowCount - rowOff };
     }
 }

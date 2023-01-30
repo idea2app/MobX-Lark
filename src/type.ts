@@ -11,7 +11,7 @@ export type LarkPageData<D extends Record<string, any> = {}> = LarkData<{
     page_token: string;
     items: D[];
     has_more: boolean;
-    total: number;
+    total?: number;
 }>;
 
 export function isLarkError(data?: any): data is LarkData {
@@ -26,25 +26,20 @@ export type TenantAccessToken = LarkData<
     }
 >;
 
-export type UserMeta = LarkData<{
-    token_type: 'Bearer';
-    access_token: string;
-    expires_in: number;
-    name: string;
-    en_name: string;
-    avatar_url: string;
-    avatar_thumb: string;
-    avatar_middle: string;
-    avatar_big: string;
-    open_id: string;
-    union_id: string;
-    email: string;
-    user_id: string;
-    mobile: string;
-    tenant_key: string;
-    refresh_expires_in: number;
-    refresh_token: string;
-}>;
+export type LocaleUser = Record<`${'' | 'en_'}name` | 'email', string>;
+
+export type UserMeta = LarkData<
+    { token_type: 'Bearer' } & LocaleUser &
+        Record<
+            | `avatar_${'url' | 'thumb' | 'middle' | 'big'}`
+            | `${'open' | 'union' | 'user'}_id`
+            | 'mobile'
+            | 'tenant_key'
+            | `${'access' | 'refresh'}_token`,
+            string
+        > &
+        Record<`${'' | 'refresh_'}expires_in`, number>
+>;
 
 export type JSTicket = LarkData<{
     expire_in: number;
@@ -53,24 +48,17 @@ export type JSTicket = LarkData<{
 
 export type I18nKey = `${string}_${string}`;
 
-export interface SheetMeta {
-    sheetId: string;
-    title: string;
-    rowCount: number;
-    frozenRowCount: number;
-    columnCount: number;
-    frozenColCount: number;
-    index: number;
-}
+export type SheetMeta = Record<'sheetId' | 'title', string> &
+    Record<
+        `${'row' | 'column'}Count` | `frozen${'Row' | 'Col'}Count` | 'index',
+        number
+    >;
 
 export type SpreadSheetMeta = LarkData<{
     spreadsheetToken: string;
     properties: {
         title: string;
-        revision: number;
-        ownerUser: number;
-        sheetCount: number;
-    };
+    } & Record<'revision' | 'ownerUser' | 'sheetCount', number>;
     sheets: SheetMeta[];
 }>;
 
@@ -86,78 +74,69 @@ export type SheetCellValue = string | number | SheetCellMedia[] | null;
 export type SheetRangeData = LarkData<{
     revision: number;
     spreadsheetToken: string;
-    valueRange: {
-        revision: string;
-        majorDimension: string;
+    valueRange: Record<'revision' | 'majorDimension', string> & {
         range: `${string}!${string}:${string}`;
         values: SheetCellValue[][];
     };
 }>;
 
-export type BITableMeta = LarkData<{
-    app: {
-        app_token: string;
-        name: string;
-        revision: number;
-    };
-}>;
-
-export type BITableList = LarkPageData<{
-    table_id: string;
+export interface RevisionTable {
     name: string;
     revision: number;
+}
+
+export type BITableMeta = LarkData<{
+    app: { app_token: string } & RevisionTable;
 }>;
 
-export type TableViewList = LarkPageData<{
-    view_type: 'grid' | 'form';
-    view_id: string;
-    view_name: string;
-}>;
+export type BITableList = LarkPageData<{ table_id: string } & RevisionTable>;
+
+export type TableViewList = LarkPageData<
+    { view_type: 'grid' | 'form' } & Record<'view_id' | 'view_name', string>
+>;
 
 export interface TableCellText {
     type: 'text';
     text: string;
 }
 
-export interface TableCellLink {
+export interface TableCellLink extends Record<'link' | 'text', string> {
     type: 'url';
-    link: string;
-    text: string;
 }
 
-export interface TableCellMedia {
-    file_token: string;
-    name: string;
+export interface TableCellMedia
+    extends Record<'file_token' | 'name' | `${'' | 'tmp_'}url`, string> {
     type: `${string}/${string}`;
     size: number;
-    url: string;
-    tmp_url: string;
 }
 
-export interface TableCellUser {
+export interface TableCellAttachment
+    extends Pick<TableCellMedia, 'name' | 'size'>,
+        Record<'id' | 'attachmentToken', string>,
+        Record<'height' | 'timeStamp' | 'width', number> {
+    mimeType: TableCellMedia['type'];
+}
+
+export interface TableCellUser extends LocaleUser {
     id: string;
-    name: string;
-    en_name: string;
-    email: string;
 }
 
-export interface TableCellMetion {
+export interface TableCellMetion
+    extends Record<'mentionType' | 'text', string> {
     type: 'mention';
-    mentionType: string;
-    text: string;
 }
 
-export interface TableCellUserMetion extends TableCellMetion {
-    token: string;
+export interface TableCellUserMetion
+    extends TableCellMetion,
+        Record<'name' | 'token', string> {
     mentionType: 'User';
     mentionNotify: boolean;
-    name: string;
 }
 
-export interface TableCellDocumentMetion extends TableCellMetion {
-    token: string;
+export interface TableCellDocumentMetion
+    extends TableCellMetion,
+        Record<'link' | 'token', string> {
     mentionType: 'Bitable';
-    link: string;
 }
 
 export interface TableCellRelation extends TableCellText {
@@ -175,6 +154,7 @@ export type TableCellValue =
           | TableCellText
           | TableCellLink
           | TableCellMedia
+          | TableCellAttachment
           | TableCellUser
           | TableCellUserMetion
           | TableCellDocumentMetion
@@ -184,8 +164,15 @@ export type TableCellValue =
 
 export type TableRecordFields = Record<string, TableCellValue>;
 
-export type TableRecordList<D extends TableRecordFields = {}> = LarkPageData<{
-    id?: string;
-    record_id: string;
-    fields: D;
+export interface TableRecord<T extends TableRecordFields>
+    extends Record<'id' | 'record_id', string> {
+    fields: T;
+}
+
+export type TableRecordData<T extends TableRecordFields> = LarkData<{
+    record: TableRecord<T>;
 }>;
+
+export type TableRecordList<D extends TableRecordFields = {}> = LarkPageData<
+    TableRecord<D>
+>;

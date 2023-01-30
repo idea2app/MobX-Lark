@@ -1,123 +1,172 @@
-import { buildURLData } from 'web-utility';
+import { DataObject, ListModel, NewData, Stream, toggle } from 'mobx-restful';
+import { isEmpty } from 'web-utility';
 
-import { LarkModule } from './base';
 import {
-    BITableMeta,
     BITableList,
-    TableViewList,
+    TableCellLink,
+    TableCellRelation,
+    TableCellText,
+    TableRecord,
+    TableRecordData,
     TableRecordList,
-    TableRecordFields
+    TableViewList
 } from '../type';
+import { createPageStream } from './base';
 
-export class BITable extends LarkModule {
-    get baseURI() {
-        return `bitable/v1/apps/${this.id}`;
-    }
-    meta?: BITableMeta['data']['app'];
+export type FilterOperator = '<' | '<=' | '=' | '!=' | '=>' | '>' | 'contains';
 
-    tables: Table[] = [];
+/**
+ * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/filter
+ */
+export function makeSimpleFilter(
+    data: DataObject,
+    operator: FilterOperator = 'contains',
+    relation: 'AND' | 'OR' = 'AND'
+) {
+    const list = Object.entries(data)
+        .map(
+            ([key, value]) =>
+                !isEmpty(value) &&
+                (value instanceof Array ? value : [value]).map(
+                    (item: string) =>
+                        `CurrentValue.[${key}]` +
+                        (operator === 'contains'
+                            ? `.contains("${item}")`
+                            : `${operator}${JSON.stringify(item)}`)
+                )
+        )
+        .filter(Boolean)
+        .flat() as string[];
 
-    /**
-     * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app/get
-     */
-    async getMetaInfo() {
-        if (!this.meta) {
-            const { body } = await this.core.client.get<BITableMeta>(
-                this.baseURI
-            );
-            this.meta = body!.data.app;
-        }
-        await this.getTables();
-
-        return this.meta;
-    }
-
-    /**
-     * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table/list
-     */
-    async getTables<D extends TableRecordFields = {}>() {
-        const { body } = await this.core.client.get<BITableList>(
-            `${this.baseURI}/tables?page_size=100`
-        );
-        return (this.tables = body!.data.items.map(
-            ({ table_id }) => new Table<D>(this, table_id)
-        ));
-    }
-
-    async getTable<D extends TableRecordFields = {}>(id: string) {
-        if (!this.tables[0]) await this.getTables<D>();
-
-        return this.tables.find(({ id: ID }) => ID === id) as
-            | Table<D>
-            | undefined;
-    }
+    return list[1] ? `${relation}(${list})` : list[0];
 }
 
-export class Table<D extends TableRecordFields = {}> {
-    document: BITable;
-    id: string;
+export const normalizeText = (
+    value: TableCellText | TableCellLink | TableCellRelation
+) =>
+    value && typeof value === 'object' && 'text' in value ? value.text : value;
 
-    get baseURI() {
-        return `${this.document.baseURI}/tables/${this.id}`;
+/**
+ * @see {@link https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/bitable-overview}
+ */
+export function BiDataTable<T extends DataObject>(Base = ListModel) {
+    abstract class BiDataTableModel extends Stream<T>(Base) {
+        sort: Partial<Record<keyof T, 'ASC' | 'DESC'>> = {};
+
+        constructor(appId: string, tableId: string) {
+            super();
+            this.baseURI = `bitable/v1/apps/${appId}/tables/${tableId}/records`;
+        }
+
+        normalize({
+            id,
+            fields
+        }: TableRecordList<T>['data']['items'][number]): T {
+            return { ...fields, id: id! };
+        }
+
+        /**
+         * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-record/get}
+         */
+        @toggle('downloading')
+        async getOne(id: string) {
+            const { body } = await this.client.get<TableRecordData<T>>(
+                `${this.baseURI}/${id}`
+            );
+            return (this.currentOne = this.normalize(body!.data.record));
+        }
+
+        makeFilter(filter: NewData<T>) {
+            return isEmpty(filter) ? undefined : makeSimpleFilter(filter);
+        }
+
+        /**
+         * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-record/list}
+         */
+        async *openStream(filter: NewData<T>) {
+            const stream = createPageStream<TableRecord<T>>(
+                this.client,
+                this.baseURI,
+                total => (this.totalCount = total),
+                {
+                    filter: this.makeFilter(filter),
+                    sort: JSON.stringify(
+                        Object.entries(this.sort).map(
+                            ([key, order]) => `${key} ${order}`
+                        )
+                    )
+                }
+            );
+            for await (const item of stream) yield this.normalize(item);
+        }
     }
-    views: TableViewList['data']['items'] = [];
+    return BiDataTableModel;
+}
 
-    records: ({ id: string } & D)[] = [];
-    lastPage?: string;
-    hasMore?: boolean;
-    totalCount?: number;
+export type TableViewItem = TableViewList['data']['items'][number];
 
-    constructor(document: BITable, id: string) {
-        this.document = document;
-        this.id = id;
+export function BiTableView() {
+    abstract class BiTableViewModel extends Stream<TableViewItem>(ListModel) {
+        constructor(appId: string, tableId: string) {
+            super();
+            this.baseURI = `bitable/v1/apps/${appId}/tables/${tableId}/views`;
+        }
+
+        /**
+         * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-view/list}
+         */
+        async *openStream() {
+            for await (const item of createPageStream<TableViewItem>(
+                this.client,
+                this.baseURI,
+                total => (this.totalCount = total)
+            ))
+                yield item;
+        }
     }
+    return BiTableViewModel;
+}
 
-    /**
-     * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-view/list
-     */
-    async getViews() {
-        const { body } = await this.document.core.client.get<TableViewList>(
-            `${this.baseURI}/views?page_size=100`
-        );
-        return (this.views = body!.data.items);
+export type BiDataTableClass<T extends DataObject> = ReturnType<
+    typeof BiDataTable<T>
+>;
+export type BiTableItem = BITableList['data']['items'][number];
+
+export function BiTable<T extends DataObject>() {
+    abstract class BiTableModel extends Stream<BiTableItem>(ListModel) {
+        constructor(public id: string) {
+            super();
+            this.baseURI = `bitable/v1/apps/${id}/tables`;
+        }
+
+        currentDataTable?: InstanceType<BiDataTableClass<T>>;
+
+        async getOne(tableName: string, DataTableClass?: BiDataTableClass<T>) {
+            const list = await this.getAll();
+
+            const table = list.find(({ name }) => name === tableName);
+
+            if (!table) throw new URIError(`Table "${tableName}" is not found`);
+
+            if (DataTableClass instanceof Function)
+                this.currentDataTable = Reflect.construct(DataTableClass, [
+                    this.id,
+                    table.table_id
+                ]);
+            return (this.currentOne = table);
+        }
+
+        /**
+         * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table/list}
+         */
+        async *openStream() {
+            for await (const item of createPageStream<BiTableItem>(
+                this.client,
+                this.baseURI,
+                total => (this.totalCount = total)
+            ))
+                yield item;
+        }
     }
-
-    /**
-     * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-record/list
-     */
-    async getNextPage(text2array?: boolean) {
-        const { body } = await this.document.core.client.get<
-            TableRecordList<D>
-        >(
-            `${this.baseURI}/records?${buildURLData({
-                text_field_as_array: text2array,
-                page_size: 100,
-                page_token: this.lastPage
-            })}`
-        );
-        const { items, page_token, has_more, total } = body!.data;
-
-        const list = items.map(
-            ({ id, record_id, fields }) =>
-                ({
-                    id: id || record_id,
-                    ...fields
-                } as { id: string } & D)
-        );
-        this.records.push(...list);
-
-        this.lastPage = page_token;
-        this.hasMore = has_more;
-        this.totalCount = total;
-
-        return list;
-    }
-
-    async getAllRecords(text2array?: boolean) {
-        do {
-            await this.getNextPage(text2array);
-        } while (this.hasMore);
-
-        return this.records;
-    }
+    return BiTableModel;
 }

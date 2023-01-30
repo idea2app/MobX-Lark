@@ -1,35 +1,40 @@
 {
-    "name": "lark-ts-sdk",
-    "version": "0.7.9",
+    "name": "mobx-lark",
+    "version": "1.0.0-beta.0",
     "license": "LGPL-3.0",
     "author": "shiy2008@gmail.com",
-    "description": "Unofficial Node.js TypeScript SDK for FeiShu/Lark API",
+    "description": "Unofficial TypeScript SDK for FeiShu/Lark API, which is based on MobX-RESTful.",
     "keywords": [
         "feishu",
         "lark",
+        "restful",
         "api",
         "sdk",
-        "typescript"
+        "typescript",
+        "mobx"
     ],
     "source": "src/index.ts",
     "types": "dist/index.d.ts",
     "module": "dist/index.esm.js",
     "main": "dist/index.js",
-    "homepage": "https://ideapp.dev/Lark-TS-SDK/",
+    "homepage": "https://idea2app.github.io/MobX-Lark/",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/idea2app/Lark-TS-SDK.git"
+        "url": "git+https://github.com/idea2app/MobX-Lark.git"
     },
     "bugs": {
-        "url": "https://github.com/idea2app/Lark-TS-SDK/issues"
+        "url": "https://github.com/idea2app/MobX-Lark/issues"
     },
     "dependencies": {
         "@swc/helpers": "^0.4.14",
         "koajax": "^0.8.3",
+        "mobx-restful": "^0.6.0",
         "node-fetch": "^2.6.8",
         "regenerator-runtime": "^0.13.11",
-        "tslib": "^2.4.1",
         "web-utility": "^4.0.0"
+    },
+    "peerDependencies": {
+        "mobx": ">=4 <6"
     },
     "devDependencies": {
         "@types/node": "^16.18.11",
@@ -37,6 +42,8 @@
         "dotenv": "^16.0.3",
         "husky": "^8.0.3",
         "lint-staged": "^13.1.0",
+        "mobx": "^5.15.7",
+        "parcel": "~2.8.3",
         "prettier": "^2.8.3",
         "ts-node": "^10.9.1",
         "typedoc": "^0.23.24",
@@ -52,12 +59,19 @@
     "lint-staged": {
         "*.{md,json,yml,ts}": "prettier --write"
     },
+    "browserslist": "> 0.5%, last 2 versions, not dead, IE 11",
+    "targets": {
+        "types": false,
+        "main": {
+            "optimize": true
+        }
+    },
     "scripts": {
         "prepare": "husky install",
         "lint": "lint-staged",
         "debug": "ts-node test/index.spec.ts",
         "test": "npm run lint  &&  npm run debug",
-        "pack-code": "rm -rf dist/  &&  tsc",
+        "pack-code": "rm -rf dist/  &&  tsc --emitDeclarationOnly  &&  parcel build",
         "pack-docs": "rm -rf docs/  &&  typedoc src/",
         "build": "npm run pack-code  &&  npm run pack-docs",
         "start": "npm run pack-docs  &&  open-cli docs/index.html",

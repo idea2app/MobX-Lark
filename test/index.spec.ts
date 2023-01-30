@@ -1,23 +1,28 @@
 import 'dotenv/config';
 import { describe, it } from 'web-utility';
 
-import { Lark, Table } from '../src';
+import {
+    BiDataTable,
+    BiTable,
+    BiTableView,
+    LarkApp,
+    SpreadSheetModel,
+    TableCellValue
+} from '../src';
 
 const {
     APP_ID,
     APP_SECRET,
     SPREADSHEET_ID,
+    SHEET_ID,
     BITABLE_ID,
     BITABLE_TABLE_ID,
     MEDIA_ID
 } = process.env;
 
-const app = new Lark({
-    appId: APP_ID!,
-    appSecret: APP_SECRET!
-});
+const app = new LarkApp({ id: APP_ID!, secret: APP_SECRET! });
 
-describe('Lark SDK', async () => {
+describe('MobX Lark SDK', async () => {
     await it('should get an Access Token', async expect => {
         const token = await app.getAccessToken();
 
@@ -25,58 +30,75 @@ describe('Lark SDK', async () => {
     });
 
     const spreadSheet =
-        await it('should get Meta data of a SpreadSheet document', async expect => {
-            const spreadSheet = await app.getSpreadSheet(SPREADSHEET_ID!);
+        await it('should get a Sheet Meta of a Spread Sheet document', async expect => {
+            type Example = Record<'k1' | 'k2' | 'k3', any>;
+
+            class ExampleSheetModel extends SpreadSheetModel<Example> {
+                client = app.client;
+
+                offset: [number, number] = [1, 7];
+
+                columnKeys: (keyof Example)[] = ['k1', 'k2', 'k3'];
+            }
+            const spreadSheet = new ExampleSheetModel(
+                SPREADSHEET_ID!,
+                SHEET_ID!
+            );
+            await spreadSheet.getMeta();
 
             const { meta } = spreadSheet;
 
-            expect(typeof meta?.sheets[0]?.sheetId === 'string');
+            expect(meta?.sheetId === SHEET_ID);
 
             return spreadSheet;
         });
 
-    await it('should get a row of the first sheet', async expect => {
-        const [sheet] = spreadSheet.sheets;
+    await it('should get a page of rows in a sheet', async expect => {
+        const data = await spreadSheet.getList();
 
-        const data = await sheet.getData({
-            columnRange: ['G', 'R'],
-            keys: Array.from(new Array(12), (_, index) => `k${++index}`)
-        });
-        expect(data instanceof Array);
-
+        expect(
+            JSON.stringify(Object.keys(data[0])) ===
+                JSON.stringify(spreadSheet.columnKeys)
+        );
         console.log(JSON.stringify(data, null, 4));
     });
 
-    const biTable =
-        await it('should get Meta data of a BITable document', async expect => {
-            const biTable = await app.getBITable(BITABLE_ID!);
+    await it('should get a page of tables in a BITable document', async expect => {
+        class ExampleTableModel extends BiTable() {
+            client = app.client;
+        }
+        const biTable = new ExampleTableModel(BITABLE_ID!);
 
-            const { meta, id, tables } = biTable;
+        const [table] = await biTable.getList();
 
-            expect(meta?.app_token === id);
-            expect(tables[0] instanceof Table);
+        expect(typeof table.table_id === 'string');
 
-            return biTable;
-        });
+        return table!;
+    });
 
-    const table =
-        await it('should get a table of a BITable document', async expect => {
-            const table = await biTable.getTable<{ name: string }>(
-                BITABLE_TABLE_ID!
-            );
-            expect(table instanceof Table);
+    await it('should get a page of views in a BITable table', async expect => {
+        class ExampleTableViewModel extends BiTableView() {
+            client = app.client;
+        }
+        const tableView = new ExampleTableViewModel(
+            BITABLE_ID!,
+            BITABLE_TABLE_ID!
+        );
 
-            return table!;
-        });
-
-    await it('should get all views of a BITable table', async expect => {
-        const [view] = await table.getViews();
+        const [view] = await tableView.getList();
 
         expect(['grid', 'form'].includes(view.view_type));
     });
 
-    await it('should get a page of records in a BITable view', async expect => {
-        const [record] = await table.getNextPage();
+    await it('should get a page of records in a BITable table', async expect => {
+        class ExampleDataTableModel extends BiDataTable<
+            Record<'id' | 'name' | 'type', TableCellValue>
+        >() {
+            client = app.client;
+        }
+        const table = new ExampleDataTableModel(BITABLE_ID!, BITABLE_TABLE_ID!);
+
+        const [record] = await table.getList();
 
         expect(typeof record.id === 'string');
     });

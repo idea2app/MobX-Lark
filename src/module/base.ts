@@ -1,12 +1,34 @@
-import { Lark } from '../Lark';
+import { DataObject, RESTClient } from 'mobx-restful';
+import { buildURLData } from 'web-utility';
 
-export abstract class LarkModule {
-    core: Lark;
-    id?: string;
-    abstract baseURI: string;
+import { LarkPageData } from '../type';
 
-    constructor(core: Lark, id?: string) {
-        this.core = core;
-        this.id = id;
-    }
+export async function* createPageStream<T extends DataObject>(
+    client: RESTClient,
+    path: string,
+    onCount: (total: number) => any,
+    filter: DataObject = {}
+) {
+    var count = 0,
+        lastPage = '';
+
+    do {
+        const { body } = await client.get<LarkPageData<T>>(
+            `${path}?${buildURLData({
+                ...filter,
+                page_size: 100,
+                page_token: lastPage
+            })}`
+        );
+        var { items, total, has_more, page_token } = body!.data;
+
+        if (total != null) count = total;
+        else count += items.length;
+
+        lastPage = page_token;
+
+        onCount(has_more ? Infinity : count);
+
+        yield* items || [];
+    } while (has_more);
 }
