@@ -26,7 +26,7 @@ export function makeSimpleFilter(
     const list = Object.entries(data)
         .map(
             ([key, value]) =>
-                !isEmpty(value) &&
+                value != null &&
                 (value instanceof Array ? value : [value]).map(
                     (item: string) =>
                         `CurrentValue.[${key}]` +
@@ -46,11 +46,15 @@ export const normalizeText = (
 ) =>
     value && typeof value === 'object' && 'text' in value ? value.text : value;
 
+export type BiBaseData = Omit<TableRecord<{}>, 'record_id' | 'fields'>;
+
 /**
  * @see {@link https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/bitable-overview}
  */
 export function BiDataTable<T extends DataObject>(Base = ListModel) {
     abstract class BiDataTableModel extends Stream<T>(Base) {
+        requiredKeys: readonly (keyof T)[] = [];
+
         sort: Partial<Record<keyof T, 'ASC' | 'DESC'>> = {};
 
         constructor(appId: string, tableId: string) {
@@ -59,10 +63,10 @@ export function BiDataTable<T extends DataObject>(Base = ListModel) {
         }
 
         normalize({
-            id,
-            fields
+            fields,
+            ...meta
         }: TableRecordList<T>['data']['items'][number]): T {
-            return { ...fields, id: id! };
+            return { ...meta, ...fields };
         }
 
         /**
@@ -76,8 +80,35 @@ export function BiDataTable<T extends DataObject>(Base = ListModel) {
             return (this.currentOne = this.normalize(body!.data.record));
         }
 
+        /**
+         * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-record/create}
+         * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-record/update}
+         */
+        @toggle('uploading')
+        async updateOne(fields: Partial<NewData<T>>, id?: string) {
+            const { body } = await (id
+                ? this.client.put<TableRecordData<T>>(`${this.baseURI}/${id}`, {
+                      fields
+                  })
+                : this.client.post<TableRecordData<T>>(this.baseURI, {
+                      fields
+                  }));
+            return (this.currentOne = this.normalize(body!.data.record));
+        }
+
         makeFilter(filter: NewData<T>) {
-            return isEmpty(filter) ? undefined : makeSimpleFilter(filter);
+            return [
+                this.requiredKeys[0] &&
+                    makeSimpleFilter(
+                        Object.fromEntries(
+                            this.requiredKeys.map(key => [key, ''])
+                        ),
+                        '!='
+                    ),
+                !isEmpty(filter) && makeSimpleFilter(filter)
+            ]
+                .filter(Boolean)
+                .join('&&');
         }
 
         /**

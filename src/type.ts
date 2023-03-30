@@ -166,6 +166,10 @@ export type TableRecordFields = Record<string, TableCellValue>;
 
 export interface TableRecord<T extends TableRecordFields>
     extends Record<'id' | 'record_id', string> {
+    created_by: TableCellUser;
+    created_time: number;
+    last_modified_by?: TableCellUser;
+    last_modified_time?: number;
     fields: T;
 }
 
