@@ -48,6 +48,19 @@ export type JSTicket = LarkData<{
 
 export type I18nKey = `${string}_${string}`;
 
+export type UploadTargetType =
+    | 'doc_image'
+    | 'docx_image'
+    | 'sheet_image'
+    | 'doc_file'
+    | 'docx_file'
+    | 'sheet_file'
+    | 'vc_virtual_background'
+    | 'bitable_image'
+    | 'bitable_file'
+    | 'moments'
+    | 'ccm_import_open';
+
 export type SheetMeta = Record<'sheetId' | 'title', string> &
     Record<
         `${'row' | 'column'}Count` | `frozen${'Row' | 'Col'}Count` | 'index',

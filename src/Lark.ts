@@ -1,4 +1,4 @@
-import { Context, HTTPClient, makeFormData, request } from 'koajax';
+import { Context, HTTPClient, HTTPError, makeFormData, request } from 'koajax';
 import { buildURLData, cache, Second } from 'web-utility';
 
 import {
@@ -6,6 +6,7 @@ import {
     JSTicket,
     LarkData,
     TenantAccessToken,
+    UploadTargetType,
     UserMeta
 } from './type';
 
@@ -149,17 +150,18 @@ export class LarkApp implements LarkAppOption {
     /**
      * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/drive-v1/media/upload_all}
      */
-    async uploadFile(file: File, parent_node: string) {
+    async uploadFile(
+        file: File,
+        parent_type: UploadTargetType,
+        parent_node: string
+    ) {
         const token = await this.getAccessToken();
 
         const body = makeFormData({
             file,
             file_name: file.name,
             size: file.size,
-            parent_type:
-                file.type.split('/')[0] === 'image'
-                    ? 'bitable_image'
-                    : 'bitable_image',
+            parent_type,
             parent_node
         });
         const { response } = request<LarkData<{ file_token: string }>>({
@@ -168,8 +170,17 @@ export class LarkApp implements LarkAppOption {
             headers: { Authorization: `Bearer ${token}` },
             body
         });
-        const { file_token } = (await response).body!.data;
+        const res = await response;
 
-        return file_token;
+        if (res.status < 300) return res.body!.data.file_token;
+
+        const error = res.body as unknown as Blob;
+
+        const raw = new TextDecoder().decode(await error.arrayBuffer());
+
+        throw new HTTPError(res.statusText, {
+            ...res,
+            body: JSON.parse(raw)
+        });
     }
 }

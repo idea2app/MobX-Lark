@@ -1,6 +1,6 @@
 {
     "name": "mobx-lark",
-    "version": "1.0.0-beta.3",
+    "version": "1.0.0-beta.5",
     "license": "LGPL-3.0",
     "author": "shiy2008@gmail.com",
     "description": "Unofficial TypeScript SDK for FeiShu/Lark API, which is based on MobX-RESTful.",
@@ -43,7 +43,7 @@
         "husky": "^8.0.3",
         "lint-staged": "^13.2.0",
         "mobx": "^5.15.7",
-        "parcel": "~2.8.3",
+        "parcel": "~2.6.2",
         "prettier": "^2.8.7",
         "ts-node": "^10.9.1",
         "typedoc": "^0.23.28",
