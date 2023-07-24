@@ -163,29 +163,14 @@ export type BiDataTableClass<T extends DataObject> = ReturnType<
 >;
 export type BiTableItem = BITableList['data']['items'][number];
 
-export function BiTable<T extends DataObject>() {
+export function BiTable() {
     abstract class BiTableModel extends Stream<BiTableItem>(ListModel) {
         constructor(public id: string) {
             super();
             this.baseURI = `bitable/v1/apps/${id}/tables`;
         }
 
-        currentDataTable?: InstanceType<BiDataTableClass<T>>;
-
-        async getOne(tableName: string, DataTableClass?: BiDataTableClass<T>) {
-            const list = await this.getAll();
-
-            const table = list.find(({ name }) => name === tableName);
-
-            if (!table) throw new URIError(`Table "${tableName}" is not found`);
-
-            if (DataTableClass instanceof Function)
-                this.currentDataTable = Reflect.construct(DataTableClass, [
-                    this.id,
-                    table.table_id
-                ]);
-            return (this.currentOne = table);
-        }
+        tableMap = {} as Record<string, ListModel<{}>>;
 
         /**
          * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table/list}
@@ -197,6 +182,21 @@ export function BiTable<T extends DataObject>() {
                 total => (this.totalCount = total)
             ))
                 yield item;
+        }
+
+        async getAllTables<T extends Record<string, BiDataTableClass<{}>>>(
+            map: T
+        ) {
+            const list = await this.getAll();
+
+            for (const { table_id, name } of list)
+                if (map[name] instanceof Function)
+                    this.tableMap[name] = Reflect.construct(map[name], [
+                        this.id,
+                        table_id
+                    ]);
+
+            return this.tableMap;
         }
     }
     return BiTableModel;
