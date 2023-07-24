@@ -1,5 +1,5 @@
 import { DataObject, ListModel, NewData, Stream, toggle } from 'mobx-restful';
-import { isEmpty } from 'web-utility';
+import { Constructor, isEmpty } from 'web-utility';
 
 import {
     BITableList,
@@ -184,9 +184,9 @@ export function BiTable() {
                 yield item;
         }
 
-        async getAllTables<T extends Record<string, BiDataTableClass<{}>>>(
-            map: T
-        ) {
+        async getAllTables<
+            T extends Record<string, Constructor<ListModel<DataObject>>>
+        >(map: T) {
             const list = await this.getAll();
 
             for (const { table_id, name } of list)
@@ -196,7 +196,10 @@ export function BiTable() {
                         table_id
                     ]);
 
-            return this.tableMap;
+            type UnwrapMap<T> = {
+                [K in keyof T]: T[K] extends Constructor<infer M> ? M : never;
+            };
+            return this.tableMap as UnwrapMap<T>;
         }
     }
     return BiTableModel;
