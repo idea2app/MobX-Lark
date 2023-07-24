@@ -1,7 +1,14 @@
-import { Context, HTTPClient } from 'koajax';
+import { Context, HTTPClient, HTTPError, makeFormData, request } from 'koajax';
 import { buildURLData, cache, Second } from 'web-utility';
 
-import { isLarkError, JSTicket, TenantAccessToken, UserMeta } from './type';
+import {
+    isLarkError,
+    JSTicket,
+    LarkData,
+    TenantAccessToken,
+    UploadTargetType,
+    UserMeta
+} from './type';
 
 export interface LarkAppOption {
     host?: string;
@@ -138,5 +145,42 @@ export class LarkApp implements LarkAppOption {
             responseType: 'arraybuffer'
         });
         return body!;
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/drive-v1/media/upload_all}
+     */
+    async uploadFile(
+        file: File,
+        parent_type: UploadTargetType,
+        parent_node: string
+    ) {
+        const token = await this.getAccessToken();
+
+        const body = makeFormData({
+            file,
+            file_name: file.name,
+            size: file.size,
+            parent_type,
+            parent_node
+        });
+        const { response } = request<LarkData<{ file_token: string }>>({
+            method: 'POST',
+            path: this.client.baseURI + 'drive/v1/medias/upload_all',
+            headers: { Authorization: `Bearer ${token}` },
+            body
+        });
+        const res = await response;
+
+        if (res.status < 300) return res.body!.data.file_token;
+
+        const error = res.body as unknown as Blob;
+
+        const raw = new TextDecoder().decode(await error.arrayBuffer());
+
+        throw new HTTPError(res.statusText, {
+            ...res,
+            body: JSON.parse(raw)
+        });
     }
 }

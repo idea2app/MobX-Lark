@@ -48,6 +48,19 @@ export type JSTicket = LarkData<{
 
 export type I18nKey = `${string}_${string}`;
 
+export type UploadTargetType =
+    | 'doc_image'
+    | 'docx_image'
+    | 'sheet_image'
+    | 'doc_file'
+    | 'docx_file'
+    | 'sheet_file'
+    | 'vc_virtual_background'
+    | 'bitable_image'
+    | 'bitable_file'
+    | 'moments'
+    | 'ccm_import_open';
+
 export type SheetMeta = Record<'sheetId' | 'title', string> &
     Record<
         `${'row' | 'column'}Count` | `frozen${'Row' | 'Col'}Count` | 'index',
@@ -166,6 +179,10 @@ export type TableRecordFields = Record<string, TableCellValue>;
 
 export interface TableRecord<T extends TableRecordFields>
     extends Record<'id' | 'record_id', string> {
+    created_by: TableCellUser;
+    created_time: number;
+    last_modified_by?: TableCellUser;
+    last_modified_time?: number;
     fields: T;
 }
 
