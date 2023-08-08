@@ -30,7 +30,7 @@
         "koajax": "^0.8.4",
         "mobx-restful": "^0.6.5",
         "node-fetch": "^2.6.12",
-        "regenerator-runtime": "^0.14.0",
+        "regenerator-runtime": "^0.13.11",
         "web-utility": "^4.1.0"
     },
     "peerDependencies": {
