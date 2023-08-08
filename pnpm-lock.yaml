@@ -18,16 +18,16 @@ dependencies:
     specifier: ^2.6.12
     version: 2.6.12
   regenerator-runtime:
-    specifier: ^0.13.11
-    version: 0.13.11
+    specifier: ^0.14.0
+    version: 0.14.0
   web-utility:
-    specifier: ^4.0.1
-    version: 4.0.1(typescript@5.1.6)
+    specifier: ^4.1.0
+    version: 4.1.0(typescript@5.1.6)
 
 devDependencies:
   '@types/node':
-    specifier: ^18.17.0
-    version: 18.17.0
+    specifier: ^18.17.3
+    version: 18.17.3
   '@types/node-fetch':
     specifier: ^2.6.4
     version: 2.6.4
@@ -47,11 +47,11 @@ devDependencies:
     specifier: ~2.6.2
     version: 2.6.2
   prettier:
-    specifier: ^3.0.0
-    version: 3.0.0
+    specifier: ^3.0.1
+    version: 3.0.1
   ts-node:
     specifier: ^10.9.1
-    version: 10.9.1(@types/node@18.17.0)(typescript@5.1.6)
+    version: 10.9.1(@types/node@18.17.3)(typescript@5.1.6)
   typedoc:
     specifier: ^0.24.8
     version: 0.24.8(typescript@5.1.6)
@@ -1058,12 +1058,12 @@ packages:
   /@types/node-fetch@2.6.4:
     resolution: {integrity: sha512-1ZX9fcN4Rvkvgv4E6PAY5WXUFWFcRWxZa3EW83UjycOB9ljJCedb2CupIP4RZMEwF/M3eTcCihbBRgwtGbg5Rg==}
     dependencies:
-      '@types/node': 18.17.0
+      '@types/node': 18.17.3
       form-data: 3.0.1
     dev: true
 
-  /@types/node@18.17.0:
-    resolution: {integrity: sha512-GXZxEtOxYGFchyUzxvKI14iff9KZ2DI+A6a37o6EQevtg6uO9t+aUZKcaC1Te5Ng1OnLM7K9NVVj+FbecD9cJg==}
+  /@types/node@18.17.3:
+    resolution: {integrity: sha512-2x8HWtFk0S99zqVQABU9wTpr8wPoaDHZUcAkoTKH+nL7kPv3WUI9cRi/Kk5Mz4xdqXSqTkKP7IWNoQQYCnDsTA==}
     dev: true
 
   /@types/validator@13.7.17:
@@ -1855,7 +1855,7 @@ packages:
       iterable-observer: 1.0.0
       jsdom: 21.1.2
       regenerator-runtime: 0.13.11
-      web-utility: 4.0.1(typescript@5.1.6)
+      web-utility: 4.1.0(typescript@5.1.6)
     transitivePeerDependencies:
       - typescript
     dev: false
@@ -2099,7 +2099,7 @@ packages:
       mobx: 5.15.7
       reflect-metadata: 0.1.13
       regenerator-runtime: 0.13.11
-      web-utility: 4.0.1(typescript@5.1.6)
+      web-utility: 4.1.0(typescript@5.1.6)
     transitivePeerDependencies:
       - jsdom
       - typescript
@@ -2341,8 +2341,8 @@ packages:
       posthtml-render: 3.0.0
     dev: true
 
-  /prettier@3.0.0:
-    resolution: {integrity: sha512-zBf5eHpwHOGPC47h0zrPyNn+eAEIdEzfywMoYn2XPi0P44Zp0tSq64rq0xAREh4auw2cJZHo9QUob+NqCQky4g==}
+  /prettier@3.0.1:
+    resolution: {integrity: sha512-fcOWSnnpCrovBsmFZIGIy9UqK2FaI7Hqax+DIO0A9UxeVoY4iweyaFjS5TavZN97Hfehph0nhsZnjlVKzEQSrQ==}
     engines: {node: '>=14'}
     hasBin: true
     dev: true
@@ -2375,6 +2375,10 @@ packages:
 
   /regenerator-runtime@0.13.11:
     resolution: {integrity: sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==}
+
+  /regenerator-runtime@0.14.0:
+    resolution: {integrity: sha512-srw17NI0TUWHuGa5CFGGmhfNIeja30WMBfbslPNhf6JrqQlLN5gcrvig1oqPxiVaXb0oW0XRKtH6Nngs5lKCIA==}
+    dev: false
 
   /requires-port@1.0.0:
     resolution: {integrity: sha512-KigOCHcocU3XODJxsu8i/j8T9tzT4adHiecwORRQ0ZZFcp7ahwXuRU1m+yuO90C5ZUyGeGfocHDI14M3L3yDAQ==}
@@ -2620,7 +2624,7 @@ packages:
       punycode: 2.3.0
     dev: false
 
-  /ts-node@10.9.1(@types/node@18.17.0)(typescript@5.1.6):
+  /ts-node@10.9.1(@types/node@18.17.3)(typescript@5.1.6):
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
     peerDependencies:
@@ -2639,7 +2643,7 @@ packages:
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 18.17.0
+      '@types/node': 18.17.3
       acorn: 8.10.0
       acorn-walk: 8.2.0
       arg: 4.1.3
@@ -2751,8 +2755,8 @@ packages:
     resolution: {integrity: sha512-DEAoo25RfSYMuTGc9vPJzZcZullwIqRDSI9LOy+fkCJPi6hykCnfKaXTuPBDuXAUcqHXyOgFtHNp/kB2FjYHbw==}
     dev: true
 
-  /web-utility@4.0.1(typescript@5.1.6):
-    resolution: {integrity: sha512-gQwLcgLdxT3gAgR9XXN+7Dz73r95r+Ph9CCfyvorgF4qeFvevkQXr0rj2RoMyeaPPu+9upe9zO/U/bycXcRVgg==}
+  /web-utility@4.1.0(typescript@5.1.6):
+    resolution: {integrity: sha512-3xH9M3F5nXcqXxlRqL24gv0+MewfOw/V1sSTOxXGuxYAxGz+IurDbZ4tsZZV/cZca4bPQEHqXcukfMLccNggkA==}
     peerDependencies:
       typescript: '>=4.1.0'
     dependencies:
