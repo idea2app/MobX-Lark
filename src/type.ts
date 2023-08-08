@@ -113,6 +113,17 @@ export interface TableCellText {
     text: string;
 }
 
+export type TableCellLocation = Record<
+    | 'name'
+    | 'pname'
+    | 'cityname'
+    | 'adname'
+    | 'address'
+    | 'full_address'
+    | 'location',
+    string
+>;
+
 export interface TableCellLink extends Record<'link' | 'text', string> {
     type: 'url';
 }
@@ -161,6 +172,7 @@ export type TableCellValue =
     | string
     | number
     | boolean
+    | TableCellLocation
     | TableCellLink
     | (
           | string

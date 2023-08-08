@@ -1,5 +1,5 @@
 import { DataObject, ListModel, NewData, Stream, toggle } from 'mobx-restful';
-import { Constructor, isEmpty } from 'web-utility';
+import { isEmpty } from 'web-utility';
 
 import {
     BITableList,
@@ -170,7 +170,27 @@ export function BiTable() {
             this.baseURI = `bitable/v1/apps/${id}/tables`;
         }
 
-        tableMap = {} as Record<string, ListModel<{}>>;
+        currentDataTable?: ListModel<DataObject>;
+
+        async getOne<T extends DataObject>(
+            tableName: string,
+            DataTableClass?: BiDataTableClass<T>
+        ) {
+            const { allItems } = this;
+
+            const list = allItems[0] ? allItems : await this.getAll();
+
+            const table = list.find(({ name }) => name === tableName);
+
+            if (!table) throw new URIError(`Table "${tableName}" is not found`);
+
+            if (DataTableClass instanceof Function)
+                this.currentDataTable = Reflect.construct(DataTableClass, [
+                    this.id,
+                    table.table_id
+                ]);
+            return (this.currentOne = table);
+        }
 
         /**
          * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table/list}
@@ -182,24 +202,6 @@ export function BiTable() {
                 total => (this.totalCount = total)
             ))
                 yield item;
-        }
-
-        async getAllTables<
-            T extends Record<string, Constructor<ListModel<DataObject>>>
-        >(map: T) {
-            const list = await this.getAll();
-
-            for (const { table_id, name } of list)
-                if (map[name] instanceof Function)
-                    this.tableMap[name] = Reflect.construct(map[name], [
-                        this.id,
-                        table_id
-                    ]);
-
-            type UnwrapMap<T> = {
-                [K in keyof T]: T[K] extends Constructor<infer M> ? M : never;
-            };
-            return this.tableMap as UnwrapMap<T>;
         }
     }
     return BiTableModel;
