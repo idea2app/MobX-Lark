@@ -44,7 +44,7 @@ export function makeSimpleFilter(
 export const normalizeText = (
     value: TableCellText | TableCellLink | TableCellRelation
 ) =>
-    value && typeof value === 'object' && 'text' in value ? value.text : value;
+    (value && typeof value === 'object' && 'text' in value && value.text) || '';
 
 export type BiBaseData = Omit<TableRecord<{}>, 'record_id' | 'fields'>;
 
