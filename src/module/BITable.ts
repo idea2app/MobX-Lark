@@ -1,4 +1,4 @@
-import { DataObject, ListModel, NewData, Stream, toggle } from 'mobx-restful';
+import { DataObject, Filter, ListModel, Stream, toggle } from 'mobx-restful';
 import { isEmpty } from 'web-utility';
 
 import {
@@ -51,8 +51,11 @@ export type BiBaseData = Omit<TableRecord<{}>, 'record_id' | 'fields'>;
 /**
  * @see {@link https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/bitable-overview}
  */
-export function BiDataTable<T extends DataObject>(Base = ListModel) {
-    abstract class BiDataTableModel extends Stream<T>(Base) {
+export function BiDataTable<
+    T extends DataObject,
+    F extends Filter<T> = Filter<T>
+>(Base = ListModel) {
+    abstract class BiDataTableModel extends Stream<T, F>(Base) {
         requiredKeys: readonly (keyof T)[] = [];
 
         sort: Partial<Record<keyof T, 'ASC' | 'DESC'>> = {};
@@ -85,7 +88,7 @@ export function BiDataTable<T extends DataObject>(Base = ListModel) {
          * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-record/update}
          */
         @toggle('uploading')
-        async updateOne(fields: Partial<NewData<T>>, id?: string) {
+        async updateOne(fields: F, id?: string) {
             const { body } = await (id
                 ? this.client.put<TableRecordData<T>>(`${this.baseURI}/${id}`, {
                       fields
@@ -96,7 +99,7 @@ export function BiDataTable<T extends DataObject>(Base = ListModel) {
             return (this.currentOne = this.normalize(body!.data.record));
         }
 
-        makeFilter(filter: NewData<T>) {
+        makeFilter(filter: F) {
             return [
                 this.requiredKeys[0] &&
                     makeSimpleFilter(
@@ -114,7 +117,7 @@ export function BiDataTable<T extends DataObject>(Base = ListModel) {
         /**
          * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-record/list}
          */
-        async *openStream(filter: NewData<T>) {
+        async *openStream(filter: F) {
             const stream = createPageStream<TableRecord<T>>(
                 this.client,
                 this.baseURI,
@@ -158,9 +161,11 @@ export function BiTableView() {
     return BiTableViewModel;
 }
 
-export type BiDataTableClass<T extends DataObject> = ReturnType<
-    typeof BiDataTable<T>
->;
+export type BiDataTableClass<
+    T extends DataObject,
+    F extends Filter<T> = Filter<T>
+> = ReturnType<typeof BiDataTable<T, F>>;
+
 export type BiTableItem = BITableList['data']['items'][number];
 
 export function BiTable() {
@@ -170,11 +175,11 @@ export function BiTable() {
             this.baseURI = `bitable/v1/apps/${id}/tables`;
         }
 
-        currentDataTable?: ListModel<DataObject>;
+        currentDataTable?: ListModel<any>;
 
-        async getOne<T extends DataObject>(
+        async getOne<T extends DataObject, F extends Filter<T>>(
             tableName: string,
-            DataTableClass?: BiDataTableClass<T>
+            DataTableClass?: BiDataTableClass<T, F>
         ) {
             const { allItems } = this;
 

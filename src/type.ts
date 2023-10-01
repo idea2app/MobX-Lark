@@ -165,7 +165,8 @@ export interface TableCellDocumentMetion
 
 export interface TableCellRelation extends TableCellText {
     table_id: string;
-    record_ids: [string, string?];
+    record_ids: string[];
+    text_arr: string[];
 }
 
 export type TableCellValue =
