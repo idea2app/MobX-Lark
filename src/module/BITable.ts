@@ -60,6 +60,8 @@ export function BiDataTable<
 
         sort: Partial<Record<keyof T, 'ASC' | 'DESC'>> = {};
 
+        currentViewId?: string;
+
         constructor(appId: string, tableId: string) {
             super();
             this.baseURI = `bitable/v1/apps/${appId}/tables/${tableId}/records`;
@@ -118,20 +120,47 @@ export function BiDataTable<
          * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-record/list}
          */
         async *openStream(filter: F) {
+            const view_id = this.currentViewId;
+
             const stream = createPageStream<TableRecord<T>>(
                 this.client,
                 this.baseURI,
                 total => (this.totalCount = total),
-                {
-                    filter: this.makeFilter(filter),
-                    sort: JSON.stringify(
-                        Object.entries(this.sort).map(
-                            ([key, order]) => `${key} ${order}`
-                        )
-                    )
-                }
+                view_id
+                    ? { view_id }
+                    : {
+                          filter: this.makeFilter(filter),
+                          sort: JSON.stringify(
+                              Object.entries(this.sort).map(
+                                  ([key, order]) => `${key} ${order}`
+                              )
+                          )
+                      }
             );
             for await (const item of stream) yield this.normalize(item);
+        }
+
+        async getViewList(
+            viewId: string,
+            pageIndex = this.pageIndex + 1,
+            pageSize = this.pageSize
+        ) {
+            try {
+                this.currentViewId = viewId;
+
+                return await this.getList({} as F, pageIndex, pageSize);
+            } finally {
+                this.currentViewId = undefined;
+            }
+        }
+
+        async getViewAll(viewId: string, pageSize = this.pageSize) {
+            this.clearList();
+
+            while (!this.noMore)
+                await this.getViewList(viewId, undefined, pageSize);
+
+            return this.allItems;
         }
     }
     return BiDataTableModel;
