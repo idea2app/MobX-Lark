@@ -9,11 +9,13 @@ export type BITableMeta = LarkData<{
     app: { app_token: string } & RevisionTable;
 }>;
 
-export type BITableList = LarkPageData<{ table_id: string } & RevisionTable>;
+export interface BITable extends RevisionTable {
+    table_id: string;
+}
 
-export type TableViewList = LarkPageData<
-    { view_type: 'grid' | 'form' } & Record<'view_id' | 'view_name', string>
->;
+export interface TableView extends Record<'view_id' | 'view_name', string> {
+    view_type: 'grid' | 'form';
+}
 
 export interface TableCellText {
     type: 'text';

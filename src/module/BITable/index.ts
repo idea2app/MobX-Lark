@@ -1,17 +1,16 @@
 import { DataObject, Filter, ListModel, Stream, toggle } from 'mobx-restful';
 import { isEmpty } from 'web-utility';
 
+import { createPageStream } from '../base';
 import {
-    BITableList,
+    BITable,
     TableCellLink,
     TableCellRelation,
     TableCellText,
     TableRecord,
     TableRecordData,
-    TableRecordList,
-    TableViewList
+    TableView
 } from './type';
-import { createPageStream } from '../base';
 
 export * from './type';
 
@@ -69,10 +68,7 @@ export function BiDataTable<
             this.baseURI = `bitable/v1/apps/${appId}/tables/${tableId}/records`;
         }
 
-        normalize({
-            fields,
-            ...meta
-        }: TableRecordList<T>['data']['items'][number]): T {
+        normalize({ fields, ...meta }: TableRecord<T>): T {
             return { ...meta, ...fields };
         }
 
@@ -84,7 +80,7 @@ export function BiDataTable<
             const { body } = await this.client.get<TableRecordData<T>>(
                 `${this.baseURI}/${id}`
             );
-            return (this.currentOne = this.normalize(body!.data.record));
+            return (this.currentOne = this.normalize(body!.data!.record));
         }
 
         /**
@@ -100,7 +96,7 @@ export function BiDataTable<
                 : this.client.post<TableRecordData<T>>(this.baseURI, {
                       fields
                   }));
-            return (this.currentOne = this.normalize(body!.data.record));
+            return (this.currentOne = this.normalize(body!.data!.record));
         }
 
         makeFilter(filter: F) {
@@ -168,10 +164,8 @@ export function BiDataTable<
     return BiDataTableModel;
 }
 
-export type TableViewItem = TableViewList['data']['items'][number];
-
 export function BiTableView() {
-    abstract class BiTableViewModel extends Stream<TableViewItem>(ListModel) {
+    abstract class BiTableViewModel extends Stream<TableView>(ListModel) {
         constructor(appId: string, tableId: string) {
             super();
             this.baseURI = `bitable/v1/apps/${appId}/tables/${tableId}/views`;
@@ -181,7 +175,7 @@ export function BiTableView() {
          * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-view/list}
          */
         async *openStream() {
-            for await (const item of createPageStream<TableViewItem>(
+            for await (const item of createPageStream<TableView>(
                 this.client,
                 this.baseURI,
                 total => (this.totalCount = total)
@@ -197,10 +191,8 @@ export type BiDataTableClass<
     F extends Filter<T> = Filter<T>
 > = ReturnType<typeof BiDataTable<T, F>>;
 
-export type BiTableItem = BITableList['data']['items'][number];
-
 export function BiTable() {
-    abstract class BiTableModel extends Stream<BiTableItem>(ListModel) {
+    abstract class BiTableModel extends Stream<BITable>(ListModel) {
         constructor(public id: string) {
             super();
             this.baseURI = `bitable/v1/apps/${id}/tables`;
@@ -232,7 +224,7 @@ export function BiTable() {
          * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table/list}
          */
         async *openStream() {
-            for await (const item of createPageStream<BiTableItem>(
+            for await (const item of createPageStream<BITable>(
                 this.client,
                 this.baseURI,
                 total => (this.totalCount = total)

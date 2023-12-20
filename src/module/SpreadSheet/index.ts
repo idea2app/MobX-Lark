@@ -40,7 +40,7 @@ export abstract class SpreadSheetModel<
             ),
             { sheetId } = this;
 
-        const sheet = body!.data.sheets.find(
+        const sheet = body!.data!.sheets.find(
             ({ sheetId: ID }) => ID === sheetId
         );
         console.assert(sheet, `Sheet "${sheetId}" is not found`);
@@ -70,7 +70,7 @@ export abstract class SpreadSheetModel<
                 dateTimeRenderOption: 'FormattedString'
             })}`
         );
-        const pageData = body!.data.valueRange.values.map(
+        const pageData = body!.data!.valueRange.values.map(
             row => objectFrom(row, columnKeys as string[]) as D
         );
         return { pageData, totalCount: rowCount - rowOff };

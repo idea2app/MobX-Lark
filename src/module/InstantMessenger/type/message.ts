@@ -1,4 +1,4 @@
-import { I18nKey } from '../../../type';
+import { I18nKey, TranslationMap } from '../../../type';
 
 export interface TextMessage {
     text: string;
@@ -60,7 +60,7 @@ export type VideoMessage = FileMessage<'media'> & Pick<ImageTag, 'image_key'>;
 export interface TextCardTag {
     tag: 'plain_text' | 'lark_md';
     content?: string;
-    i18n?: Record<I18nKey, string>;
+    i18n?: TranslationMap;
     lines?: number;
 }
 
