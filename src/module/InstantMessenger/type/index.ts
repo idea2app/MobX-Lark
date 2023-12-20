@@ -1,4 +1,4 @@
-import { I18nKey } from '../../../type';
+import { TranslationMap } from '../../../type';
 import { ChatMessageContent } from './message';
 
 export * from './message';
@@ -11,7 +11,7 @@ export interface CreateChatMeta
         Record<`${'user' | 'bot'}_id_list`, string[]> {
     chat_mode: 'group';
     chat_type: 'private' | 'public';
-    i18n_names: Record<I18nKey, string>;
+    i18n_names: TranslationMap;
     external: boolean;
     membership_approval: 'no_approval_required' | 'approval_required';
 }

@@ -36,7 +36,7 @@ export abstract class ChatListModel extends Stream<ChatMeta>(ListModel) {
                       set_bot_manager: true
                   })}`
               ));
-        return (this.currentOne = body!.data);
+        return (this.currentOne = body!.data!);
     }
 }
 
@@ -77,6 +77,6 @@ export abstract class MessageListModel extends Stream<ChatMessage>(ListModel) {
                 content: JSON.stringify(content)
             }
         );
-        return (this.currentOne = body!.data);
+        return (this.currentOne = body!.data!);
     }
 }

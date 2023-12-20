@@ -127,7 +127,7 @@ export class LarkApp implements LarkAppOption {
         await this.getAccessToken();
 
         const { body } = await this.client.post<JSTicket>('jssdk/ticket/get');
-        const { expire_in, ticket } = body!.data;
+        const { expire_in, ticket } = body!.data!;
 
         setTimeout(clean, expire_in * Second);
 
@@ -172,7 +172,7 @@ export class LarkApp implements LarkAppOption {
         });
         const res = await response;
 
-        if (res.status < 300) return res.body!.data.file_token;
+        if (res.status < 300) return res.body!.data!.file_token;
 
         const error = res.body as unknown as Blob;
 

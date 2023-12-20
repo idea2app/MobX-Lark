@@ -4,7 +4,11 @@ export type LarkData<
 > = E & {
     code: number;
     msg: string;
-    data: D;
+    data?: D;
+    error?: {
+        log_id: string;
+        [key: string]: any;
+    };
 };
 
 export type LarkPageData<D extends Record<string, any> = {}> = LarkData<{
@@ -47,6 +51,8 @@ export type JSTicket = LarkData<{
 }>;
 
 export type I18nKey = `${string}_${string}`;
+
+export type TranslationMap = Record<I18nKey, string>;
 
 export type UploadTargetType =
     | 'doc_image'
