@@ -68,17 +68,12 @@ export interface HrCardTag {
     tag: 'hr';
 }
 
-export interface URLCardTag {
-    url: string;
-    pc_url: string;
-    android_url: string;
-    ios_url: string;
-}
+export type URLCardTag = Record<
+    `${'' | 'pc_' | 'android_' | 'ios_'}url`,
+    string
+>;
 
-export interface ConfirmCardTag {
-    title: TextCardTag;
-    text: TextCardTag;
-}
+export type ConfirmCardTag = Record<'title' | 'text', TextCardTag>;
 
 export interface ButtonCardTag {
     tag: 'button';
@@ -127,14 +122,10 @@ export interface CardHeader {
     template?: TemplateColor;
 }
 
-export interface InteractiveMessage {
-    config?: {
-        enable_forward?: boolean;
-        update_multi?: boolean;
-    };
+export interface InteractiveMessage
+    extends Partial<Record<`${'' | 'i18n_'}elements`, CardTag[]>> {
+    config?: Partial<Record<'enable_forward' | 'update_multi', boolean>>;
     header?: CardHeader;
-    elements?: CardTag[];
-    i18n_elements?: CardTag[];
 }
 
 export type ChatMessageContent =

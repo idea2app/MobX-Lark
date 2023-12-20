@@ -10,8 +10,10 @@ import {
     TableRecordData,
     TableRecordList,
     TableViewList
-} from '../type';
-import { createPageStream } from './base';
+} from './type';
+import { createPageStream } from '../base';
+
+export * from './type';
 
 export type FilterOperator = '<' | '<=' | '=' | '!=' | '=>' | '>' | 'contains';
 

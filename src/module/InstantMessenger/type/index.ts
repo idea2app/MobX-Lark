@@ -5,32 +5,27 @@ export * from './message';
 
 export type ChatPermission = 'all_members' | 'only_owner' | 'not_anyone';
 
-export interface CreateChatMeta {
-    owner_id: string;
+export interface CreateChatMeta
+    extends Record<'owner_id' | 'avatar' | 'name' | 'description', string>,
+        Record<`${'join' | 'leave'}_message_visibility`, ChatPermission>,
+        Record<`${'user' | 'bot'}_id_list`, string[]> {
     chat_mode: 'group';
     chat_type: 'private' | 'public';
-    avatar: string;
-    name: string;
-    description: string;
     i18n_names: Record<I18nKey, string>;
-    user_id_list: string[];
-    bot_id_list: string[];
     external: boolean;
-    join_message_visibility: ChatPermission;
-    leave_message_visibility: ChatPermission;
     membership_approval: 'no_approval_required' | 'approval_required';
 }
 
-export interface ChatMeta extends CreateChatMeta {
-    tenant_key: string;
+export interface ChatMeta
+    extends CreateChatMeta,
+        Record<'tenant_key' | 'chat_id', string>,
+        Record<
+            `${'add_member' | 'at_all' | 'edit' | 'moderation'}_permission`,
+            ChatPermission
+        > {
     owner_id_type: 'user_id';
-    chat_id: string;
     chat_tag: 'inner';
-    add_member_permission: ChatPermission;
     share_card_permission: 'allowed';
-    at_all_permission: ChatPermission;
-    edit_permission: ChatPermission;
-    moderation_permission: ChatPermission;
 }
 
 export type ChatMessageType = 'text' | 'card';
@@ -41,29 +36,22 @@ export interface SendChatMessage {
     receive_id: string;
 }
 
-export interface ChatSender {
-    id: string;
+export interface ChatSender extends Record<'id' | 'tenant_key', string> {
     id_type: 'open_id' | 'app_id';
     sender_type: 'app';
-    tenant_key: string;
 }
 
-export interface ChatMetion
-    extends Pick<ChatSender, 'id' | 'id_type' | 'tenant_key'> {
-    key: string;
-    name: string;
-}
+export type ChatMetion = Pick<ChatSender, 'id' | 'id_type' | 'tenant_key'> &
+    Record<'key' | 'name', string>;
 
-export interface ChatMessage extends Pick<SendChatMessage, 'msg_type'> {
-    chat_id: string;
-    message_id: string;
-    upper_message_id: string;
-    root_id: string;
-    parent_id: string;
-    create_time: string;
-    update_time: string;
-    deleted: boolean;
-    updated: boolean;
+export interface ChatMessage
+    extends Pick<SendChatMessage, 'msg_type'>,
+        Record<`${'create' | 'update'}_time`, string>,
+        Record<'deleted' | 'updated', boolean>,
+        Record<
+            `${'chat' | 'message' | 'upper_message' | 'root' | 'parent'}_id`,
+            string
+        > {
     sender: ChatSender;
     mentions: ChatMetion[];
     body: {
