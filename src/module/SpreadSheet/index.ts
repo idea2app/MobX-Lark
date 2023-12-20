@@ -2,7 +2,9 @@ import { buildURLData, objectFrom } from 'web-utility';
 import * as MobX from 'mobx';
 import { DataObject, NewData, ListModel, toggle } from 'mobx-restful';
 
-import { SpreadSheetMeta, SheetMeta, SheetRangeData } from '../type';
+import { SpreadSheetMeta, SheetMeta, SheetRangeData } from './type';
+
+export * from './type';
 
 export abstract class SpreadSheetModel<
     D extends DataObject,
