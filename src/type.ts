@@ -30,13 +30,15 @@ export type TenantAccessToken = LarkData<
     }
 >;
 
+export type UserIdType = `${'open' | 'union' | 'user'}_id`;
+
 export type LocaleUser = Record<`${'' | 'en_'}name` | 'email', string>;
 
 export type UserMeta = LarkData<
     { token_type: 'Bearer' } & LocaleUser &
         Record<
             | `avatar_${'url' | 'thumb' | 'middle' | 'big'}`
-            | `${'open' | 'union' | 'user'}_id`
+            | UserIdType
             | 'mobile'
             | 'tenant_key'
             | `${'access' | 'refresh'}_token`,

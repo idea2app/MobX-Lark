@@ -40,10 +40,10 @@ export interface TaskCompletion {
     tip: TranslationMap;
 }
 
-export type BaseCustomField = Pick<TaskList, 'guid' | 'name'> &
+export type BaseTaskField = Pick<TaskList, 'guid' | 'name'> &
     Pick<TaskList, 'creator' | 'created_at' | 'updated_at'>;
 
-export interface CustomFieldNumberSetting {
+export interface TaskFieldNumberSetting {
     format: 'normal' | 'percentage' | 'cny' | 'usd' | 'custom';
     custom_symbol?: string;
     custom_symbol_position?: 'left' | 'right';
@@ -51,54 +51,53 @@ export interface CustomFieldNumberSetting {
     decimal_count: number;
 }
 
-export interface NumberCustomField extends BaseCustomField {
+export interface NumberTaskField extends BaseTaskField {
     type: 'number';
-    number_setting: CustomFieldNumberSetting;
+    number_setting: TaskFieldNumberSetting;
 }
 
-export interface TextCustomField extends BaseCustomField {
+export interface TextTaskField extends BaseTaskField {
     type: 'text';
     text_setting: object;
 }
 
-export interface DateTimeCustomField extends BaseCustomField {
+export interface DateTimeTaskField extends BaseTaskField {
     type: 'datetime';
     datetime_setting: { format: string };
 }
 
-export interface CustomFieldOption
-    extends Pick<CustomFieldValue, 'guid' | 'name'> {
+export interface TaskFieldOption extends Pick<TaskFieldValue, 'guid' | 'name'> {
     color_index: number;
     is_hidden: boolean;
 }
 
-export interface SingleSelectCustomField extends BaseCustomField {
+export interface SingleSelectTaskField extends BaseTaskField {
     type: 'single_select';
-    single_select_setting: { options: CustomFieldOption[] };
+    single_select_setting: { options: TaskFieldOption[] };
 }
 
-export interface MultiSelectCustomField extends BaseCustomField {
+export interface MultiSelectTaskField extends BaseTaskField {
     type: 'multi_select';
-    multi_select_setting: { options: CustomFieldOption[] };
+    multi_select_setting: { options: TaskFieldOption[] };
 }
 
-export interface MemberCustomField extends BaseCustomField {
+export interface MemberTaskField extends BaseTaskField {
     type: 'member';
     member_setting: { multi: boolean };
 }
 
-export type CustomField =
-    | NumberCustomField
-    | TextCustomField
-    | DateTimeCustomField
-    | SingleSelectCustomField
-    | MultiSelectCustomField
-    | MemberCustomField;
+export type TaskField =
+    | NumberTaskField
+    | TextTaskField
+    | DateTimeTaskField
+    | SingleSelectTaskField
+    | MultiSelectTaskField
+    | MemberTaskField;
 
-export type CustomFieldValue = Pick<CustomField, 'guid' | 'type' | 'name'> &
+export type TaskFieldValue = Pick<TaskField, 'guid' | 'type' | 'name'> &
     Partial<
         Record<
-            `${Exclude<CustomField['type'], 'member' | 'multi_select'>}_value`,
+            `${Exclude<TaskField['type'], 'member' | 'multi_select'>}_value`,
             string
         > & {
             member_value: TaskOperator[];
@@ -146,7 +145,7 @@ export interface Task
         href: Record<'url' | 'title', string>;
     };
     custom_complete: Record<'pc' | 'ios' | 'android', TaskCompletion>;
-    custom_fields: CustomFieldValue[];
+    custom_fields: TaskFieldValue[];
     attachments: TaskAttachment[];
     dependencies: TaskDependency[];
     tasklists: Partial<Record<'tasklist_guid' | 'section_guid', string>>[];
