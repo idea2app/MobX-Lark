@@ -20,6 +20,11 @@ export interface TaskList
 
 export type TaskResourceType = 'tasklist' | 'my_tasks';
 
+export interface TaskResource {
+    resource_type: TaskResourceType;
+    resource_id: string;
+}
+
 export interface TaskListSection
     extends Pick<
         TaskList,

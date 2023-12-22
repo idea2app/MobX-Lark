@@ -23,7 +23,7 @@ export async function* createPageStream<T extends DataObject>(
         var { items, total, has_more, page_token } = body!.data!;
 
         if (total != null) count = total;
-        else count += items.length;
+        else count += items?.length || 0;
 
         lastPage = page_token;
 
