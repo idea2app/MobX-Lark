@@ -1,37 +1,67 @@
-import { Filter, IDType, ListModel, Stream, toggle } from 'mobx-restful';
+import {
+    Filter,
+    IDType,
+    ListModel,
+    NewData,
+    Stream,
+    toggle
+} from 'mobx-restful';
 import { buildURLData } from 'web-utility';
 
 import { LarkData, UserIdType } from '../../type';
 import { createPageStream } from '../base';
 import {
-    TaskField,
     Task,
+    TaskField,
     TaskList,
     TaskListSection,
-    TaskResourceType,
+    TaskResource,
     TaskSummary
 } from './type';
 
-export interface TaskFilter extends Filter<Task> {
+export interface BaseTaskFilter {
     user_id_type?: UserIdType;
 }
 
+export interface TaskFilter
+    extends Filter<Task>,
+        BaseTaskFilter,
+        Partial<TaskResource>,
+        Record<`created_${'from' | 'to'}`, string> {
+    completed?: boolean;
+}
+
 export abstract class TaskModel extends Stream<Task, TaskFilter>(ListModel) {
-    constructor(tasklist_guid: string) {
-        super();
-        this.baseURI = `task/v2/tasklists/${tasklist_guid}/tasks`;
-    }
+    baseURI = 'task/v2/tasks';
 
     /**
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/task/list}
      * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/tasklist/tasks}
      */
-    async *openStream({ user_id_type }: TaskFilter) {
-        for await (const { guid } of createPageStream<TaskSummary>(
-            this.client,
-            this.baseURI,
-            total => (this.totalCount = total)
-        ))
-            yield await this.getOne(guid, user_id_type);
+    async *openStream({
+        resource_type = 'my_tasks',
+        resource_id,
+        user_id_type = 'union_id',
+        ...rest
+    }: TaskFilter) {
+        if (resource_type === 'my_tasks') {
+            const stream = createPageStream<Task>(
+                this.client,
+                this.baseURI,
+                total => (this.totalCount = total),
+                { type: resource_type, user_id_type, ...rest }
+            );
+            for await (const item of stream) yield item;
+        } else {
+            const stream = createPageStream<TaskSummary>(
+                this.client,
+                `task/v2/tasklists/${resource_id}/tasks`,
+                total => (this.totalCount = total),
+                rest
+            );
+            for await (const { guid } of stream)
+                yield await this.getOne(guid, user_id_type);
+        }
     }
 
     /**
@@ -44,19 +74,45 @@ export abstract class TaskModel extends Stream<Task, TaskFilter>(ListModel) {
         );
         return (this.currentOne = body!.data!.task);
     }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/task/create}
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/task/patch}
+     */
+    @toggle('uploading')
+    async updateOne(
+        task: NewData<Task>,
+        id?: string,
+        user_id_type: UserIdType = 'union_id'
+    ) {
+        const path = `task/v2/tasks?${buildURLData({ user_id_type })}`;
+        const { body } = id
+            ? await this.client.patch<LarkData<{ task: Task }>>(path, {
+                  task,
+                  update_fields: Object.keys(task)
+              })
+            : await this.client.post<LarkData<{ task: Task }>>(path, task);
+
+        return body!.data!.task;
+    }
 }
 
-export abstract class TaskListModel extends Stream<TaskList>(ListModel) {
+export type TaskListFilter = Filter<TaskList> & BaseTaskFilter;
+
+export abstract class TaskListModel extends Stream<TaskList, TaskListFilter>(
+    ListModel
+) {
     baseURI = 'task/v2/tasklists';
 
     /**
      * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/tasklist/list}
      */
-    async *openStream() {
+    async *openStream({ user_id_type = 'union_id' }: TaskListFilter) {
         for await (const item of createPageStream<TaskList>(
             this.client,
             this.baseURI,
-            total => (this.totalCount = total)
+            total => (this.totalCount = total),
+            { user_id_type }
         ))
             yield item;
     }
@@ -72,12 +128,32 @@ export abstract class TaskListModel extends Stream<TaskList>(ListModel) {
 
         return (this.currentOne = body!.data!.tasklist);
     }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/tasklist/create}
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/tasklist/patch}
+     */
+    @toggle('uploading')
+    async updateOne(
+        tasklist: NewData<TaskList>,
+        id?: string,
+        user_id_type: UserIdType = 'union_id'
+    ) {
+        const path = `${this.baseURI}?${buildURLData({ user_id_type })}`;
+        const { body } = id
+            ? await this.client.post<LarkData<{ tasklist: TaskList }>>(path, {
+                  tasklist,
+                  update_fields: Object.keys(tasklist)
+              })
+            : await this.client.post<LarkData<{ tasklist: TaskList }>>(
+                  path,
+                  tasklist
+              );
+        return body!.data!.tasklist;
+    }
 }
 
-export interface TaskListSectionFilter {
-    resource_type: TaskResourceType;
-    resource_id?: string;
-}
+export type TaskListSectionFilter = Partial<TaskResource> & BaseTaskFilter;
 
 export abstract class TaskListSectionModel extends Stream<
     TaskListSection,
@@ -88,16 +164,20 @@ export abstract class TaskListSectionModel extends Stream<
     /**
      * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/section/list}
      */
-    async *openStream(filter: TaskListSectionFilter) {
-        for await (const { guid } of createPageStream<
+    async *openStream({
+        resource_type = 'my_tasks',
+        resource_id,
+        user_id_type = 'union_id'
+    }: TaskListSectionFilter) {
+        const stream = createPageStream<
             Pick<TaskListSection, 'guid' | 'name' | 'is_default'>
-        >(
-            this.client,
-            this.baseURI,
-            total => (this.totalCount = total),
-            filter
-        ))
-            yield await this.getOne(guid);
+        >(this.client, this.baseURI, total => (this.totalCount = total), {
+            resource_type,
+            resource_id,
+            user_id_type
+        });
+
+        for await (const { guid } of stream) yield await this.getOne(guid);
     }
 
     /**
@@ -110,6 +190,30 @@ export abstract class TaskListSectionModel extends Stream<
         >(`${this.baseURI}/${id}`);
 
         return (this.currentOne = body!.data!.section);
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/section/create}
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/section/patch}
+     */
+    @toggle('uploading')
+    async updateOne(
+        section: NewData<TaskListSection>,
+        id?: string,
+        user_id_type: UserIdType = 'union_id',
+        [target]: Partial<TaskResource>[] = []
+    ) {
+        const path = `${this.baseURI}?${buildURLData({ user_id_type })}`;
+        const { body } = id
+            ? await this.client.patch<LarkData<{ section: TaskListSection }>>(
+                  path,
+                  { section, update_fields: Object.keys(section) }
+              )
+            : await this.client.post<LarkData<{ section: TaskListSection }>>(
+                  path,
+                  { name: section.name, ...target }
+              );
+        return body!.data!.section;
     }
 }
 
@@ -124,13 +228,49 @@ export abstract class TaskFieldModel extends Stream<TaskField, TaskFieldFilter>(
     /**
      * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/custom_field/list}
      */
-    async *openStream(filter: TaskFieldFilter) {
+    async *openStream({
+        resource_type = 'tasklist',
+        resource_id,
+        user_id_type = 'union_id'
+    }: TaskFieldFilter) {
         for await (const item of createPageStream<TaskField>(
             this.client,
             this.baseURI,
             total => (this.totalCount = total),
-            filter
+            { resource_type, resource_id, user_id_type }
         ))
             yield item;
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/custom_field/create}
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/custom_field/patch}
+     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/custom_field/add}
+     */
+    @toggle('uploading')
+    async updateOne(
+        data: NewData<TaskField>,
+        id?: string,
+        user_id_type: UserIdType = 'union_id',
+        [target, ...targets]: TaskResource[] = []
+    ) {
+        const path = `${this.baseURI}?${buildURLData({ user_id_type })}`;
+        const { body } = id
+            ? await this.client.patch<LarkData<{ custom_field: TaskField }>>(
+                  path,
+                  { custom_field: data, update_fields: Object.keys(data) }
+              )
+            : await this.client.post<LarkData<{ custom_field: TaskField }>>(
+                  path,
+                  { ...data, ...target }
+              );
+        const { custom_field } = body!.data!;
+
+        for (const body of targets)
+            await this.client.post(
+                `${this.baseURI}/${custom_field.guid}/add`,
+                body
+            );
+        return custom_field;
     }
 }
