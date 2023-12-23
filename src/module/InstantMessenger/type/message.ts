@@ -29,12 +29,13 @@ export interface ImageTag {
 
 export type RichTextTag = TextTag | LinkTag | AtTag | ImageTag;
 
-export type RichTextMessage = {
-    [key: I18nKey]: {
+export type RichTextMessage = Record<
+    I18nKey,
+    {
         title: string;
         content: RichTextTag[][];
-    };
-};
+    }
+>;
 
 export interface UserCardMessage {
     type: 'share_user';
