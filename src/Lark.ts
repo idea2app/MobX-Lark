@@ -1,4 +1,4 @@
-import { Context, HTTPClient, HTTPError, makeFormData, request } from 'koajax';
+import { Context, HTTPClient, makeFormData } from 'koajax';
 import { buildURLData, cache, Second } from 'web-utility';
 
 import {
@@ -113,7 +113,7 @@ export class LarkApp implements LarkAppOption {
     async getUserMeta(code: string) {
         await this.getAccessToken();
 
-        const { body } = await this.client.post<UserMeta>(
+        const { body } = await this.client.post<LarkData<UserMeta>>(
             'authen/v1/access_token',
             { grant_type: 'authorization_code', code }
         );
@@ -126,7 +126,8 @@ export class LarkApp implements LarkAppOption {
     getJSTicket = cache(async clean => {
         await this.getAccessToken();
 
-        const { body } = await this.client.post<JSTicket>('jssdk/ticket/get');
+        const { body } =
+            await this.client.post<LarkData<JSTicket>>('jssdk/ticket/get');
         const { expire_in, ticket } = body!.data!;
 
         setTimeout(clean, expire_in * Second);
@@ -155,32 +156,19 @@ export class LarkApp implements LarkAppOption {
         parent_type: UploadTargetType,
         parent_node: string
     ) {
-        const token = await this.getAccessToken();
+        await this.getAccessToken();
 
-        const body = makeFormData({
+        const form = makeFormData({
             file,
             file_name: file.name,
             size: file.size,
             parent_type,
             parent_node
         });
-        const { response } = request<LarkData<{ file_token: string }>>({
-            method: 'POST',
-            path: this.client.baseURI + 'drive/v1/medias/upload_all',
-            headers: { Authorization: `Bearer ${token}` },
-            body
-        });
-        const res = await response;
+        const { body } = await this.client.post<
+            LarkData<{ file_token: string }>
+        >('drive/v1/medias/upload_all', form);
 
-        if (res.status < 300) return res.body!.data!.file_token;
-
-        const error = res.body as unknown as Blob;
-
-        const raw = new TextDecoder().decode(await error.arrayBuffer());
-
-        throw new HTTPError(res.statusText, {
-            ...res,
-            body: JSON.parse(raw)
-        });
+        return body!.data!.file_token;
     }
 }

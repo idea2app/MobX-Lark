@@ -34,8 +34,8 @@ export type UserIdType = `${'open' | 'union' | 'user'}_id`;
 
 export type LocaleUser = Record<`${'' | 'en_'}name` | 'email', string>;
 
-export type UserMeta = LarkData<
-    { token_type: 'Bearer' } & LocaleUser &
+export interface UserMeta
+    extends LocaleUser,
         Record<
             | `avatar_${'url' | 'thumb' | 'middle' | 'big'}`
             | UserIdType
@@ -43,14 +43,15 @@ export type UserMeta = LarkData<
             | 'tenant_key'
             | `${'access' | 'refresh'}_token`,
             string
-        > &
-        Record<`${'' | 'refresh_'}expires_in`, number>
->;
+        >,
+        Record<`${'' | 'refresh_'}expires_in`, number> {
+    token_type: 'Bearer';
+}
 
-export type JSTicket = LarkData<{
+export interface JSTicket {
     expire_in: number;
     ticket: string;
-}>;
+}
 
 export type I18nKey = `${string}_${string}`;
 

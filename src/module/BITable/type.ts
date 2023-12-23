@@ -1,13 +1,9 @@
-import { LarkData, LarkPageData, LocaleUser } from '../../type';
+import { LarkData, LocaleUser } from '../../type';
 
 export interface RevisionTable {
     name: string;
     revision: number;
 }
-
-export type BITableMeta = LarkData<{
-    app: { app_token: string } & RevisionTable;
-}>;
 
 export interface BITable extends RevisionTable {
     table_id: string;
@@ -111,7 +107,3 @@ export interface TableRecord<T extends TableRecordFields>
 export type TableRecordData<T extends TableRecordFields> = LarkData<{
     record: TableRecord<T>;
 }>;
-
-export type TableRecordList<D extends TableRecordFields = {}> = LarkPageData<
-    TableRecord<D>
->;

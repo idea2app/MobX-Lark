@@ -1,8 +1,9 @@
-import { buildURLData, objectFrom } from 'web-utility';
 import * as MobX from 'mobx';
-import { DataObject, NewData, ListModel, toggle } from 'mobx-restful';
+import { DataObject, ListModel, NewData, toggle } from 'mobx-restful';
+import { buildURLData, objectFrom } from 'web-utility';
 
-import { SpreadSheetMeta, SheetMeta, SheetRangeData } from './type';
+import { LarkData } from '../../type';
+import { SheetMeta, SpreadSheetMeta, SpreadSheetRange } from './type';
 
 export * from './type';
 
@@ -35,7 +36,7 @@ export abstract class SpreadSheetModel<
     async getMeta() {
         if (this.meta) return this.meta;
 
-        const { body } = await this.client.get<SpreadSheetMeta>(
+        const { body } = await this.client.get<LarkData<SpreadSheetMeta>>(
                 `${this.baseURI}/metainfo`
             ),
             { sheetId } = this;
@@ -63,7 +64,7 @@ export abstract class SpreadSheetModel<
         const startColumn = String.fromCharCode(startColumnNumber),
             endColumn = String.fromCharCode(endColumnNumber);
 
-        const { body } = await this.client.get<SheetRangeData>(
+        const { body } = await this.client.get<LarkData<SpreadSheetRange>>(
             `${this.baseURI}/values/${
                 this.sheetId
             }!${startColumn}${startRow}:${endColumn}${endRow}?${buildURLData({
