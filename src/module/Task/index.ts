@@ -19,6 +19,8 @@ import {
     TaskSummary
 } from './type';
 
+export * from './type';
+
 export interface BaseTaskFilter {
     user_id_type?: UserIdType;
 }
@@ -57,7 +59,7 @@ export abstract class TaskModel extends Stream<Task, TaskFilter>(ListModel) {
                 this.client,
                 `task/v2/tasklists/${resource_id}/tasks`,
                 total => (this.totalCount = total),
-                rest
+                { user_id_type, ...rest }
             );
             for await (const { guid } of stream)
                 yield await this.getOne(guid, user_id_type);
