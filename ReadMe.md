@@ -2,11 +2,19 @@
 
 Unofficial [TypeScript][1] SDK for [FeiShu/Lark API][2], which is based on [MobX-RESTful][3].
 
-[![MobX compatibility](https://img.shields.io/badge/Compatible-1?logo=mobx&label=MobX%204%2F5%2F6)][4]
+[![MobX compatibility](https://img.shields.io/badge/Compatible-1?logo=mobx&label=MobX%206%2F7)][4]
 [![NPM Dependency](https://img.shields.io/librariesio/github/idea2app/MobX-Lark.svg)][5]
 [![CI & CD](https://github.com/idea2app/MobX-Lark/actions/workflows/main.yml/badge.svg)][6]
 
 [![NPM](https://nodei.co/npm/mobx-lark.png?downloads=true&downloadRank=true&stars=true)][7]
+
+## Versions
+
+|   SemVer   |  branch  |    status    | ES decorator |    MobX     |
+| :--------: | :------: | :----------: | :----------: | :---------: |
+|   `>=2`    |  `main`  | ✅developing |   stage-3    |  `>=6.11`   |
+| `>=0.8 <2` |  `main`  | ❌deprecated |   stage-2    | `>=4 <6.11` |
+|   `<0.8`   | `master` | ❌deprecated |              |             |
 
 ## Usage
 

@@ -119,21 +119,25 @@ export function BiDataTable<
          */
         async *openStream(filter: F) {
             const view_id = this.currentViewId;
-
+            const searchParams = view_id
+                ? { view_id }
+                : {
+                      filter: this.makeFilter(filter),
+                      sort: JSON.stringify(
+                          Object.entries(this.sort).map(
+                              ([key, order]) => `${key} ${order}`
+                          )
+                      )
+                  };
             const stream = createPageStream<TableRecord<T>>(
                 this.client,
                 this.baseURI,
                 total => (this.totalCount = total),
-                view_id
-                    ? { view_id }
-                    : {
-                          filter: this.makeFilter(filter),
-                          sort: JSON.stringify(
-                              Object.entries(this.sort).map(
-                                  ([key, order]) => `${key} ${order}`
-                              )
-                          )
-                      }
+                {
+                    ...searchParams,
+                    text_field_as_array: true,
+                    automatic_fields: true
+                }
             );
             for await (const item of stream) yield this.normalize(item);
         }
