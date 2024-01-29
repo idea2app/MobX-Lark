@@ -1,13 +1,13 @@
 {
     "compilerOptions": {
         "strict": true,
-        "target": "ES5",
+        "target": "ES6",
         "module": "CommonJS",
         "moduleResolution": "Node",
-        "experimentalDecorators": true,
+        "useDefineForClassFields": true,
         "declaration": true,
         "skipLibCheck": true,
-        "lib": ["ES2021", "DOM"],
+        "lib": ["ES2023", "DOM"],
         "outDir": "dist/"
     },
     "include": ["src/**/*.ts"],

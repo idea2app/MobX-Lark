@@ -1,4 +1,4 @@
-import * as MobX from 'mobx';
+import { observable } from 'mobx';
 import { DataObject, ListModel, NewData, toggle } from 'mobx-restful';
 import { buildURLData, objectFrom } from 'web-utility';
 
@@ -17,15 +17,14 @@ export abstract class SpreadSheetModel<
 
     abstract columnKeys: (keyof D)[];
 
-    @MobX.observable
-    meta?: SheetMeta;
+    @observable
+    accessor meta: SheetMeta | undefined;
 
     constructor(
         public id: string,
         public sheetId: string
     ) {
         super();
-        MobX.makeObservable?.(this);
         this.baseURI = `sheets/v2/spreadsheets/${id}`;
     }
 
