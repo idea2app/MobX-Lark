@@ -1,6 +1,7 @@
 import { DataObject, Filter, ListModel, Stream, toggle } from 'mobx-restful';
-import { isEmpty } from 'web-utility';
+import { buildURLData, isEmpty } from 'web-utility';
 
+import { UserIdType } from '../../type';
 import { createPageStream } from '../base';
 import {
     BITable,
@@ -49,6 +50,14 @@ export const normalizeText = (
 
 export type BiBaseData = Omit<TableRecord<{}>, 'record_id' | 'fields'>;
 
+export interface BiDataQueryOptions {
+    text_field_as_array?: boolean;
+    automatic_fields?: boolean;
+    display_formula_ref?: boolean;
+    with_shared_url?: boolean;
+    user_id_type?: UserIdType;
+}
+
 /**
  * @see {@link https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/bitable-overview}
  */
@@ -61,6 +70,10 @@ export function BiDataTable<
 
         sort: Partial<Record<keyof T, 'ASC' | 'DESC'>> = {};
 
+        queryOptions: BiDataQueryOptions = {
+            text_field_as_array: true,
+            automatic_fields: true
+        };
         currentViewId?: string;
 
         constructor(appId: string, tableId: string) {
@@ -78,7 +91,7 @@ export function BiDataTable<
         @toggle('downloading')
         async getOne(id: string) {
             const { body } = await this.client.get<TableRecordData<T>>(
-                `${this.baseURI}/${id}`
+                `${this.baseURI}/${id}?${buildURLData(this.queryOptions)}`
             );
             return (this.currentOne = this.normalize(body!.data!.record));
         }
@@ -133,11 +146,7 @@ export function BiDataTable<
                 this.client,
                 this.baseURI,
                 total => (this.totalCount = total),
-                {
-                    ...searchParams,
-                    text_field_as_array: true,
-                    automatic_fields: true
-                }
+                { ...searchParams, ...this.queryOptions }
             );
             for await (const item of stream) yield this.normalize(item);
         }
