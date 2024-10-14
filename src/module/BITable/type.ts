@@ -50,6 +50,8 @@ export interface TableCellUser extends LocaleUser {
     id: string;
 }
 
+export type TableCellGroup = Record<'id' | 'name' | 'avatar_url', string>;
+
 export interface TableCellMetion
     extends Record<'mentionType' | 'text', string> {
     type: 'mention';
@@ -87,6 +89,7 @@ export type TableCellValue =
           | TableCellMedia
           | TableCellAttachment
           | TableCellUser
+          | TableCellGroup
           | TableCellUserMetion
           | TableCellDocumentMetion
           | TableCellRelation

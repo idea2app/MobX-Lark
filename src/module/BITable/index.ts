@@ -1,5 +1,13 @@
-import { DataObject, Filter, ListModel, Stream, toggle } from 'mobx-restful';
-import { buildURLData, isEmpty } from 'web-utility';
+import {
+    DataObject,
+    Filter,
+    ListModel,
+    PageData,
+    RESTClient,
+    Stream,
+    toggle
+} from 'mobx-restful';
+import { buildURLData, Constructor, isEmpty } from 'web-utility';
 
 import { UserIdType } from '../../type';
 import { createPageStream } from '../base';
@@ -10,6 +18,7 @@ import {
     TableCellText,
     TableRecord,
     TableRecordData,
+    TableRecordFields,
     TableView
 } from './type';
 
@@ -176,6 +185,49 @@ export function BiDataTable<
     }
     return BiDataTableModel;
 }
+
+export function BiSearch<D extends DataObject, F extends Filter<D> = Filter<D>>(
+    Model: Constructor<ListModel<D, F>>
+) {
+    abstract class BiSearchModel extends Model {
+        declare baseURI: string;
+        declare client: RESTClient;
+        declare loadPage: (
+            pageIndex: number,
+            pageSize: number,
+            filter: F
+        ) => Promise<PageData<D>>;
+
+        abstract searchKeys: readonly (keyof TableRecordFields)[];
+
+        makeFilter(filter: F) {
+            return isEmpty(filter)
+                ? ''
+                : makeSimpleFilter(filter, 'contains', 'OR');
+        }
+
+        async getSearchList(
+            keywords: string,
+            pageIndex = this.pageIndex + 1,
+            pageSize = this.pageSize
+        ) {
+            const wordList = keywords.split(/[\s,]+/);
+            const filterList = this.searchKeys.map(key => [key, wordList]);
+
+            return this.getList(
+                Object.fromEntries(filterList),
+                pageIndex,
+                pageSize
+            );
+        }
+    }
+    return BiSearchModel;
+}
+
+interface BiSearchModel
+    extends InstanceType<ReturnType<typeof BiSearch<TableRecordFields, any>>> {}
+
+export type BiSearchModelClass = Constructor<BiSearchModel>;
 
 export function BiTableView() {
     abstract class BiTableViewModel extends Stream<TableView>(ListModel) {
