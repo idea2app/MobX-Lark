@@ -76,24 +76,24 @@ export interface TableCellRelation extends TableCellText {
     text_arr: string[];
 }
 
+export type TableCellObject =
+    | TableCellLocation
+    | TableCellText
+    | TableCellLink
+    | TableCellMedia
+    | TableCellAttachment
+    | TableCellUser
+    | TableCellGroup
+    | TableCellUserMetion
+    | TableCellDocumentMetion
+    | TableCellRelation;
+
 export type TableCellValue =
     | string
     | number
     | boolean
-    | TableCellLocation
-    | TableCellLink
-    | (
-          | string
-          | TableCellText
-          | TableCellLink
-          | TableCellMedia
-          | TableCellAttachment
-          | TableCellUser
-          | TableCellGroup
-          | TableCellUserMetion
-          | TableCellDocumentMetion
-          | TableCellRelation
-      )[]
+    | TableCellObject
+    | (string | TableCellObject)[]
     | null;
 
 export type TableRecordFields = Record<string, TableCellValue>;
