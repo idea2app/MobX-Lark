@@ -13,51 +13,22 @@ import { UserIdType } from '../../type';
 import { createPageStream } from '../base';
 import {
     BITable,
-    TableCellLink,
-    TableCellRelation,
-    TableCellText,
+    LarkFormData,
+    TableFormView,
     TableRecord,
     TableRecordData,
     TableRecordFields,
     TableView
 } from './type';
+import { makeSimpleFilter } from './utility';
 
 export * from './type';
+export * from './utility';
 
-export type FilterOperator = '<' | '<=' | '=' | '!=' | '=>' | '>' | 'contains';
-
-/**
- * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/filter
- */
-export function makeSimpleFilter(
-    data: DataObject,
-    operator: FilterOperator = 'contains',
-    relation: 'AND' | 'OR' = 'AND'
-) {
-    const list = Object.entries(data)
-        .map(
-            ([key, value]) =>
-                value != null &&
-                (value instanceof Array ? value : [value]).map(
-                    (item: string) =>
-                        `CurrentValue.[${key}]` +
-                        (operator === 'contains'
-                            ? `.contains("${item}")`
-                            : `${operator}${JSON.stringify(item)}`)
-                )
-        )
-        .filter(Boolean)
-        .flat() as string[];
-
-    return list[1] ? `${relation}(${list})` : list[0];
-}
-
-export const normalizeText = (
-    value: TableCellText | TableCellLink | TableCellRelation
-) =>
-    (value && typeof value === 'object' && 'text' in value && value.text) || '';
-
-export type BiBaseData = Omit<TableRecord<{}>, 'record_id' | 'fields'>;
+export type BiBaseData = Omit<
+    TableRecord<{}>,
+    `record_${'id' | 'url'}` | 'fields'
+>;
 
 export interface BiDataQueryOptions {
     text_field_as_array?: boolean;
@@ -229,8 +200,11 @@ interface BiSearchModel
 
 export type BiSearchModelClass = Constructor<BiSearchModel>;
 
-export function BiTableView() {
-    abstract class BiTableViewModel extends Stream<TableView>(ListModel) {
+export function BiTableView<
+    T extends TableView['view_type'],
+    D extends T extends 'form' ? TableFormView : TableView
+>(type = 'grid' as T) {
+    abstract class BiTableViewModel extends Stream<D>(ListModel) {
         constructor(appId: string, tableId: string) {
             super();
             this.baseURI = `bitable/v1/apps/${appId}/tables/${tableId}/views`;
@@ -238,6 +212,7 @@ export function BiTableView() {
 
         /**
          * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-view/list}
+         * @see {@link https://open.feishu.cn/document/server-docs/docs/bitable-v1/form/get}
          */
         async *openStream() {
             for await (const item of createPageStream<TableView>(
@@ -245,7 +220,14 @@ export function BiTableView() {
                 this.baseURI,
                 total => (this.totalCount = total)
             ))
-                yield item;
+                if (type !== 'form') {
+                    if (item.view_type === type) yield item as D;
+                } else if (item.view_type === 'form') {
+                    const { body } = await this.client.get<LarkFormData>(
+                        this.baseURI.replace(/views$/, `forms/${item.view_id}`)
+                    );
+                    yield body!.data!.form as D;
+                }
         }
     }
     return BiTableViewModel;

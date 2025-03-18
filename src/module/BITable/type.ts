@@ -10,8 +10,16 @@ export interface BITable extends RevisionTable {
 }
 
 export interface TableView extends Record<'view_id' | 'view_name', string> {
-    view_type: 'grid' | 'form';
+    view_type: 'grid' | 'kanban' | 'gallery' | 'gantt' | 'form';
 }
+
+export interface TableFormView
+    extends Record<'name' | 'description' | 'shared_url', string>,
+        Record<'shared' | 'submit_limit_once', boolean> {
+    shared_limit: 'tenant_editable';
+}
+
+export type LarkFormData = LarkData<{ form: TableFormView }>;
 
 export interface TableCellText {
     type: 'text';

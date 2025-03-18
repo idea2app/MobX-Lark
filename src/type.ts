@@ -32,7 +32,10 @@ export type TenantAccessToken = LarkData<
 
 export type UserIdType = `${'open' | 'union' | 'user'}_id`;
 
-export type LocaleUser = Record<`${'' | 'en_'}name` | 'email', string>;
+export type LocaleUser = Record<
+    `${'' | 'en_'}name` | `${'' | 'enterprise_'}email`,
+    string
+>;
 
 export interface UserMeta
     extends LocaleUser,
@@ -41,6 +44,7 @@ export interface UserMeta
             | UserIdType
             | 'mobile'
             | 'tenant_key'
+            | 'employee_no'
             | `${'access' | 'refresh'}_token`,
             string
         >,

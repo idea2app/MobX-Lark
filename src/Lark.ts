@@ -10,35 +10,42 @@ import {
     UserMeta
 } from './type';
 
-export interface LarkAppOption {
+export interface LarkAppBaseOption {
     host?: string;
     id: string;
-    secret?: string;
 }
 
+export interface LarkAppServerOption extends LarkAppBaseOption {
+    secret: string;
+}
+
+export interface LarkAppClientOption extends LarkAppBaseOption {
+    accessToken: string;
+}
+
+export interface LarkAppOption
+    extends LarkAppServerOption,
+        LarkAppClientOption {}
+
 export class LarkApp implements LarkAppOption {
-    host?: string;
-    id: string;
-    secret?: string;
+    host = 'https://open.feishu.cn/open-apis/';
+    id = '';
+    secret = '';
 
     client: HTTPClient<Context>;
-    accessToken?: string;
+    accessToken = '';
 
-    constructor({
-        host = 'https://open.feishu.cn/open-apis/',
-        id,
-        secret
-    }: LarkAppOption) {
+    constructor(option: LarkAppServerOption | LarkAppClientOption) {
+        Object.assign(this, option);
+
         console.assert(
-            !globalThis.window || !secret,
+            !globalThis.window || !this.secret,
             "App Secret can't be used in client"
         );
-        this.host = host;
-        this.id = id;
-        this.secret = secret;
-
-        this.client = new HTTPClient({ baseURI: host, responseType: 'json' });
-
+        this.client = new HTTPClient({
+            baseURI: this.host,
+            responseType: 'json'
+        });
         this.boot();
     }
 
@@ -48,8 +55,8 @@ export class LarkApp implements LarkAppOption {
 
             if (accessToken)
                 request.headers = {
-                    ...request.headers,
-                    Authorization: `Bearer ${accessToken}`
+                    Authorization: `Bearer ${accessToken}`,
+                    ...request.headers
                 };
             try {
                 await next();
@@ -70,8 +77,10 @@ export class LarkApp implements LarkAppOption {
         });
     }
 
-    getAccessToken() {
-        return this.getTenantAccessToken();
+    getAccessToken(code = '') {
+        return code
+            ? this.getUserAccessToken(code)
+            : this.getTenantAccessToken();
     }
 
     /**
@@ -89,7 +98,7 @@ export class LarkApp implements LarkAppOption {
             { app_id: id, app_secret: secret }
         );
         setTimeout(() => {
-            delete this.accessToken;
+            this.accessToken = '';
             clean();
         }, body!.expire * Second);
 
@@ -110,14 +119,29 @@ export class LarkApp implements LarkAppOption {
     /**
      * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/authen-v1/authen/access_token}
      */
-    async getUserMeta(code: string) {
-        await this.getAccessToken();
-
+    getUserAccessToken = cache(async (clean, code: string) => {
         const { body } = await this.client.post<LarkData<UserMeta>>(
             'authen/v1/access_token',
             { grant_type: 'authorization_code', code }
         );
-        return body!.data;
+        const { expires_in, access_token } = body!.data!;
+
+        setTimeout(() => {
+            this.accessToken = '';
+            clean();
+        }, expires_in * Second);
+
+        return (this.accessToken = access_token);
+    }, 'User Access Token');
+
+    /**
+     * @see {@link https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/get}
+     */
+    async getUserMeta() {
+        const { body } = await this.client.get<LarkData<UserMeta>>(
+            'authen/v1/user_info'
+        );
+        return body!.data!;
     }
 
     /**
