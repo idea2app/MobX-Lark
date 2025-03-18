@@ -76,18 +76,35 @@ describe('MobX Lark SDK', async () => {
         return table!;
     });
 
-    await it('should get a page of views in a BITable table', async expect => {
-        class ExampleTableViewModel extends BiTableView() {
+    await it('should get a page of grids in a BITable table', async expect => {
+        class ExampleTableGridModel extends BiTableView('grid') {
             client = app.client;
         }
-        const tableView = new ExampleTableViewModel(
+        const gridView = new ExampleTableGridModel(
             BITABLE_ID!,
             BITABLE_TABLE_ID!
         );
+        const list = await gridView.getList();
 
-        const [view] = await tableView.getList();
+        expect(list.every(({ view_type }) => view_type === 'grid'));
+    });
 
-        expect(['grid', 'form'].includes(view.view_type));
+    await it('should get a page of forms in a BITable table', async expect => {
+        class ExampleTableFormModel extends BiTableView('form') {
+            client = app.client;
+        }
+        const formView = new ExampleTableFormModel(
+            BITABLE_ID!,
+            BITABLE_TABLE_ID!
+        );
+        const list = await formView.getList();
+
+        expect(
+            list.every(
+                ({ submit_limit_once }) =>
+                    typeof submit_limit_once === 'boolean'
+            )
+        );
     });
 
     await it('should get a page of records in a BITable table', async expect => {

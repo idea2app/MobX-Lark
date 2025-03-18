@@ -18,11 +18,8 @@ Unofficial [TypeScript][1] SDK for [FeiShu/Lark API][2], which is based on [MobX
 
 ## Usage
 
--   [Example](test/index.spec.ts)
--   [API document](https://idea2app.github.io/MobX-Lark/)
-
-> Some **Node.js** tips about the upstream `mobx-restful` you should know:
-> https://github.com/idea2app/MobX-RESTful?tab=readme-ov-file#usage
+- [Example](test/index.spec.ts)
+- [API document](https://idea2app.github.io/MobX-Lark/)
 
 ## User cases
 
@@ -31,7 +28,7 @@ Unofficial [TypeScript][1] SDK for [FeiShu/Lark API][2], which is based on [MobX
 
 ## Related with
 
--   Lark client API: https://github.com/idea2app/Lark-client-API
+- Lark client API: https://github.com/idea2app/Lark-client-API
 
 [1]: https://www.typescriptlang.org/
 [2]: https://open.feishu.cn/
