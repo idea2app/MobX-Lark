@@ -1,6 +1,7 @@
 import { Context, HTTPClient, makeFormData } from 'koajax';
 import { buildURLData, cache, Second } from 'web-utility';
 
+import { LarkWikiNode } from './module';
 import {
     isLarkError,
     JSTicket,
@@ -194,5 +195,42 @@ export class LarkApp implements LarkAppOption {
         >('drive/v1/medias/upload_all', form);
 
         return body!.data!.file_token;
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/server-docs/docs/wiki-v2/space-node/get_node}
+     */
+    async wiki2docx(id: string) {
+        await this.getAccessToken();
+
+        const { body } = await this.client.get<
+            LarkData<{ node: LarkWikiNode }>
+        >(`wiki/v2/spaces/get_node?token=${id}`);
+
+        const { obj_type, obj_token } = body!.data!.node;
+
+        return obj_type === 'docx' ? obj_token : '';
+    }
+
+    static documentPathPattern = /(wiki|docx)\/(\w+)/;
+
+    /**
+     * @see {@link https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/docs-v1/content/get}
+     */
+    async downloadMarkdown(URI: string) {
+        await this.getAccessToken();
+
+        const [, type, id] = URI.match(LarkApp.documentPathPattern) || [];
+
+        const doc_token = type === 'wiki' ? await this.wiki2docx(id) : id;
+
+        const { body } = await this.client.get<LarkData<{ content: string }>>(
+            `docs/v1/content?${new URLSearchParams({
+                doc_type: 'docx',
+                doc_token,
+                content_type: 'markdown'
+            })}`
+        );
+        return body!.data!.content;
     }
 }
