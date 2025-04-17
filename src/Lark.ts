@@ -166,11 +166,17 @@ export class LarkApp implements LarkAppOption {
     async downloadFile(id: string) {
         await this.getAccessToken();
 
-        const { body } = await this.client.request<ArrayBuffer>({
-            path: `drive/v1/medias/${id}/download`,
-            responseType: 'arraybuffer'
-        });
-        return body!;
+        const { headers, body } = await this.client.get<Blob>(
+            `drive/v1/medias/${id}/download`,
+            {},
+            { responseType: 'blob' }
+        );
+        const { 'Content-Disposition': CD, 'Content-Type': CT } = headers;
+
+        const [type] = (CT as string)?.split(';') || [],
+            [, fileName] = (CD as string)?.match(/filename="?(.*?)"?$/) || [];
+
+        return new File([body!], fileName, { type });
     }
 
     /**

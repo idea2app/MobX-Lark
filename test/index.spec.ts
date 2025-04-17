@@ -121,8 +121,8 @@ describe('MobX Lark SDK', async () => {
     });
 
     await it('should download a file', async expect => {
-        const file = await app.downloadFile(MEDIA_ID!);
+        const { size } = await app.downloadFile(MEDIA_ID!);
 
-        expect(file.byteLength > 0);
+        expect(size > 0);
     });
 }).finally(() => process.exit());

@@ -1,6 +1,6 @@
 {
     "name": "mobx-lark",
-    "version": "2.1.1",
+    "version": "2.2.0",
     "license": "LGPL-3.0",
     "author": "shiy2008@gmail.com",
     "description": "Unofficial TypeScript SDK for FeiShu/Lark API, which is based on MobX-RESTful.",
@@ -25,7 +25,7 @@
         "url": "https://github.com/idea2app/MobX-Lark/issues"
     },
     "dependencies": {
-        "@swc/helpers": "^0.5.15",
+        "@swc/helpers": "^0.5.17",
         "koajax": "^3.1.2",
         "mobx": "^6.13.7",
         "mobx-restful": "^2.1.0",
@@ -35,10 +35,10 @@
     "devDependencies": {
         "@parcel/config-default": "~2.14.4",
         "@parcel/transformer-typescript-tsc": "~2.14.4",
-        "@types/node": "^22.14.0",
-        "dotenv": "^16.4.7",
+        "@types/node": "^22.14.1",
+        "dotenv": "^16.5.0",
         "husky": "^9.1.7",
-        "lint-staged": "^15.5.0",
+        "lint-staged": "^15.5.1",
         "mobx": "^6.13.7",
         "parcel": "~2.14.4",
         "prettier": "^3.5.3",
