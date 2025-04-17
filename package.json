@@ -1,6 +1,6 @@
 {
     "name": "mobx-lark",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "license": "LGPL-3.0",
     "author": "shiy2008@gmail.com",
     "description": "Unofficial TypeScript SDK for FeiShu/Lark API, which is based on MobX-RESTful.",
@@ -25,27 +25,32 @@
         "url": "https://github.com/idea2app/MobX-Lark/issues"
     },
     "dependencies": {
-        "@swc/helpers": "^0.5.15",
-        "koajax": "^3.1.1",
+        "@swc/helpers": "^0.5.17",
+        "koajax": "^3.1.2",
         "mobx": "^6.13.7",
         "mobx-restful": "^2.1.0",
         "regenerator-runtime": "^0.14.1",
         "web-utility": "^4.4.3"
     },
     "devDependencies": {
-        "@parcel/config-default": "~2.14.0",
-        "@parcel/transformer-typescript-tsc": "~2.14.0",
-        "@types/node": "^22.13.10",
-        "dotenv": "^16.4.7",
+        "@parcel/config-default": "~2.14.4",
+        "@parcel/transformer-typescript-tsc": "~2.14.4",
+        "@types/node": "^22.14.1",
+        "dotenv": "^16.5.0",
         "husky": "^9.1.7",
-        "lint-staged": "^15.5.0",
+        "lint-staged": "^15.5.1",
         "mobx": "^6.13.7",
-        "parcel": "~2.14.0",
+        "parcel": "~2.14.4",
         "prettier": "^3.5.3",
         "ts-node": "^10.9.2",
-        "typedoc": "^0.28.0",
+        "typedoc": "^0.28.2",
         "typedoc-plugin-mdn-links": "^5.0.1",
-        "typescript": "~5.8.2"
+        "typescript": "~5.8.3"
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "@swc/core"
+        ]
     },
     "prettier": {
         "singleQuote": true,

@@ -61,8 +61,17 @@ export function BiDataTable<
             this.baseURI = `bitable/v1/apps/${appId}/tables/${tableId}/records`;
         }
 
-        normalize({ fields, ...meta }: TableRecord<T>): T {
+        extractFields({ fields, ...meta }: TableRecord<T>): T {
             return { ...meta, ...fields };
+        }
+
+        /**
+         * @deprecated
+         */
+        normalize = this.extractFields;
+
+        wrapFields(fields: F) {
+            return fields as unknown as T;
         }
 
         /**
@@ -81,7 +90,9 @@ export function BiDataTable<
          * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-record/update}
          */
         @toggle('uploading')
-        async updateOne(fields: F, id?: string) {
+        async updateOne(data: F, id?: string) {
+            const fields = this.wrapFields(data);
+
             const { body } = await (id
                 ? this.client.put<TableRecordData<T>>(`${this.baseURI}/${id}`, {
                       fields
