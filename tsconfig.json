@@ -7,12 +7,12 @@
         "useDefineForClassFields": true,
         "declaration": true,
         "skipLibCheck": true,
-        "lib": ["ES2023", "DOM"],
+        "lib": ["ESNext", "DOM"],
         "outDir": "dist/"
     },
     "include": ["src/**/*.ts"],
     "typedocOptions": {
-        "name": "Lark SDK",
+        "name": "MobX Lark",
         "excludeExternals": true,
         "excludePrivate": true,
         "readme": "./ReadMe.md",
