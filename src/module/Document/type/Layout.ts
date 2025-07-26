@@ -1,15 +1,16 @@
-import { Block } from './Block';
+import { Block, BlockType } from './Block';
 import { BackgroundColor, FontColor } from './Text';
 
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#4b4dbec6}
  */
-export type DividerBlock = Block<'divider', {}>;
+export type DividerBlock = Block<BlockType.divider, 'divider', {}>;
 
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#10591ec3}
  */
 export type CalloutBlock = Block<
+    BlockType.callout,
     'callout',
     {
         background_color?: BackgroundColor;
@@ -26,12 +27,12 @@ export type CalloutBlock = Block<
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#d04c994f}
  */
-export type GridBlock = Block<'grid', { column_size: number }>;
+export type GridBlock = Block<BlockType.grid, 'grid', { column_size: number }>;
 
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#3134f01b}
  */
-export type GridColumnBlock = Block<'grid_column', { width_ratio: number }>;
+export type GridColumnBlock = Block<BlockType.grid_column, 'grid_column', { width_ratio: number }>;
 
 export type TableMergeInfo = Partial<Record<'row_span' | 'col_span', number>>;
 
@@ -39,6 +40,7 @@ export type TableMergeInfo = Partial<Record<'row_span' | 'col_span', number>>;
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#28f31481}
  */
 export type TableBlock = Block<
+    BlockType.table,
     'table',
     {
         cells?: string[];
@@ -56,4 +58,4 @@ export type TableBlock = Block<
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#eca5d2c3}
  */
-export type TableCellBlock = Block<'table_cell', {}>;
+export type TableCellBlock = Block<BlockType.table_cell, 'table_cell', {}>;
