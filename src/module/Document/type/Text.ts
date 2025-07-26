@@ -16,6 +16,7 @@ export type TextIndentationLevel = 'NoIndent' | 'OneLevelIndent';
 
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#be1b12a7}
+ * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#fb1f28b8}
  */
 export enum FontColor {
     Red = 1,
@@ -29,8 +30,9 @@ export enum FontColor {
 
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#45c9c07b}
+ * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#28d02e32}
  */
-export enum FontBackgroundColor {
+export enum BackgroundColor {
     /**
      * 浅红色
      */
@@ -96,7 +98,7 @@ export enum FontBackgroundColor {
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#80293bd9}
  */
-export type TextBackgroundColor = keyof typeof FontBackgroundColor;
+export type TextBackgroundColor = keyof typeof BackgroundColor;
 
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#45accc42}
@@ -199,7 +201,7 @@ export interface TextElementStyle
         >
     > {
     text_color?: FontColor;
-    background_color?: FontBackgroundColor;
+    background_color?: BackgroundColor;
     link?: { url: string };
     comment_ids?: string[];
 }
@@ -274,10 +276,7 @@ export interface TextElement {
  */
 export type TextBlock = Block<
     'text',
-    {
-        elements: TextElement[];
-        style: TextStyle;
-    }
+    { elements: TextElement[]; style: TextStyle }
 >;
 export type PageBlock = TextBlock;
 export type Heading1Block = TextBlock;
