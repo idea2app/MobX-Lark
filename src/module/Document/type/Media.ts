@@ -1,4 +1,4 @@
-import { Block } from './Block';
+import { Block, BlockType } from './Block';
 import { Align } from './Text';
 
 /**
@@ -10,6 +10,7 @@ export type LinkPreviewURLType = 'MessageLink' | 'Undefined';
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#7680e63}
  */
 export type LinkPreviewBlock = Block<
+    BlockType.link_preview,
     'link_preview',
     { url: string; url_type: LinkPreviewURLType }
 >;
@@ -39,6 +40,7 @@ export enum IframeComponentType {
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#1613ffc1}
  */
 export type IframeBlock = Block<
+    BlockType.iframe,
     'iframe',
     { component: { type: IframeComponentType; url: string } }
 >;
@@ -47,6 +49,7 @@ export type IframeBlock = Block<
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#a6f35866}
  */
 export type ImageBlock = Block<
+    BlockType.image,
     'image',
     {
         token?: string;
@@ -78,12 +81,13 @@ export enum ViewType {
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#a1b455e8}
  */
-export type ViewBlock = Block<'view', { view_type?: ViewType }>;
+export type ViewBlock = Block<BlockType.view, 'view', { view_type?: ViewType }>;
 
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#2b183663}
  */
 export type FileBlock = Block<
+    BlockType.file,
     'file',
     { token?: string; name?: string; view_type?: ViewType }
 >;

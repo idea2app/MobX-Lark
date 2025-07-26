@@ -1,4 +1,4 @@
-import { Block } from './Block';
+import { Block, BlockType } from './Block';
 
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#05e7d57e}
@@ -184,8 +184,7 @@ export enum CodeLanguage {
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#1c6877f3}
  */
-export interface TextStyle
-    extends Partial<Record<'done' | 'folded' | 'wrap', boolean>> {
+export interface TextStyle extends Partial<Record<'done' | 'folded' | 'wrap', boolean>> {
     align?: Align;
     language?: CodeLanguage;
     background_color?: TextBackgroundColor;
@@ -193,12 +192,12 @@ export interface TextStyle
     sequence?: string;
 }
 
+/**
+ * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#669a5f7b}
+ */
 export interface TextElementStyle
     extends Partial<
-        Record<
-            'bold' | 'italic' | 'strikethrough' | 'underline' | 'inline_code',
-            boolean
-        >
+        Record<'bold' | 'italic' | 'strikethrough' | 'underline' | 'inline_code', boolean>
     > {
     text_color?: FontColor;
     background_color?: BackgroundColor;
@@ -206,6 +205,9 @@ export interface TextElementStyle
     comment_ids?: string[];
 }
 
+/**
+ * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#23769256}
+ */
 export interface TextElementData {
     text_element_style?: TextElementStyle;
 }
@@ -274,22 +276,23 @@ export interface TextElement {
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#c1ebd2a2}
  */
-export type TextBlock = Block<
+export type TextBlock<Type extends BlockType = BlockType.text> = Block<
+    Type,
     'text',
-    { elements: TextElement[]; style: TextStyle }
+    { elements: TextElement[]; style?: TextStyle }
 >;
-export type PageBlock = TextBlock;
-export type Heading1Block = TextBlock;
-export type Heading2Block = TextBlock;
-export type Heading3Block = TextBlock;
-export type Heading4Block = TextBlock;
-export type Heading5Block = TextBlock;
-export type Heading6Block = TextBlock;
-export type Heading7Block = TextBlock;
-export type Heading8Block = TextBlock;
-export type Heading9Block = TextBlock;
-export type BulletBlock = TextBlock;
-export type OrderedBlock = TextBlock;
-export type CodeBlock = TextBlock;
-export type QuoteBlock = TextBlock;
-export type TodoBlock = TextBlock;
+export type PageBlock = TextBlock<BlockType.page>;
+export type Heading1Block = TextBlock<BlockType.heading1>;
+export type Heading2Block = TextBlock<BlockType.heading2>;
+export type Heading3Block = TextBlock<BlockType.heading3>;
+export type Heading4Block = TextBlock<BlockType.heading4>;
+export type Heading5Block = TextBlock<BlockType.heading5>;
+export type Heading6Block = TextBlock<BlockType.heading6>;
+export type Heading7Block = TextBlock<BlockType.heading7>;
+export type Heading8Block = TextBlock<BlockType.heading8>;
+export type Heading9Block = TextBlock<BlockType.heading9>;
+export type BulletBlock = TextBlock<BlockType.bullet>;
+export type OrderedBlock = TextBlock<BlockType.ordered>;
+export type CodeBlock = TextBlock<BlockType.code>;
+export type QuoteBlock = TextBlock<BlockType.quote>;
+export type TodoBlock = TextBlock<BlockType.todo>;
