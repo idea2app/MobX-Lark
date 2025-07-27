@@ -54,7 +54,10 @@
     },
     "pnpm": {
         "onlyBuiltDependencies": [
-            "@swc/core"
+            "@parcel/watcher",
+            "@swc/core",
+            "lmdb",
+            "msgpackr-extract"
         ]
     },
     "prettier": {

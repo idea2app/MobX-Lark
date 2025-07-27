@@ -215,11 +215,16 @@ export enum BlockType {
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#8b7f3e74}
  */
-export type Block<Type extends BlockType, TypeName extends keyof typeof BlockType, Meta = {}> = {
+export type Block<
+    Type extends BlockType,
+    TypeName extends keyof typeof BlockType,
+    Meta = {},
+    Child extends string | Block<any, any, any, any> = string
+> = {
     block_id: string;
     block_type: Type;
     parent_id?: string;
-    children?: string[];
+    children?: Child[];
     comment_ids?: string[];
 } & {
     [type in TypeName]: Meta;
