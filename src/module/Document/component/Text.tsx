@@ -1,6 +1,7 @@
-import { Fragment, FC, JSX, CSSProperties } from 'react';
+import { Fragment, FC, JSX } from 'react';
 
-import { Align, BackgroundColor, BlockType, FontColor, TextBlock, TextRun } from '../type';
+import { Align, BlockType, TextBlock, TextRun } from '../type';
+import { TextColorMap, BackgroundColorMap } from './constant';
 
 export const TextTagMap: Partial<Record<BlockType, keyof JSX.IntrinsicElements>> = {
     [BlockType.page]: 'article',
@@ -16,34 +17,6 @@ export const TextTagMap: Partial<Record<BlockType, keyof JSX.IntrinsicElements>>
     [BlockType.code]: 'pre',
     [BlockType.quote]: 'blockquote',
     [BlockType.todo]: 'div'
-};
-
-export const TextColorMap: Record<FontColor, CSSProperties['color']> = {
-    [FontColor.Red]: 'red',
-    [FontColor.Orange]: 'orange',
-    [FontColor.Yellow]: 'yellow',
-    [FontColor.Green]: 'green',
-    [FontColor.Blue]: 'blue',
-    [FontColor.Purple]: 'purple',
-    [FontColor.Gray]: 'gray'
-};
-
-export const BackgroundColorMap: Record<BackgroundColor, CSSProperties['backgroundColor']> = {
-    [BackgroundColor.LightRedBackground]: '#ffcccc',
-    [BackgroundColor.LightOrangeBackground]: '#ffe6cc',
-    [BackgroundColor.LightYellowBackground]: '#ffffcc',
-    [BackgroundColor.LightGreenBackground]: '#e6ffe6',
-    [BackgroundColor.LightBlueBackground]: '#cceeff',
-    [BackgroundColor.LightPurpleBackground]: '#f2e6ff',
-    [BackgroundColor.PaleGrayBackground]: '#f2f2f2',
-    [BackgroundColor.DarkRedBackground]: 'red',
-    [BackgroundColor.DarkOrangeBackground]: 'orange',
-    [BackgroundColor.DarkYellowBackground]: 'yellow',
-    [BackgroundColor.DarkGreenBackground]: 'green',
-    [BackgroundColor.DarkBlueBackground]: 'blue',
-    [BackgroundColor.DarkPurpleBackground]: 'purple',
-    [BackgroundColor.DarkGrayBackground]: 'gray',
-    [BackgroundColor.LightGrayBackground]: 'lightgray'
 };
 
 export const TextRunComponent: FC<TextRun> = ({ content, text_element_style }) => {
@@ -88,8 +61,39 @@ export const TextBlockComponent: FC<TextBlock> = ({ block_type, text: { style, e
     const Tag = TextTagMap[block_type] || Fragment,
         StyleTag = style?.done ? 's' : Fragment;
 
-    const texts = elements.map(({ text_run }) =>
-        text_run ? <TextRunComponent key={text_run.content} {...text_run} /> : null
+    const texts = elements.map(
+        ({ text_run, mention_user, mention_doc, reminder, file, equation }) =>
+            text_run ? (
+                <TextRunComponent key={text_run.content} {...text_run} />
+            ) : mention_user ? (
+                <TextRunComponent
+                    key={mention_user.user_id}
+                    content={`👤${mention_user.user_id}`}
+                    {...mention_user}
+                />
+            ) : mention_doc ? (
+                <TextRunComponent
+                    key={mention_doc.url}
+                    content={mention_doc.url}
+                    text_element_style={{ link: { url: mention_doc.url } }}
+                />
+            ) : reminder ? (
+                <time key={reminder.expire_time} dateTime={new Date(reminder.expire_time).toJSON()}>
+                    <TextRunComponent
+                        content={new Date(reminder.expire_time).toJSON()}
+                        {...reminder}
+                    />
+                </time>
+            ) : file ? (
+                <TextRunComponent
+                    key={file.file_token}
+                    content={`📄${file.file_token}`}
+                    {...file}
+                />
+            ) : equation ? (
+                // @todo KaTeX rendering
+                <TextRunComponent key={equation.content} {...equation} />
+            ) : null
     );
 
     return (
