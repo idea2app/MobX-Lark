@@ -1,23 +1,8 @@
-import { Fragment, FC, JSX } from 'react';
+import { Fragment, FC } from 'react';
 
-import { Align, BlockType, TextBlock, TextRun } from '../type';
-import { TextColorMap, BackgroundColorMap } from './constant';
-
-export const TextTagMap: Partial<Record<BlockType, keyof JSX.IntrinsicElements>> = {
-    [BlockType.page]: 'article',
-    [BlockType.text]: 'p',
-    [BlockType.heading1]: 'h1',
-    [BlockType.heading2]: 'h2',
-    [BlockType.heading3]: 'h3',
-    [BlockType.heading4]: 'h4',
-    [BlockType.heading5]: 'h5',
-    [BlockType.heading6]: 'h6',
-    [BlockType.bullet]: 'ul',
-    [BlockType.ordered]: 'ol',
-    [BlockType.code]: 'pre',
-    [BlockType.quote]: 'blockquote',
-    [BlockType.todo]: 'div'
-};
+import { Align, TextBlock, TextRun } from '../type';
+import { ChildrenRenderer } from './Block';
+import { TextColorMap, BackgroundColorMap, TextTagMap } from './constant';
 
 export const TextRunComponent: FC<TextRun> = ({ content, text_element_style }) => {
     const {
@@ -57,7 +42,11 @@ export const TextRunComponent: FC<TextRun> = ({ content, text_element_style }) =
     );
 };
 
-export const TextBlockComponent: FC<TextBlock> = ({ block_type, text: { style, elements } }) => {
+export const TextBlockComponent: FC<TextBlock> = ({
+    block_type,
+    text: { style, elements },
+    children
+}) => {
     const Tag = TextTagMap[block_type] || Fragment,
         StyleTag = style?.done ? 's' : Fragment;
 
@@ -87,8 +76,10 @@ export const TextBlockComponent: FC<TextBlock> = ({ block_type, text: { style, e
             ) : file ? (
                 <TextRunComponent
                     key={file.file_token}
-                    content={`📄${file.file_token}`}
-                    {...file}
+                    content={`drive/v1/medias/${file.file_token}/download`}
+                    text_element_style={{
+                        link: { url: `drive/v1/medias/${file.file_token}/download` }
+                    }}
                 />
             ) : equation ? (
                 // @todo KaTeX rendering
@@ -111,6 +102,8 @@ export const TextBlockComponent: FC<TextBlock> = ({ block_type, text: { style, e
             }}
         >
             <StyleTag>{texts}</StyleTag>
+
+            <ChildrenRenderer>{children}</ChildrenRenderer>
         </Tag>
     );
 };
