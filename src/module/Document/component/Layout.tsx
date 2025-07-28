@@ -7,15 +7,14 @@ import {
     GridBlock,
     GridColumnBlock,
     TableBlock,
-    TableCellBlock,
-    TextBlock
+    TableCellBlock
 } from '../type';
+import { blockMap, ChildrenRenderer } from './Block';
 import { BackgroundColorMap, TextColorMap } from './constant';
-import { TextBlockComponent } from './Text';
 
 export const DividerBlockComponent: FC<DividerBlock> = () => <hr />;
 
-export const CalloutBlockComponent: FC<CalloutBlock<TextBlock>> = ({ callout, children }) => (
+export const CalloutBlockComponent: FC<CalloutBlock> = ({ callout, children }) => (
     <blockquote
         style={{
             border: callout.border_color && `1px solid ${TextColorMap[callout.border_color]}`,
@@ -24,38 +23,30 @@ export const CalloutBlockComponent: FC<CalloutBlock<TextBlock>> = ({ callout, ch
             color: callout.text_color && TextColorMap[callout.text_color]
         }}
     >
-        {children?.map(child => (
-            <TextBlockComponent key={child.block_id} {...child} />
-        ))}
+        <ChildrenRenderer>{children}</ChildrenRenderer>
     </blockquote>
 );
 
-export const GridBlockComponent: FC<GridBlock<GridColumnBlock<TextBlock>>> = ({ children }) => (
+export const GridBlockComponent: FC<GridBlock> = ({ children }) => (
     <div className="lark-grid-block">
-        {children?.map(child => (
-            <GridColumnBlockComponent key={child.block_id} {...child} />
-        ))}
+        <ChildrenRenderer>{children}</ChildrenRenderer>
     </div>
 );
 
-export const GridColumnBlockComponent: FC<GridColumnBlock<TextBlock>> = ({
-    grid_column,
-    children
-}) => (
+export const GridColumnBlockComponent: FC<GridColumnBlock> = ({ grid_column, children }) => (
     <div className="lark-grid-column-block" style={{ width: `${grid_column.width_ratio}%` }}>
-        {children?.map(child => (
-            <TextBlockComponent key={child.block_id} {...child} />
-        ))}
+        <ChildrenRenderer>{children}</ChildrenRenderer>
     </div>
 );
 
-export const TableBlockComponent: FC<TableBlock<TableCellBlock<TextBlock>>> = ({
-    table,
-    children
-}) => {
+export const TableBlockComponent: FC<TableBlock> = ({ table, children }) => {
     const { header_row, header_column, column_size, column_width, merge_info } = table.property;
 
-    const [header, ...body] = splitArray(children || [], column_size),
+    const blocks = (children || [])
+        .map(block_id => blockMap[block_id])
+        .filter(Boolean) as TableCellBlock[];
+
+    const [header, ...body] = splitArray(blocks, column_size),
         [headerWidth, ...bodyWidth] = splitArray(column_width || [], column_size),
         [headerMerge, ...bodyMerge] = splitArray(merge_info || [], column_size);
 
@@ -108,7 +99,7 @@ export const TableBlockComponent: FC<TableBlock<TableCellBlock<TextBlock>>> = ({
 
 export interface TableCellBlockComponentProps
     extends Pick<TdHTMLAttributes<HTMLTableCellElement>, 'width' | 'colSpan' | 'rowSpan'>,
-        TableCellBlock<TextBlock> {
+        TableCellBlock {
     is?: 'th' | 'td';
 }
 
@@ -118,8 +109,6 @@ export const TableCellBlockComponent: FC<TableCellBlockComponentProps> = ({
     ...props
 }) => (
     <Tag {...props}>
-        {children?.map(child => (
-            <TextBlockComponent key={child.block_id} {...child} />
-        ))}
+        <ChildrenRenderer>{children}</ChildrenRenderer>
     </Tag>
 );
