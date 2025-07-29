@@ -14,11 +14,7 @@ export async function* createPageStream<T extends DataObject>(
 
     do {
         const { body } = await client.get<LarkPageData<T>>(
-            `${path}?${buildURLData({
-                ...filter,
-                page_size: 500,
-                page_token: lastPage
-            })}`
+            `${path}?${buildURLData({ page_size: 500, page_token: lastPage, ...filter })}`
         );
         var { items, total, has_more, page_token } = body!.data!;
 

@@ -3,6 +3,7 @@ package-lock.json
 yarn.lock
 yarn-error.log
 .parcel-cache/
+test/output/
 dist/
 docs/
 .env

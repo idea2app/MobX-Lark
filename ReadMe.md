@@ -19,6 +19,8 @@ Unofficial [TypeScript][1] SDK for [FeiShu/Lark API][2], which is based on [MobX
 ## Usage
 
 - [Example](test/index.spec.ts)
+    - [SpreadSheet example](https://idea2app.feishu.cn/wiki/RQXiwdDvtiPz6HkokTqcVDZWnhg)
+    - [BI Table example](https://idea2app.feishu.cn/wiki/Jzqbwv4biiY1Ckkqf95cS97Ynig)
 - [API document](https://idea2app.github.io/MobX-Lark/)
 
 ## User cases
