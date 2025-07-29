@@ -1,7 +1,7 @@
 import { Context, HTTPClient, makeFormData } from 'koajax';
-import { buildURLData, cache, Second } from 'web-utility';
+import { buildURLData, cache, sleep } from 'web-utility';
 
-import { LarkWikiNode } from './module';
+import { WikiNodeModel } from './module';
 import {
     isLarkError,
     JSTicket,
@@ -24,9 +24,7 @@ export interface LarkAppClientOption extends LarkAppBaseOption {
     accessToken: string;
 }
 
-export interface LarkAppOption
-    extends LarkAppServerOption,
-        LarkAppClientOption {}
+export interface LarkAppOption extends LarkAppServerOption, LarkAppClientOption {}
 
 export class LarkApp implements LarkAppOption {
     host = 'https://open.feishu.cn/open-apis/';
@@ -39,10 +37,8 @@ export class LarkApp implements LarkAppOption {
     constructor(option: LarkAppServerOption | LarkAppClientOption) {
         Object.assign(this, option);
 
-        console.assert(
-            !globalThis.window || !this.secret,
-            "App Secret can't be used in client"
-        );
+        console.assert(!globalThis.window || !this.secret, "App Secret can't be used in client");
+
         this.client = new HTTPClient({
             baseURI: this.host,
             responseType: 'json'
@@ -79,9 +75,7 @@ export class LarkApp implements LarkAppOption {
     }
 
     getAccessToken(code = '') {
-        return code
-            ? this.getUserAccessToken(code)
-            : this.getTenantAccessToken();
+        return code ? this.getUserAccessToken(code) : this.getTenantAccessToken();
     }
 
     /**
@@ -98,11 +92,10 @@ export class LarkApp implements LarkAppOption {
             'auth/v3/tenant_access_token/internal',
             { app_id: id, app_secret: secret }
         );
-        setTimeout(() => {
+        sleep(body!.expire).then(() => {
             this.accessToken = '';
             clean();
-        }, body!.expire * Second);
-
+        });
         return (this.accessToken = body!.tenant_access_token);
     }, 'Tenant Access Token');
 
@@ -121,17 +114,16 @@ export class LarkApp implements LarkAppOption {
      * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/authen-v1/authen/access_token}
      */
     getUserAccessToken = cache(async (clean, code: string) => {
-        const { body } = await this.client.post<LarkData<UserMeta>>(
-            'authen/v1/access_token',
-            { grant_type: 'authorization_code', code }
-        );
+        const { body } = await this.client.post<LarkData<UserMeta>>('authen/v1/access_token', {
+            grant_type: 'authorization_code',
+            code
+        });
         const { expires_in, access_token } = body!.data!;
 
-        setTimeout(() => {
+        sleep(expires_in).then(() => {
             this.accessToken = '';
             clean();
-        }, expires_in * Second);
-
+        });
         return (this.accessToken = access_token);
     }, 'User Access Token');
 
@@ -139,9 +131,8 @@ export class LarkApp implements LarkAppOption {
      * @see {@link https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/get}
      */
     async getUserMeta() {
-        const { body } = await this.client.get<LarkData<UserMeta>>(
-            'authen/v1/user_info'
-        );
+        const { body } = await this.client.get<LarkData<UserMeta>>('authen/v1/user_info');
+
         return body!.data!;
     }
 
@@ -151,11 +142,11 @@ export class LarkApp implements LarkAppOption {
     getJSTicket = cache(async clean => {
         await this.getAccessToken();
 
-        const { body } =
-            await this.client.post<LarkData<JSTicket>>('jssdk/ticket/get');
+        const { body } = await this.client.post<LarkData<JSTicket>>('jssdk/ticket/get');
+
         const { expire_in, ticket } = body!.data!;
 
-        setTimeout(clean, expire_in * Second);
+        sleep(expire_in).then(clean);
 
         return ticket;
     }, 'JS ticket');
@@ -182,11 +173,7 @@ export class LarkApp implements LarkAppOption {
     /**
      * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/drive-v1/media/upload_all}
      */
-    async uploadFile(
-        file: File,
-        parent_type: UploadTargetType,
-        parent_node: string
-    ) {
+    async uploadFile(file: File, parent_type: UploadTargetType, parent_node: string) {
         await this.getAccessToken();
 
         const form = makeFormData({
@@ -196,24 +183,25 @@ export class LarkApp implements LarkAppOption {
             parent_type,
             parent_node
         });
-        const { body } = await this.client.post<
-            LarkData<{ file_token: string }>
-        >('drive/v1/medias/upload_all', form);
-
+        const { body } = await this.client.post<LarkData<{ file_token: string }>>(
+            'drive/v1/medias/upload_all',
+            form
+        );
         return body!.data!.file_token;
     }
 
     /**
-     * @see {@link https://open.feishu.cn/document/server-docs/docs/wiki-v2/space-node/get_node}
+     * @see {@link WikiNodeModel.getOne}
      */
     async wiki2docx(id: string) {
         await this.getAccessToken();
 
-        const { body } = await this.client.get<
-            LarkData<{ node: LarkWikiNode }>
-        >(`wiki/v2/spaces/get_node?token=${id}`);
+        const { client } = this;
 
-        const { obj_type, obj_token } = body!.data!.node;
+        class InternalWikiNodeModel extends WikiNodeModel {
+            client = client;
+        }
+        const { obj_type, obj_token } = await new InternalWikiNodeModel('', '').getOne(id);
 
         return obj_type === 'docx' ? obj_token : '';
     }

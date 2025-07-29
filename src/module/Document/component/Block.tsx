@@ -37,7 +37,7 @@ export const blockComponentMap: Partial<Record<BlockType, FC<any>>> = {
     [BlockType.table_cell]: TableCellBlockComponent,
     [BlockType.iframe]: IframeBlockComponent,
     [BlockType.image]: ImageBlockComponent,
-    [BlockType.file]: FileBlockComponent,
+    [BlockType.file]: FileBlockComponent
 };
 
 export const blockMap: Record<string, Block<any, any, any>> = {};
@@ -74,13 +74,18 @@ export const ChildrenRenderer: FC<{ children?: string[] }> = ({ children }) => (
     <>
         {children?.map(block_id => {
             const block = blockMap[block_id];
+
             if (!block) return;
 
-            const BlockComponent = blockComponentMap[block.block_type as BlockType];
+            const { block_type } = block;
 
-            if (!BlockComponent) return <p>Unsupported Block Type {block.block_type}</p>;
+            const BlockComponent = blockComponentMap[block_type as BlockType];
 
-            return <BlockComponent key={block.block_id} {...block} />;
+            return BlockComponent ? (
+                <BlockComponent key={block_id} {...block} />
+            ) : (
+                <p key={block_id}>Unsupported Block Type {block_type}</p>
+            );
         })}
     </>
 );

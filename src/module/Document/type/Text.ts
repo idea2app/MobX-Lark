@@ -276,23 +276,23 @@ export interface TextElement {
 /**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#c1ebd2a2}
  */
-export type TextBlock<Type extends BlockType = BlockType.text> = Block<
-    Type,
-    'text',
-    { elements: TextElement[]; style?: TextStyle }
->;
-export type PageBlock = TextBlock<BlockType.page>;
-export type Heading1Block = TextBlock<BlockType.heading1>;
-export type Heading2Block = TextBlock<BlockType.heading2>;
-export type Heading3Block = TextBlock<BlockType.heading3>;
-export type Heading4Block = TextBlock<BlockType.heading4>;
-export type Heading5Block = TextBlock<BlockType.heading5>;
-export type Heading6Block = TextBlock<BlockType.heading6>;
-export type Heading7Block = TextBlock<BlockType.heading7>;
-export type Heading8Block = TextBlock<BlockType.heading8>;
-export type Heading9Block = TextBlock<BlockType.heading9>;
-export type BulletBlock = TextBlock<BlockType.bullet>;
-export type OrderedBlock = TextBlock<BlockType.ordered>;
-export type CodeBlock = TextBlock<BlockType.code>;
-export type QuoteBlock = TextBlock<BlockType.quote>;
-export type TodoBlock = TextBlock<BlockType.todo>;
+export type TextBlock<
+    Type extends BlockType = BlockType.text,
+    TypeName extends keyof typeof BlockType = 'text'
+> = Block<Type, TypeName, { elements: TextElement[]; style?: TextStyle }>;
+
+export type PageBlock = TextBlock<BlockType.page, 'page'>;
+export type Heading1Block = TextBlock<BlockType.heading1, 'heading1'>;
+export type Heading2Block = TextBlock<BlockType.heading2, 'heading2'>;
+export type Heading3Block = TextBlock<BlockType.heading3, 'heading3'>;
+export type Heading4Block = TextBlock<BlockType.heading4, 'heading4'>;
+export type Heading5Block = TextBlock<BlockType.heading5, 'heading5'>;
+export type Heading6Block = TextBlock<BlockType.heading6, 'heading6'>;
+export type Heading7Block = TextBlock<BlockType.heading7, 'heading7'>;
+export type Heading8Block = TextBlock<BlockType.heading8, 'heading8'>;
+export type Heading9Block = TextBlock<BlockType.heading9, 'heading9'>;
+export type BulletBlock = TextBlock<BlockType.bullet, 'bullet'>;
+export type OrderedBlock = TextBlock<BlockType.ordered, 'ordered'>;
+export type CodeBlock = TextBlock<BlockType.code, 'code'>;
+export type QuoteBlock = TextBlock<BlockType.quote, 'quote'>;
+export type TodoBlock = TextBlock<BlockType.todo, 'todo'>;

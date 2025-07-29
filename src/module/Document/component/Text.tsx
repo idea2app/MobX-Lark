@@ -1,6 +1,26 @@
 import { Fragment, FC } from 'react';
 
-import { Align, TextBlock, TextRun } from '../type';
+import {
+    Align,
+    BlockType,
+    BulletBlock,
+    CodeBlock,
+    Heading1Block,
+    Heading2Block,
+    Heading3Block,
+    Heading4Block,
+    Heading5Block,
+    Heading6Block,
+    Heading7Block,
+    Heading8Block,
+    Heading9Block,
+    OrderedBlock,
+    PageBlock,
+    QuoteBlock,
+    TextBlock,
+    TextRun,
+    TodoBlock
+} from '../type';
 import { ChildrenRenderer } from './Block';
 import { TextColorMap, BackgroundColorMap, TextTagMap } from './constant';
 
@@ -42,11 +62,34 @@ export const TextRunComponent: FC<TextRun> = ({ content, text_element_style }) =
     );
 };
 
-export const TextBlockComponent: FC<TextBlock> = ({
+export type TextBlockComponentProps =
+    | PageBlock
+    | TextBlock
+    | Heading1Block
+    | Heading2Block
+    | Heading3Block
+    | Heading4Block
+    | Heading5Block
+    | Heading6Block
+    | Heading7Block
+    | Heading8Block
+    | Heading9Block
+    | BulletBlock
+    | OrderedBlock
+    | CodeBlock
+    | QuoteBlock
+    | TodoBlock;
+
+export const TextBlockComponent: FC<TextBlockComponentProps> = ({
     block_type,
-    text: { style, elements },
-    children
+    children,
+    ...props
 }) => {
+    const metaKey = Object.keys(BlockType).find(
+        key => BlockType[key as keyof typeof BlockType] === block_type
+    );
+    const { elements, style } = props[metaKey as keyof typeof props] as object as TextBlock['text'];
+
     const Tag = TextTagMap[block_type] || Fragment,
         StyleTag = style?.done ? 's' : Fragment;
 
@@ -88,22 +131,24 @@ export const TextBlockComponent: FC<TextBlock> = ({
     );
 
     return (
-        <Tag
-            className={style?.language ? `language-${style.language}` : ''}
-            style={{
-                textIndent: style?.indentation_level === 'OneLevelIndent' ? '1rem' : 0,
-                textAlign:
-                    style?.align === Align.left
-                        ? 'left'
-                        : style?.align === Align.center
-                          ? 'center'
-                          : 'right',
-                backgroundColor: style?.background_color
-            }}
-        >
-            <StyleTag>{texts}</StyleTag>
+        <>
+            <Tag
+                className={style?.language ? `language-${style.language}` : ''}
+                style={{
+                    textIndent: style?.indentation_level === 'OneLevelIndent' ? '1rem' : 0,
+                    textAlign:
+                        style?.align === Align.left
+                            ? 'left'
+                            : style?.align === Align.center
+                              ? 'center'
+                              : 'right',
+                    backgroundColor: style?.background_color
+                }}
+            >
+                <StyleTag>{texts}</StyleTag>
+            </Tag>
 
             <ChildrenRenderer>{children}</ChildrenRenderer>
-        </Tag>
+        </>
     );
 };
