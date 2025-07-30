@@ -2,18 +2,18 @@ import { ListModel, Stream, toggle } from 'mobx-restful';
 
 import { LarkData } from '../../type';
 import { createPageStream } from '../base';
-import { LarkWiki, LarkWikiNode } from './type';
+import { Wiki, WikiNode } from './type';
 
 export * from './type';
 
-export abstract class WikiModel extends Stream<LarkWiki>(ListModel) {
+export abstract class WikiModel extends Stream<Wiki>(ListModel) {
     baseURI = `wiki/v2/spaces`;
 
     /**
      * @see {@link https://open.feishu.cn/document/server-docs/docs/wiki-v2/space/list}
      */
     async *openStream() {
-        for await (const item of createPageStream<LarkWiki>(
+        for await (const item of createPageStream<Wiki>(
             this.client,
             this.baseURI,
             total => (this.totalCount = total),
@@ -23,7 +23,7 @@ export abstract class WikiModel extends Stream<LarkWiki>(ListModel) {
     }
 }
 
-export abstract class WikiNodeModel extends Stream<LarkWikiNode>(ListModel) {
+export abstract class WikiNodeModel extends Stream<WikiNode>(ListModel) {
     constructor(
         public domain: string,
         public wikiId: string
@@ -37,7 +37,7 @@ export abstract class WikiNodeModel extends Stream<LarkWikiNode>(ListModel) {
      */
     @toggle('downloading')
     async getOne(id: string) {
-        const { body } = await this.client.get<LarkData<{ node: LarkWikiNode }>>(
+        const { body } = await this.client.get<LarkData<{ node: WikiNode }>>(
             `wiki/v2/spaces/get_node?token=${id}`
         );
         return body!.data!.node;
@@ -51,22 +51,24 @@ export abstract class WikiNodeModel extends Stream<LarkWikiNode>(ListModel) {
      * @see {@link https://open.feishu.cn/document/server-docs/docs/wiki-v2/space-node/list}
      */
     async *traverseTree(
-        parent_node_token?: string,
+        parentNode?: WikiNode,
         onCount?: (total: number) => any
-    ): AsyncGenerator<LarkWikiNode> {
+    ): AsyncGenerator<WikiNode> {
         let totalCount = 0;
 
         const addCount = (total: number) => (totalCount += total);
 
-        const stream = createPageStream<LarkWikiNode>(this.client, this.baseURI, addCount, {
+        const stream = createPageStream<WikiNode>(this.client, this.baseURI, addCount, {
             page_size: 50,
-            parent_node_token
+            parent_node_token: parentNode?.node_token
         });
 
         for (const node of await Array.fromAsync(stream)) {
+            node.title_path = parentNode ? `${parentNode.title_path}/${node.title}` : node.title;
+
             yield node;
 
-            if (node.has_child) yield* this.traverseTree(node.node_token, addCount);
+            if (node.has_child) yield* this.traverseTree(node, addCount);
         }
         onCount?.(totalCount);
     }

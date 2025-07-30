@@ -1,7 +1,8 @@
-import { Fragment, FC } from 'react';
+import { Fragment, FC, CSSProperties } from 'react';
 
 import {
     Align,
+    BackgroundColor,
     BlockType,
     BulletBlock,
     CodeBlock,
@@ -18,11 +19,22 @@ import {
     PageBlock,
     QuoteBlock,
     TextBlock,
+    TextStyle,
     TextRun,
     TodoBlock
 } from '../type';
 import { ChildrenRenderer } from './Block';
 import { TextColorMap, BackgroundColorMap, TextTagMap } from './constant';
+
+export const styleOf = ({
+    indentation_level,
+    align,
+    background_color
+}: TextStyle): CSSProperties => ({
+    textIndent: indentation_level === 'OneLevelIndent' ? '1rem' : 0,
+    textAlign: align === Align.right ? 'right' : align === Align.center ? 'center' : 'left',
+    backgroundColor: background_color && BackgroundColorMap[BackgroundColor[background_color]]
+});
 
 export const TextRunComponent: FC<TextRun> = ({ content, text_element_style }) => {
     const {
@@ -74,8 +86,6 @@ export type TextBlockComponentProps =
     | Heading7Block
     | Heading8Block
     | Heading9Block
-    | BulletBlock
-    | OrderedBlock
     | CodeBlock
     | QuoteBlock
     | TodoBlock;
@@ -130,25 +140,38 @@ export const TextBlockComponent: FC<TextBlockComponentProps> = ({
             ) : null
     );
 
-    return (
+    return block_type === BlockType.page ? (
+        <Tag style={style && styleOf(style)}>
+            <h1>
+                <StyleTag>{texts}</StyleTag>
+            </h1>
+            <ChildrenRenderer>{children}</ChildrenRenderer>
+        </Tag>
+    ) : (
         <>
             <Tag
                 className={style?.language ? `language-${style.language}` : ''}
-                style={{
-                    textIndent: style?.indentation_level === 'OneLevelIndent' ? '1rem' : 0,
-                    textAlign:
-                        style?.align === Align.left
-                            ? 'left'
-                            : style?.align === Align.center
-                              ? 'center'
-                              : 'right',
-                    backgroundColor: style?.background_color
-                }}
+                style={style && styleOf(style)}
             >
-                <StyleTag>{texts}</StyleTag>
+                {style?.language ? <code>{texts}</code> : <StyleTag>{texts}</StyleTag>}
             </Tag>
 
             <ChildrenRenderer>{children}</ChildrenRenderer>
         </>
+    );
+};
+
+export const ListBlockComponent: FC<BulletBlock | OrderedBlock> = ({ block_type, ...props }) => {
+    const Tag = block_type === BlockType.bullet ? 'ul' : 'ol',
+        { style, elements } = 'bullet' in props ? props.bullet : props.ordered;
+
+    return (
+        <Tag style={style && styleOf(style)}>
+            {elements.map(({ text_run }) => (
+                <li key={text_run!.content}>
+                    <TextRunComponent {...text_run!} />
+                </li>
+            ))}
+        </Tag>
     );
 };

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { outputFile, outputJSON } from 'fs-extra';
-import { marked } from 'marked';
 import { renderToStaticMarkup } from 'react-dom/server';
+import Turndown from 'turndown';
 import { describe, it } from 'web-utility';
 
 import {
@@ -88,12 +88,14 @@ describe('MobX Lark SDK', async () => {
         console.log(files, vDOM);
 
         const markup = renderToStaticMarkup(vDOM);
+        const markdown = new Turndown().turndown(markup);
 
         expect(markup.includes('<article>'));
 
+        await outputJSON('test/output/index.json', blocks);
         await outputFile('test/output/index.html', markup);
+        await outputFile('test/output/index.md', markdown);
         await outputJSON('test/output/files.json', files);
-        await outputFile('test/output/index.md', await marked(markup));
     });
 
     const spreadSheetWikiNode =

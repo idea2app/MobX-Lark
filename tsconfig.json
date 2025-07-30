@@ -4,6 +4,7 @@
         "target": "ES6",
         "module": "CommonJS",
         "moduleResolution": "Node",
+        "esModuleInterop": true,
         "useDefineForClassFields": true,
         "declaration": true,
         "skipLibCheck": true,

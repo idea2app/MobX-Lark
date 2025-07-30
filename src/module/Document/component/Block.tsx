@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import { Block, BlockType, FileBlock, ImageBlock, TextBlock } from '../type';
-import { TextBlockComponent } from './Text';
+import { ListBlockComponent, TextBlockComponent } from './Text';
 import {
     CalloutBlockComponent,
     DividerBlockComponent,
@@ -24,8 +24,8 @@ export const blockComponentMap: Partial<Record<BlockType, FC<any>>> = {
     [BlockType.heading7]: TextBlockComponent,
     [BlockType.heading8]: TextBlockComponent,
     [BlockType.heading9]: TextBlockComponent,
-    [BlockType.bullet]: TextBlockComponent,
-    [BlockType.ordered]: TextBlockComponent,
+    [BlockType.bullet]: ListBlockComponent,
+    [BlockType.ordered]: ListBlockComponent,
     [BlockType.code]: TextBlockComponent,
     [BlockType.quote]: TextBlockComponent,
     [BlockType.todo]: TextBlockComponent,
@@ -70,23 +70,46 @@ export function registerBlocks<T extends Block<any, any, any>>(blocks: T[]) {
     return { root, files };
 }
 
+export function reduceBlocks<T extends Block<any, any, any>>(sum: T[], current: T) {
+    let key: 'bullet' | 'ordered' | undefined;
+
+    switch (current.block_type) {
+        case BlockType.bullet:
+            key = 'bullet' as const;
+        case BlockType.ordered:
+            {
+                key = 'ordered' as const;
+
+                const last = sum.at(-1);
+
+                if (last?.block_type === current.block_type)
+                    last![key].elements.push(...current[key].elements);
+                else sum.push(current);
+            }
+            break;
+        default:
+            sum.push(current);
+    }
+    return sum;
+}
+
 export const ChildrenRenderer: FC<{ children?: string[] }> = ({ children }) => (
     <>
-        {children?.map(block_id => {
-            const block = blockMap[block_id];
+        {children
+            ?.map(block_id => blockMap[block_id])
+            .filter(Boolean)
+            .reduce(reduceBlocks, [] as Block<any, any, any>[])
+            .map(block => {
+                const { block_type, block_id } = block;
 
-            if (!block) return;
+                const BlockComponent = blockComponentMap[block_type as BlockType];
 
-            const { block_type } = block;
-
-            const BlockComponent = blockComponentMap[block_type as BlockType];
-
-            return BlockComponent ? (
-                <BlockComponent key={block_id} {...block} />
-            ) : (
-                <p key={block_id}>Unsupported Block Type {block_type}</p>
-            );
-        })}
+                return BlockComponent ? (
+                    <BlockComponent key={block_id} {...block} />
+                ) : (
+                    <p key={block_id}>Unsupported Block Type {block_type}</p>
+                );
+            })}
     </>
 );
 
