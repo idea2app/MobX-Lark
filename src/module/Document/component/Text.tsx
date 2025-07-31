@@ -155,7 +155,11 @@ export const TextBlockComponent: FC<TextBlockComponentProps> = ({
                 className={style?.language ? `language-${style.language}` : ''}
                 style={style && styleOf(style)}
             >
-                {style?.language ? <code>{texts}</code> : <StyleTag>{texts}</StyleTag>}
+                {style?.language ? (
+                    <code className={`language-${style.language}`}>{texts}</code>
+                ) : (
+                    <StyleTag>{texts}</StyleTag>
+                )}
             </Tag>
 
             <ChildrenRenderer>{children}</ChildrenRenderer>

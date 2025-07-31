@@ -1,4 +1,5 @@
-import { LarkData, LocaleUser } from '../../type';
+import { LarkData } from '../../type';
+import { LocaleUser } from '../User/type';
 
 export interface RevisionTable {
     name: string;
@@ -27,13 +28,7 @@ export interface TableCellText {
 }
 
 export type TableCellLocation = Record<
-    | 'name'
-    | 'pname'
-    | 'cityname'
-    | 'adname'
-    | 'address'
-    | 'full_address'
-    | 'location',
+    'name' | 'pname' | 'cityname' | 'adname' | 'address' | 'full_address' | 'location',
     string
 >;
 
@@ -60,21 +55,16 @@ export interface TableCellUser extends LocaleUser {
 
 export type TableCellGroup = Record<'id' | 'name' | 'avatar_url', string>;
 
-export interface TableCellMetion
-    extends Record<'mentionType' | 'text', string> {
+export interface TableCellMetion extends Record<'mentionType' | 'text', string> {
     type: 'mention';
 }
 
-export interface TableCellUserMetion
-    extends TableCellMetion,
-        Record<'name' | 'token', string> {
+export interface TableCellUserMetion extends TableCellMetion, Record<'name' | 'token', string> {
     mentionType: 'User';
     mentionNotify: boolean;
 }
 
-export interface TableCellDocumentMetion
-    extends TableCellMetion,
-        Record<'link' | 'token', string> {
+export interface TableCellDocumentMetion extends TableCellMetion, Record<'link' | 'token', string> {
     mentionType: 'Bitable';
 }
 

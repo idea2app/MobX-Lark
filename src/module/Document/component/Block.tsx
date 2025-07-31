@@ -8,6 +8,7 @@ import {
     DividerBlockComponent,
     GridBlockComponent,
     GridColumnBlockComponent,
+    QuoteContainerBlockComponent,
     TableBlockComponent,
     TableCellBlockComponent
 } from './Layout';
@@ -28,6 +29,7 @@ export const blockComponentMap: Partial<Record<BlockType, FC<any>>> = {
     [BlockType.bullet]: ListBlockComponent,
     [BlockType.ordered]: ListBlockComponent,
     [BlockType.code]: TextBlockComponent,
+    [BlockType.quote_container]: QuoteContainerBlockComponent,
     [BlockType.quote]: TextBlockComponent,
     [BlockType.todo]: TextBlockComponent,
     [BlockType.divider]: DividerBlockComponent,

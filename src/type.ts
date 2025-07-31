@@ -1,7 +1,6 @@
-export type LarkData<
-    D extends Record<string, any> = {},
-    E extends Record<string, any> = {}
-> = E & {
+import { LocaleUser, User, UserIdType } from './module/User/type';
+
+export type LarkData<D extends Record<string, any> = {}, E extends Record<string, any> = {}> = E & {
     code: number;
     msg: string;
     data?: D;
@@ -30,21 +29,12 @@ export type TenantAccessToken = LarkData<
     }
 >;
 
-export type UserIdType = `${'open' | 'union' | 'user'}_id`;
-
-export type LocaleUser = Record<
-    `${'' | 'en_'}name` | `${'' | 'enterprise_'}email`,
-    string
->;
-
 export interface UserMeta
     extends LocaleUser,
+        Pick<User, UserIdType | 'mobile' | 'employee_no'>,
         Record<
             | `avatar_${'url' | 'thumb' | 'middle' | 'big'}`
-            | UserIdType
-            | 'mobile'
             | 'tenant_key'
-            | 'employee_no'
             | `${'access' | 'refresh'}_token`,
             string
         >,

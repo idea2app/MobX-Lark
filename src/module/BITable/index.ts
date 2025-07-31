@@ -1,16 +1,8 @@
-import {
-    DataObject,
-    Filter,
-    ListModel,
-    PageData,
-    RESTClient,
-    Stream,
-    toggle
-} from 'mobx-restful';
+import { DataObject, Filter, ListModel, PageData, RESTClient, Stream, toggle } from 'mobx-restful';
 import { buildURLData, Constructor, isEmpty } from 'web-utility';
 
-import { UserIdType } from '../../type';
 import { createPageStream } from '../base';
+import { UserIdType } from '../User/type';
 import {
     BITable,
     LarkFormData,
@@ -25,10 +17,7 @@ import { makeSimpleFilter } from './utility';
 export * from './type';
 export * from './utility';
 
-export type BiBaseData = Omit<
-    TableRecord<{}>,
-    `record_${'id' | 'url'}` | 'fields'
->;
+export type BiBaseData = Omit<TableRecord<{}>, `record_${'id' | 'url'}` | 'fields'>;
 
 export interface BiDataQueryOptions {
     text_field_as_array?: boolean;
@@ -41,10 +30,9 @@ export interface BiDataQueryOptions {
 /**
  * @see {@link https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/bitable-overview}
  */
-export function BiDataTable<
-    T extends DataObject,
-    F extends Filter<T> = Filter<T>
->(Base = ListModel) {
+export function BiDataTable<T extends DataObject, F extends Filter<T> = Filter<T>>(
+    Base = ListModel
+) {
     abstract class BiDataTableModel extends Stream<T, F>(Base) {
         requiredKeys: readonly (keyof T)[] = [];
 
@@ -107,9 +95,7 @@ export function BiDataTable<
             return [
                 this.requiredKeys[0] &&
                     makeSimpleFilter(
-                        Object.fromEntries(
-                            this.requiredKeys.map(key => [key, ''])
-                        ),
+                        Object.fromEntries(this.requiredKeys.map(key => [key, ''])),
                         '!='
                     ),
                 !isEmpty(filter) && makeSimpleFilter(filter)
@@ -128,9 +114,7 @@ export function BiDataTable<
                 : {
                       filter: this.makeFilter(filter),
                       sort: JSON.stringify(
-                          Object.entries(this.sort).map(
-                              ([key, order]) => `${key} ${order}`
-                          )
+                          Object.entries(this.sort).map(([key, order]) => `${key} ${order}`)
                       )
                   };
             const stream = createPageStream<TableRecord<T>>(
@@ -159,8 +143,7 @@ export function BiDataTable<
         async getViewAll(viewId: string, pageSize = this.pageSize) {
             this.clearList();
 
-            while (!this.noMore)
-                await this.getViewList(viewId, undefined, pageSize);
+            while (!this.noMore) await this.getViewList(viewId, undefined, pageSize);
 
             return this.allItems;
         }
@@ -174,18 +157,12 @@ export function BiSearch<D extends DataObject, F extends Filter<D> = Filter<D>>(
     abstract class BiSearchModel extends Model {
         declare baseURI: string;
         declare client: RESTClient;
-        declare loadPage: (
-            pageIndex: number,
-            pageSize: number,
-            filter: F
-        ) => Promise<PageData<D>>;
+        declare loadPage: (pageIndex: number, pageSize: number, filter: F) => Promise<PageData<D>>;
 
         abstract searchKeys: readonly (keyof TableRecordFields)[];
 
         makeFilter(filter: F) {
-            return isEmpty(filter)
-                ? ''
-                : makeSimpleFilter(filter, 'contains', 'OR');
+            return isEmpty(filter) ? '' : makeSimpleFilter(filter, 'contains', 'OR');
         }
 
         async getSearchList(
@@ -196,18 +173,13 @@ export function BiSearch<D extends DataObject, F extends Filter<D> = Filter<D>>(
             const wordList = keywords.split(/[\s,]+/);
             const filterList = this.searchKeys.map(key => [key, wordList]);
 
-            return this.getList(
-                Object.fromEntries(filterList),
-                pageIndex,
-                pageSize
-            );
+            return this.getList(Object.fromEntries(filterList), pageIndex, pageSize);
         }
     }
     return BiSearchModel;
 }
 
-interface BiSearchModel
-    extends InstanceType<ReturnType<typeof BiSearch<TableRecordFields, any>>> {}
+interface BiSearchModel extends InstanceType<ReturnType<typeof BiSearch<TableRecordFields, any>>> {}
 
 export type BiSearchModelClass = Constructor<BiSearchModel>;
 
@@ -244,10 +216,9 @@ export function BiTableView<
     return BiTableViewModel;
 }
 
-export type BiDataTableClass<
-    T extends DataObject,
-    F extends Filter<T> = Filter<T>
-> = ReturnType<typeof BiDataTable<T, F>>;
+export type BiDataTableClass<T extends DataObject, F extends Filter<T> = Filter<T>> = ReturnType<
+    typeof BiDataTable<T, F>
+>;
 
 export function BiTable() {
     abstract class BiTableModel extends Stream<BITable>(ListModel) {
