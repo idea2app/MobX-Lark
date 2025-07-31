@@ -3,6 +3,7 @@ import { Fragment, FC, CSSProperties } from 'react';
 import {
     Align,
     BackgroundColor,
+    Block,
     BlockType,
     BulletBlock,
     CodeBlock,
@@ -23,7 +24,7 @@ import {
     TextRun,
     TodoBlock
 } from '../type';
-import { ChildrenRenderer } from './Block';
+import { blockMap, ChildrenRenderer } from './Block';
 import { TextColorMap, BackgroundColorMap, TextTagMap } from './constant';
 
 export const styleOf = ({
@@ -69,7 +70,7 @@ export const TextRunComponent: FC<TextRun> = ({ content, text_element_style }) =
             }}
             href={link?.url}
         >
-            {content}
+            {content + ''}
         </Tag>
     );
 };
@@ -91,6 +92,7 @@ export type TextBlockComponentProps =
     | TodoBlock;
 
 export const TextBlockComponent: FC<TextBlockComponentProps> = ({
+    parent_id = '',
     block_type,
     children,
     ...props
@@ -100,7 +102,7 @@ export const TextBlockComponent: FC<TextBlockComponentProps> = ({
     );
     const { elements, style } = props[metaKey as keyof typeof props] as object as TextBlock['text'];
 
-    const Tag = TextTagMap[block_type] || Fragment,
+    const Tag = isListBlock(blockMap[parent_id]) ? 'li' : TextTagMap[block_type] || Fragment,
         StyleTag = style?.done ? 's' : Fragment;
 
     const texts = elements.map(
@@ -161,17 +163,20 @@ export const TextBlockComponent: FC<TextBlockComponentProps> = ({
     );
 };
 
-export const ListBlockComponent: FC<BulletBlock | OrderedBlock> = ({ block_type, ...props }) => {
+export const isListBlock = (block?: Block<any, any, any>): block is BulletBlock | OrderedBlock =>
+    block?.block_type === BlockType.bullet || block?.block_type === BlockType.ordered;
+
+export const ListBlockComponent: FC<BulletBlock | OrderedBlock> = ({
+    block_type,
+    children,
+    ...props
+}) => {
     const Tag = block_type === BlockType.bullet ? 'ul' : 'ol',
-        { style, elements } = 'bullet' in props ? props.bullet : props.ordered;
+        { style } = 'bullet' in props ? props.bullet : props.ordered;
 
     return (
         <Tag style={style && styleOf(style)}>
-            {elements.map(({ text_run }) => (
-                <li key={text_run!.content}>
-                    <TextRunComponent {...text_run!} />
-                </li>
-            ))}
+            <ChildrenRenderer>{children}</ChildrenRenderer>
         </Tag>
     );
 };

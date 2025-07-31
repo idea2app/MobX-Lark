@@ -1,4 +1,5 @@
 import { FC } from 'react';
+import { uniqueID } from 'web-utility';
 
 import { Block, BlockType, FileBlock, ImageBlock, TextBlock } from '../type';
 import { ListBlockComponent, TextBlockComponent } from './Text';
@@ -67,30 +68,62 @@ export function registerBlocks<T extends Block<any, any, any>>(blocks: T[]) {
             files.push({ token, name: caption?.content });
         }
     }
+    for (const parent of blocks) {
+        parent.children ||= [];
+
+        let virtualList: Block<any, any, any> | undefined;
+
+        for (const childId of [...parent.children]) {
+            const child = blockMap[childId];
+
+            if (!child) continue;
+
+            if (child.block_type === BlockType.bullet || child.block_type === BlockType.ordered) {
+                const { block_type, block_id } = child;
+                const index = parent.children.indexOf(block_id);
+
+                if (virtualList?.block_type !== block_type) virtualList = undefined;
+
+                const listKey = list2text(child) as string;
+
+                if (!virtualList) {
+                    virtualList = {
+                        parent_id: parent.block_id,
+                        block_type,
+                        block_id: uniqueID(),
+                        [listKey]: { elements: [] },
+                        children: [block_id]
+                    };
+                    parent.children[index] = child.parent_id = virtualList.block_id;
+
+                    blockMap[virtualList.block_id] = virtualList;
+                } else {
+                    virtualList.children!.push(block_id);
+
+                    child.parent_id = virtualList.block_id;
+
+                    parent.children.splice(index, 1);
+                }
+            } else virtualList = undefined;
+        }
+    }
     return { root, files };
 }
 
-export function reduceBlocks<T extends Block<any, any, any>>(sum: T[], current: T) {
-    let key: 'bullet' | 'ordered' | undefined;
-
-    switch (current.block_type) {
-        case BlockType.bullet:
-            key = 'bullet' as const;
-        case BlockType.ordered:
-            {
-                key = 'ordered' as const;
-
-                const last = sum.at(-1);
-
-                if (last?.block_type === current.block_type)
-                    last![key].elements.push(...current[key].elements);
-                else sum.push(current);
-            }
-            break;
-        default:
-            sum.push(current);
+function list2text<T extends Block<any, any, any>>(current: T) {
+    const { block_type } = current;
+    const listKey =
+        block_type === BlockType.bullet
+            ? 'bullet'
+            : block_type === BlockType.ordered
+              ? 'ordered'
+              : undefined;
+    if (listKey) {
+        current.block_type = BlockType.text;
+        current['text' as keyof T] = current[listKey];
+        delete current[listKey];
     }
-    return sum;
+    return listKey;
 }
 
 export const ChildrenRenderer: FC<{ children?: string[] }> = ({ children }) => (
@@ -98,7 +131,6 @@ export const ChildrenRenderer: FC<{ children?: string[] }> = ({ children }) => (
         {children
             ?.map(block_id => blockMap[block_id])
             .filter(Boolean)
-            .reduce(reduceBlocks, [] as Block<any, any, any>[])
             .map(block => {
                 const { block_type, block_id } = block;
 

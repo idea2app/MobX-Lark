@@ -83,9 +83,9 @@ export const TableBlockComponent: FC<TableBlock> = ({ table, children }) => {
                                 <TableCellBlockComponent
                                     key={cell.block_id}
                                     is={!columnIndex && header_column ? 'th' : 'td'}
-                                    width={rowWidth[columnIndex]}
-                                    rowSpan={rowMerge[columnIndex]?.row_span}
-                                    colSpan={rowMerge[columnIndex]?.col_span}
+                                    width={rowWidth?.[columnIndex]}
+                                    rowSpan={rowMerge?.[columnIndex]?.row_span}
+                                    colSpan={rowMerge?.[columnIndex]?.col_span}
                                     {...cell}
                                 />
                             ))}
