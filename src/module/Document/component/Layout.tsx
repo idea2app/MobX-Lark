@@ -6,6 +6,7 @@ import {
     DividerBlock,
     GridBlock,
     GridColumnBlock,
+    QuoteContainerBlock,
     TableBlock,
     TableCellBlock
 } from '../type';
@@ -13,6 +14,10 @@ import { blockMap, ChildrenRenderer } from './Block';
 import { BackgroundColorMap, TextColorMap } from './constant';
 
 export const DividerBlockComponent: FC<DividerBlock> = () => <hr />;
+
+export const QuoteContainerBlockComponent: FC<QuoteContainerBlock> = ({ children }) => (
+    <ChildrenRenderer>{children}</ChildrenRenderer>
+);
 
 export const CalloutBlockComponent: FC<CalloutBlock> = ({ callout, children }) => (
     <blockquote

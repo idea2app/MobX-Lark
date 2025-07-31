@@ -1,23 +1,10 @@
-import {
-    Filter,
-    IDType,
-    ListModel,
-    NewData,
-    Stream,
-    toggle
-} from 'mobx-restful';
+import { Filter, IDType, ListModel, NewData, Stream, toggle } from 'mobx-restful';
 import { buildURLData } from 'web-utility';
 
-import { LarkData, UserIdType } from '../../type';
+import { LarkData } from '../../type';
 import { createPageStream } from '../base';
-import {
-    Task,
-    TaskField,
-    TaskList,
-    TaskListSection,
-    TaskResource,
-    TaskSummary
-} from './type';
+import { UserIdType } from '../User/type';
+import { Task, TaskField, TaskList, TaskListSection, TaskResource, TaskSummary } from './type';
 
 export * from './type';
 
@@ -61,8 +48,7 @@ export abstract class TaskModel extends Stream<Task, TaskFilter>(ListModel) {
                 total => (this.totalCount = total),
                 { user_id_type, ...rest }
             );
-            for await (const { guid } of stream)
-                yield await this.getOne(guid, user_id_type);
+            for await (const { guid } of stream) yield await this.getOne(guid, user_id_type);
         }
     }
 
@@ -82,11 +68,7 @@ export abstract class TaskModel extends Stream<Task, TaskFilter>(ListModel) {
      * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/task/patch}
      */
     @toggle('uploading')
-    async updateOne(
-        task: NewData<Task>,
-        id?: string,
-        user_id_type: UserIdType = 'union_id'
-    ) {
+    async updateOne(task: NewData<Task>, id?: string, user_id_type: UserIdType = 'union_id') {
         const path = `task/v2/tasks?${buildURLData({ user_id_type })}`;
         const { body } = id
             ? await this.client.patch<LarkData<{ task: Task }>>(path, {
@@ -101,9 +83,7 @@ export abstract class TaskModel extends Stream<Task, TaskFilter>(ListModel) {
 
 export type TaskListFilter = Filter<TaskList> & BaseTaskFilter;
 
-export abstract class TaskListModel extends Stream<TaskList, TaskListFilter>(
-    ListModel
-) {
+export abstract class TaskListModel extends Stream<TaskList, TaskListFilter>(ListModel) {
     baseURI = 'task/v2/tasklists';
 
     /**
@@ -124,9 +104,9 @@ export abstract class TaskListModel extends Stream<TaskList, TaskListFilter>(
      */
     @toggle('downloading')
     async getOne(id: IDType, user_id_type: UserIdType = 'union_id') {
-        const { body } = await this.client.get<
-            LarkData<{ tasklist: TaskList }>
-        >(`${this.baseURI}/${id}?${buildURLData({ user_id_type })}`);
+        const { body } = await this.client.get<LarkData<{ tasklist: TaskList }>>(
+            `${this.baseURI}/${id}?${buildURLData({ user_id_type })}`
+        );
 
         return (this.currentOne = body!.data!.tasklist);
     }
@@ -147,20 +127,16 @@ export abstract class TaskListModel extends Stream<TaskList, TaskListFilter>(
                   tasklist,
                   update_fields: Object.keys(tasklist)
               })
-            : await this.client.post<LarkData<{ tasklist: TaskList }>>(
-                  path,
-                  tasklist
-              );
+            : await this.client.post<LarkData<{ tasklist: TaskList }>>(path, tasklist);
         return body!.data!.tasklist;
     }
 }
 
 export type TaskListSectionFilter = Partial<TaskResource> & BaseTaskFilter;
 
-export abstract class TaskListSectionModel extends Stream<
-    TaskListSection,
-    TaskListSectionFilter
->(ListModel) {
+export abstract class TaskListSectionModel extends Stream<TaskListSection, TaskListSectionFilter>(
+    ListModel
+) {
     baseURI = 'task/v2/sections';
 
     /**
@@ -171,13 +147,16 @@ export abstract class TaskListSectionModel extends Stream<
         resource_id,
         user_id_type = 'union_id'
     }: TaskListSectionFilter) {
-        const stream = createPageStream<
-            Pick<TaskListSection, 'guid' | 'name' | 'is_default'>
-        >(this.client, this.baseURI, total => (this.totalCount = total), {
-            resource_type,
-            resource_id,
-            user_id_type
-        });
+        const stream = createPageStream<Pick<TaskListSection, 'guid' | 'name' | 'is_default'>>(
+            this.client,
+            this.baseURI,
+            total => (this.totalCount = total),
+            {
+                resource_type,
+                resource_id,
+                user_id_type
+            }
+        );
 
         for await (const { guid } of stream) yield await this.getOne(guid);
     }
@@ -187,9 +166,9 @@ export abstract class TaskListSectionModel extends Stream<
      */
     @toggle('downloading')
     async getOne(id: string) {
-        const { body } = await this.client.get<
-            LarkData<{ section: TaskListSection }>
-        >(`${this.baseURI}/${id}`);
+        const { body } = await this.client.get<LarkData<{ section: TaskListSection }>>(
+            `${this.baseURI}/${id}`
+        );
 
         return (this.currentOne = body!.data!.section);
     }
@@ -207,24 +186,21 @@ export abstract class TaskListSectionModel extends Stream<
     ) {
         const path = `${this.baseURI}?${buildURLData({ user_id_type })}`;
         const { body } = id
-            ? await this.client.patch<LarkData<{ section: TaskListSection }>>(
-                  path,
-                  { section, update_fields: Object.keys(section) }
-              )
-            : await this.client.post<LarkData<{ section: TaskListSection }>>(
-                  path,
-                  { name: section.name, ...target }
-              );
+            ? await this.client.patch<LarkData<{ section: TaskListSection }>>(path, {
+                  section,
+                  update_fields: Object.keys(section)
+              })
+            : await this.client.post<LarkData<{ section: TaskListSection }>>(path, {
+                  name: section.name,
+                  ...target
+              });
         return body!.data!.section;
     }
 }
 
-export type TaskFieldFilter = Filter<TaskField> &
-    Partial<TaskListSectionFilter>;
+export type TaskFieldFilter = Filter<TaskField> & Partial<TaskListSectionFilter>;
 
-export abstract class TaskFieldModel extends Stream<TaskField, TaskFieldFilter>(
-    ListModel
-) {
+export abstract class TaskFieldModel extends Stream<TaskField, TaskFieldFilter>(ListModel) {
     baseURI = 'task/v2/custom_fields';
 
     /**
@@ -258,21 +234,18 @@ export abstract class TaskFieldModel extends Stream<TaskField, TaskFieldFilter>(
     ) {
         const path = `${this.baseURI}?${buildURLData({ user_id_type })}`;
         const { body } = id
-            ? await this.client.patch<LarkData<{ custom_field: TaskField }>>(
-                  path,
-                  { custom_field: data, update_fields: Object.keys(data) }
-              )
-            : await this.client.post<LarkData<{ custom_field: TaskField }>>(
-                  path,
-                  { ...data, ...target }
-              );
+            ? await this.client.patch<LarkData<{ custom_field: TaskField }>>(path, {
+                  custom_field: data,
+                  update_fields: Object.keys(data)
+              })
+            : await this.client.post<LarkData<{ custom_field: TaskField }>>(path, {
+                  ...data,
+                  ...target
+              });
         const { custom_field } = body!.data!;
 
         for (const body of targets)
-            await this.client.post(
-                `${this.baseURI}/${custom_field.guid}/add`,
-                body
-            );
+            await this.client.post(`${this.baseURI}/${custom_field.guid}/add`, body);
         return custom_field;
     }
 }

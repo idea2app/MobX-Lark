@@ -7,6 +7,11 @@ import { BackgroundColor, FontColor } from './Text';
 export type DividerBlock = Block<BlockType.divider, 'divider', {}>;
 
 /**
+ * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#b48ef162}
+ */
+export type QuoteContainerBlock = Block<BlockType.quote_container, 'quote_container', {}>;
+
+/**
  * @see {@link https://open.feishu.cn/document/docs/docs/data-structure/block#10591ec3}
  */
 export type CalloutBlock = Block<
