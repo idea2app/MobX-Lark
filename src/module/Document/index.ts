@@ -1,17 +1,33 @@
+import { HTTPError } from 'koajax';
 import { BaseListModel } from 'mobx-restful';
 import { cache } from 'web-utility';
 
-import { LarkData } from '../../type';
+import { isLarkError, LarkData } from '../../type';
 import { createPageStream } from '../base';
 import { User } from '../User/type';
-import { Block, BlockType, Document, TextBlock, TextElement } from './type';
+import {
+    Block,
+    BlockType,
+    Document,
+    FileBlock,
+    IframeBlock,
+    IframeComponentType,
+    ImageBlock,
+    TextBlock,
+    TextElement
+} from './type';
 
 export * from './type';
 export * from './component';
 
+export type FileURLResolver = (token: string) => string | Promise<string>;
+
 export abstract class DocumentModel extends BaseListModel<Document> {
     baseURI = 'docx/v1/documents';
 
+    /**
+     * @see {@link https://open.feishu.cn/document/server-docs/contact-v3/user/get}
+     */
     #getOneUser = cache(async (clean, user_id: string) => {
         const { body } = await this.client.get<LarkData<{ user: User }>>(
             `contact/v3/users/${user_id}`
@@ -19,55 +35,79 @@ export abstract class DocumentModel extends BaseListModel<Document> {
         return body!.data!.user;
     }, 'DocumentModel.#getOneUser');
 
-    #getOneDocument = cache(
-        (clean, token: string) => this.getOne(token),
-        'DocumentModel.#getOneDocument'
-    );
+    async *#resolveTextElements(
+        elements: TextBlock['text']['elements'],
+        resolveFileURL?: FileURLResolver
+    ) {
+        for (const element of elements)
+            try {
+                const { mention_user, file } = element;
 
-    async *#resolveTextElements(elements: TextBlock['text']['elements']) {
-        for (const element of elements) {
-            const { mention_user, mention_doc } = element;
+                if (mention_user) {
+                    const { user_id, text_element_style } = mention_user;
 
-            if (mention_user) {
-                const { user_id, text_element_style } = mention_user;
-                try {
-                    const { name } = await this.#getOneUser(user_id);
-
-                    yield { text_run: { content: `@${name}`, text_element_style } } as TextElement;
-                } catch (error) {
-                    console.error(error);
-
-                    yield element;
-                }
-            } else if (mention_doc) {
-                const { token, url, text_element_style } = mention_doc;
-                try {
-                    const { title } = await this.#getOneDocument(token);
+                    const { name, nickname, email, enterprise_email, mobile } =
+                        await this.#getOneUser(user_id);
+                    const Name = nickname || name,
+                        Email = enterprise_email || email;
 
                     yield {
                         text_run: {
-                            content: title,
-                            text_element_style: { ...text_element_style, link: { url } }
+                            content: Name ? `@${Name}` : Email || mobile,
+                            text_element_style: {
+                                ...text_element_style,
+                                link: { url: Email ? `mailto:${Email}` : `tel:${mobile}` }
+                            }
                         }
                     } as TextElement;
-                } catch (error) {
-                    console.error(error);
+                } else if (file) {
+                    const { file_token, text_element_style } = file;
 
-                    yield element;
-                }
-            } else yield element;
-        }
+                    const url = await resolveFileURL?.(file_token || '');
+
+                    if (url)
+                        yield {
+                            text_run: {
+                                content: url,
+                                text_element_style: { ...text_element_style, link: { url } }
+                            }
+                        } as TextElement;
+                } else yield element;
+            } catch (error) {
+                if (error instanceof HTTPError && isLarkError(error.response.body))
+                    console.error(error.response.body);
+                else console.error(error);
+
+                yield element;
+            }
     }
 
-    async *#resolveBlocks(stream: AsyncIterable<Block<any, any, any>>) {
-        for await (const block of stream) {
-            switch (block.block_type) {
-                case BlockType.text: {
-                    const { text } = block as TextBlock;
+    async *#resolveBlocks(
+        stream: AsyncIterable<Block<any, any, any>>,
+        resolveFileURL?: FileURLResolver
+    ) {
+        for await (let block of stream) {
+            if (block.block_type === BlockType.text) {
+                const { text } = block as TextBlock;
 
-                    text.elements = await Array.fromAsync(this.#resolveTextElements(text.elements));
-                    break;
+                text.elements = await Array.fromAsync(this.#resolveTextElements(text.elements));
+            } else if (block.block_type === BlockType.file) {
+                const { file, ...meta } = block as FileBlock;
+                const url = resolveFileURL?.(file.token || '');
+
+                if (url) {
+                    yield {
+                        ...meta,
+                        block_type: BlockType.iframe,
+                        iframe: { component: { url, type: IframeComponentType.Undefined } }
+                    } as IframeBlock;
+
+                    continue;
                 }
+            } else if (block.block_type === BlockType.image) {
+                const { image } = block as ImageBlock;
+
+                image.url = await resolveFileURL?.(image.token || '');
             }
             yield block;
         }
@@ -76,12 +116,12 @@ export abstract class DocumentModel extends BaseListModel<Document> {
     /**
      * @see {@link https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/list}
      */
-    async getOneBlocks(id: string) {
+    async getOneBlocks(id: string, resolveFileURL?: FileURLResolver) {
         const stream = createPageStream<Block<any, any, any>>(
             this.client,
             `docx/v1/documents/${id}/blocks`,
             total => void total
         );
-        return Array.fromAsync(this.#resolveBlocks(stream));
+        return Array.fromAsync(this.#resolveBlocks(stream, resolveFileURL));
     }
 }

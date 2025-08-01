@@ -15,22 +15,25 @@ import { BackgroundColorMap, TextColorMap } from './constant';
 
 export const DividerBlockComponent: FC<DividerBlock> = () => <hr />;
 
-export const QuoteContainerBlockComponent: FC<QuoteContainerBlock> = ({ children }) => (
-    <ChildrenRenderer>{children}</ChildrenRenderer>
-);
+export const CalloutBlockComponent: FC<QuoteContainerBlock | CalloutBlock> = ({
+    children,
+    ...props
+}) => {
+    const { border_color, background_color, text_color } =
+        'callout' in props ? props.callout : (props.quote_container as CalloutBlock['callout']);
 
-export const CalloutBlockComponent: FC<CalloutBlock> = ({ callout, children }) => (
-    <blockquote
-        style={{
-            border: callout.border_color && `1px solid ${TextColorMap[callout.border_color]}`,
-            backgroundColor:
-                callout.background_color && BackgroundColorMap[callout.background_color],
-            color: callout.text_color && TextColorMap[callout.text_color]
-        }}
-    >
-        <ChildrenRenderer>{children}</ChildrenRenderer>
-    </blockquote>
-);
+    return (
+        <blockquote
+            style={{
+                border: border_color && `1px solid ${TextColorMap[border_color]}`,
+                backgroundColor: background_color && BackgroundColorMap[background_color],
+                color: text_color && TextColorMap[text_color]
+            }}
+        >
+            <ChildrenRenderer>{children}</ChildrenRenderer>
+        </blockquote>
+    );
+};
 
 export const GridBlockComponent: FC<GridBlock> = ({ children }) => (
     <div className="lark-grid-block">
@@ -110,10 +113,12 @@ export interface TableCellBlockComponentProps
 
 export const TableCellBlockComponent: FC<TableCellBlockComponentProps> = ({
     is: Tag = 'td',
-    children,
-    ...props
+    width,
+    rowSpan,
+    colSpan,
+    children
 }) => (
-    <Tag {...props}>
+    <Tag {...{ width, rowSpan, colSpan }}>
         <ChildrenRenderer>{children}</ChildrenRenderer>
     </Tag>
 );

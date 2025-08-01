@@ -9,6 +9,7 @@ import {
     BiTable,
     BiTableView,
     Block,
+    BlockType,
     DocumentModel,
     LarkApp,
     renderBlocks,
@@ -70,22 +71,23 @@ describe('MobX Lark SDK', async () => {
         }
         const { obj_token } = await wikiNodeStore.getOne(DOCUMENT_WIKI_ID!);
 
-        const blocks: Block<any, any, any>[] = await new MyDocumentModel().getOneBlocks(obj_token);
-
+        const blocks: Block<any, any, any>[] = await new MyDocumentModel().getOneBlocks(
+            obj_token,
+            token => `https://idea2.app/api/Lark/file/${token}`
+        );
         expect('block_type' in blocks[0] && 'block_id' in blocks[0]);
 
-        console.log(blocks);
+        const imageBlock = blocks.find(({ block_type }) => block_type === BlockType.image);
+
+        expect(imageBlock?.url?.startsWith('https://idea2.app/api/Lark/file/'));
 
         return blocks;
     });
 
     await it('should render a Document with React JSX', async expect => {
-        const { vDOM, files } = renderBlocks(blocks);
+        const vDOM = renderBlocks(blocks);
 
         expect('type' in vDOM && 'key' in vDOM && 'props' in vDOM);
-        expect(files.length > 0);
-
-        console.log(files, vDOM);
 
         const markup = renderToStaticMarkup(vDOM);
         const markdown = new Turndown().turndown(markup);
@@ -95,7 +97,6 @@ describe('MobX Lark SDK', async () => {
         await outputJSON('test/output/index.json', blocks);
         await outputFile('test/output/index.html', markup);
         await outputFile('test/output/index.md', markdown);
-        await outputJSON('test/output/files.json', files);
     });
 
     const spreadSheetWikiNode =

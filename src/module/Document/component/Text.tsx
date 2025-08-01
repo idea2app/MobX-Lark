@@ -25,7 +25,7 @@ import {
     TodoBlock
 } from '../type';
 import { blockMap, ChildrenRenderer } from './Block';
-import { TextColorMap, BackgroundColorMap, TextTagMap } from './constant';
+import { TextColorMap, BackgroundColorMap, TextTagMap, CodeLanguageMap } from './constant';
 
 export const styleOf = ({
     indentation_level,
@@ -118,7 +118,7 @@ export const TextBlockComponent: FC<TextBlockComponentProps> = ({
             ) : mention_doc ? (
                 <TextRunComponent
                     key={mention_doc.url}
-                    content={mention_doc.url}
+                    content={mention_doc.title || mention_doc.url}
                     text_element_style={{ link: { url: mention_doc.url } }}
                 />
             ) : reminder ? (
@@ -149,14 +149,17 @@ export const TextBlockComponent: FC<TextBlockComponentProps> = ({
             </h1>
             <ChildrenRenderer>{children}</ChildrenRenderer>
         </Tag>
+    ) : Tag === 'li' ? (
+        <Tag style={style && styleOf(style)}>
+            <StyleTag>{texts}</StyleTag>
+
+            <ChildrenRenderer>{children}</ChildrenRenderer>
+        </Tag>
     ) : (
         <>
-            <Tag
-                className={style?.language ? `language-${style.language}` : ''}
-                style={style && styleOf(style)}
-            >
+            <Tag style={style && styleOf(style)}>
                 {style?.language ? (
-                    <code className={`language-${style.language}`}>{texts}</code>
+                    <code className={`language-${CodeLanguageMap[style.language]}`}>{texts}</code>
                 ) : (
                     <StyleTag>{texts}</StyleTag>
                 )}
