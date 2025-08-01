@@ -4,6 +4,21 @@ export type UserIdType = `${'open' | 'union' | 'user'}_id`;
 
 export type LocaleUser = Record<`${'' | 'en_'}name` | `${'' | 'enterprise_'}email`, string>;
 
+export enum Gender {
+    Secret = 0,
+    Male = 1,
+    Female = 2,
+    Other = 3
+}
+
+export enum EmployeeType {
+    Formal = 1,
+    Intern = 2,
+    Outsourced = 3,
+    Labor = 4,
+    Consultant = 5
+}
+
 export interface CustomAttribute {
     type: 'TEXT';
     id: string;
@@ -63,11 +78,11 @@ export interface User
         >,
         Record<'mobile_visible' | `is_${'tenant_manager' | 'frozen'}`, boolean>,
         Record<`${'department' | 'subscription' | 'dotted_line_leader_user'}_ids`, string[]> {
-    gender: 1;
+    gender: Gender;
     avatar: Record<`avatar_${72 | 240 | 640 | 'origin'}`, string>;
     status: Record<`is_${'frozen' | 'resigned' | 'activated' | 'exited' | 'unjoin'}`, boolean>;
     join_time: number;
-    employee_type: 1;
+    employee_type: EmployeeType;
     orders: Order[];
     custom_attrs: CustomAttribute[];
     assign_info: SeatAssign[];

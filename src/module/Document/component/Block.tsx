@@ -1,14 +1,13 @@
 import { FC } from 'react';
 import { uniqueID } from 'web-utility';
 
-import { Block, BlockType, FileBlock, ImageBlock, TextBlock } from '../type';
+import { Block, BlockType } from '../type';
 import { ListBlockComponent, TextBlockComponent } from './Text';
 import {
     CalloutBlockComponent,
     DividerBlockComponent,
     GridBlockComponent,
     GridColumnBlockComponent,
-    QuoteContainerBlockComponent,
     TableBlockComponent,
     TableCellBlockComponent
 } from './Layout';
@@ -29,7 +28,7 @@ export const blockComponentMap: Partial<Record<BlockType, FC<any>>> = {
     [BlockType.bullet]: ListBlockComponent,
     [BlockType.ordered]: ListBlockComponent,
     [BlockType.code]: TextBlockComponent,
-    [BlockType.quote_container]: QuoteContainerBlockComponent,
+    [BlockType.quote_container]: CalloutBlockComponent,
     [BlockType.quote]: TextBlockComponent,
     [BlockType.todo]: TextBlockComponent,
     [BlockType.divider]: DividerBlockComponent,
@@ -46,30 +45,14 @@ export const blockComponentMap: Partial<Record<BlockType, FC<any>>> = {
 export const blockMap: Record<string, Block<any, any, any>> = {};
 
 export function registerBlocks<T extends Block<any, any, any>>(blocks: T[]) {
-    let root: T | undefined,
-        files: Partial<Record<'token' | 'name', string>>[] = [];
+    let root: T | undefined;
 
     for (const block of blocks) {
         blockMap[block.block_id] = block;
 
         if (!block.parent_id) root = block;
-        else if (block.block_type === BlockType.text) {
-            for (const { file, text_run } of (block as unknown as TextBlock).text.elements)
-                if (file)
-                    files.push({
-                        token: file.file_token,
-                        name: text_run?.content
-                    });
-        } else if (block.block_type === BlockType.file) {
-            const { token, name } = (block as unknown as FileBlock).file;
-
-            files.push({ token, name });
-        } else if (block.block_type === BlockType.image) {
-            const { token, caption } = (block as unknown as ImageBlock).image;
-
-            files.push({ token, name: caption?.content });
-        }
     }
+
     for (const parent of blocks) {
         parent.children ||= [];
 
@@ -109,7 +92,7 @@ export function registerBlocks<T extends Block<any, any, any>>(blocks: T[]) {
             } else virtualList = undefined;
         }
     }
-    return { root, files };
+    return root;
 }
 
 function list2text<T extends Block<any, any, any>>(current: T) {
@@ -130,29 +113,24 @@ function list2text<T extends Block<any, any, any>>(current: T) {
 
 export const ChildrenRenderer: FC<{ children?: string[] }> = ({ children }) => (
     <>
-        {children
-            ?.map(block_id => blockMap[block_id])
-            .filter(Boolean)
-            .map(block => {
-                const { block_type, block_id } = block;
+        {children?.map(block_id => {
+            const block = blockMap[block_id];
+            const { block_type } = block;
+            const BlockComponent = blockComponentMap[block_type as BlockType];
 
-                const BlockComponent = blockComponentMap[block_type as BlockType];
-
-                return BlockComponent ? (
-                    <BlockComponent key={block_id} {...block} />
-                ) : (
-                    <p key={block_id}>Unsupported Block Type {block_type}</p>
-                );
-            })}
+            return BlockComponent ? (
+                <BlockComponent key={block_id} {...block} />
+            ) : (
+                <p key={block_id}>Unsupported Block Type {block_type}</p>
+            );
+        })}
     </>
 );
 
 export function renderBlocks(blocks: Block<any, any, any>[]) {
-    const { root, files } = registerBlocks(blocks);
+    const root = registerBlocks(blocks);
 
     if (!root) throw new ReferenceError('No root block to render');
 
-    const vDOM = <ChildrenRenderer>{[root.block_id]}</ChildrenRenderer>;
-
-    return { vDOM, files };
+    return <ChildrenRenderer>{[root.block_id]}</ChildrenRenderer>;
 }

@@ -7,7 +7,7 @@ export const IframeBlockComponent: FC<IframeBlock> = ({ iframe: { component } })
 );
 
 export const ImageBlockComponent: FC<ImageBlock> = ({
-    image: { token, width, height, align, caption }
+    image: { token, url, width, height, align, caption }
 }) => (
     <figure
         style={{
@@ -15,7 +15,7 @@ export const ImageBlockComponent: FC<ImageBlock> = ({
         }}
     >
         <img
-            src={`drive/v1/medias/${token}/download`}
+            src={url || `drive/v1/medias/${token}/download`}
             style={{ width: width || '100%', height }}
             alt={caption?.content}
         />

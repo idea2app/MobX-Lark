@@ -1,4 +1,5 @@
 export * from './base';
+export * from './User/type';
 export * from './InstantMessenger';
 export * from './Task';
 export * from './Document';

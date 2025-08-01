@@ -234,10 +234,8 @@ export enum MentionObjType {
     Docx = 22
 }
 
-export interface MentionDoc extends TextElementData {
-    token: string;
+export interface MentionDoc extends TextElementData, Record<'token' | 'url' | 'title', string> {
     obj_type: MentionObjType;
-    url: string;
 }
 
 export interface Reminder extends TextElementData {

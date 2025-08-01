@@ -53,6 +53,10 @@ export type ImageBlock = Block<
     'image',
     {
         token?: string;
+        /**
+         * Developer customized URL
+         */
+        url?: string;
         width?: number;
         height?: number;
         align?: Align;
