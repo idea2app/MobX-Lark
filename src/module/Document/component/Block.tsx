@@ -12,6 +12,12 @@ import {
     TableCellBlockComponent
 } from './Layout';
 import { FileBlockComponent, IframeBlockComponent, ImageBlockComponent } from './Media';
+import {
+    AgendaBlockComponent,
+    AgendaItemBlockComponent,
+    AgendaItemTitleBlockComponent,
+    AgendaItemContentBlockComponent
+} from './Collaboration';
 
 export const blockComponentMap: Partial<Record<BlockType, FC<any>>> = {
     [BlockType.page]: TextBlockComponent,
@@ -39,12 +45,18 @@ export const blockComponentMap: Partial<Record<BlockType, FC<any>>> = {
     [BlockType.table_cell]: TableCellBlockComponent,
     [BlockType.iframe]: IframeBlockComponent,
     [BlockType.image]: ImageBlockComponent,
-    [BlockType.file]: FileBlockComponent
+    [BlockType.file]: FileBlockComponent,
+    [BlockType.agenda]: AgendaBlockComponent,
+    [BlockType.agenda_item]: AgendaItemBlockComponent,
+    [BlockType.agenda_item_title]: AgendaItemTitleBlockComponent,
+    [BlockType.agenda_item_content]: AgendaItemContentBlockComponent
 };
 
 export const blockMap: Record<string, Block<any, any, any>> = {};
 
 export function registerBlocks<T extends Block<any, any, any>>(blocks: T[]) {
+    blocks = globalThis.structuredClone?.(blocks) || JSON.parse(JSON.stringify(blocks));
+
     let root: T | undefined;
 
     for (const block of blocks) {
@@ -115,13 +127,17 @@ export const ChildrenRenderer: FC<{ children?: string[] }> = ({ children }) => (
     <>
         {children?.map(block_id => {
             const block = blockMap[block_id];
+
+            if (!block)
+                return <noscript key={block_id}>Block with ID {block_id} is not found</noscript>;
+
             const { block_type } = block;
             const BlockComponent = blockComponentMap[block_type as BlockType];
 
             return BlockComponent ? (
                 <BlockComponent key={block_id} {...block} />
             ) : (
-                <p key={block_id}>Unsupported Block Type {block_type}</p>
+                <noscript key={block_id}>Unsupported Block Type {block_type}</noscript>
             );
         })}
     </>
