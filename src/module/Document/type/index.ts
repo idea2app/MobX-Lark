@@ -2,6 +2,8 @@ export * from './Block';
 export * from './Text';
 export * from './Layout';
 export * from './Media';
+export * from './Document';
+export * from './Collaboration';
 
 export interface Document extends Record<'document_id' | 'title', string> {
     revision_id: number;

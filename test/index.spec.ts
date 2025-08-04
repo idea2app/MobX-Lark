@@ -11,6 +11,7 @@ import {
     Block,
     BlockType,
     DocumentModel,
+    ImageBlock,
     LarkApp,
     renderBlocks,
     SpreadSheetModel,
@@ -69,17 +70,21 @@ describe('MobX Lark SDK', async () => {
         class MyDocumentModel extends DocumentModel {
             client = app.client;
         }
+        const documentStore = new MyDocumentModel('idea2app.feishu.cn');
+
         const { obj_token } = await wikiNodeStore.getOne(DOCUMENT_WIKI_ID!);
 
-        const blocks: Block<any, any, any>[] = await new MyDocumentModel().getOneBlocks(
+        const blocks: Block<any, any, any>[] = await documentStore.getOneBlocks(
             obj_token,
             token => `https://idea2.app/api/Lark/file/${token}`
         );
         expect('block_type' in blocks[0] && 'block_id' in blocks[0]);
 
-        const imageBlock = blocks.find(({ block_type }) => block_type === BlockType.image);
+        const imageBlock = blocks.find(
+            ({ block_type }) => block_type === BlockType.image
+        ) as ImageBlock;
 
-        expect(imageBlock?.url?.startsWith('https://idea2.app/api/Lark/file/'));
+        expect(!!imageBlock?.image.url?.startsWith('https://idea2.app/api/Lark/file/'));
 
         return blocks;
     });
@@ -92,7 +97,7 @@ describe('MobX Lark SDK', async () => {
         const markup = renderToStaticMarkup(vDOM);
         const markdown = new Turndown().turndown(markup);
 
-        expect(markup.includes('<article>'));
+        expect(markup.includes('</article>'));
 
         await outputJSON('test/output/index.json', blocks);
         await outputFile('test/output/index.html', markup);

@@ -23,6 +23,109 @@ Unofficial [TypeScript][1] SDK for [FeiShu/Lark API][2], which is based on [MobX
     - [BI Table example](https://idea2app.feishu.cn/wiki/Jzqbwv4biiY1Ckkqf95cS97Ynig)
 - [API document](https://idea2app.github.io/MobX-Lark/)
 
+### 1. Initialization
+
+#### User access token (front-end)
+
+```ts
+import { LarkApp } from 'mobx-lark';
+import { parseCookie } from 'web-utility';
+
+const { token } = parseCookie();
+
+export const larkApp = new LarkApp({
+    id: process.env.LARK_APP_ID,
+    accessToken: token // or other getting way of OAuth token
+});
+```
+
+##### OAuth middleware for Next.js
+
+1. [Initialization](https://github.com/idea2app/Lark-Next-Bootstrap-ts/blob/afa51fad3b16e598bf3b10010b2dc47405b016a3/pages/api/Lark/core.ts#L40-L48)
+
+2. Page router usage:
+
+    ```ts
+    import { compose } from 'next-ssr-middleware';
+
+    import { larkOAuth2 } from '../utility/lark';
+
+    export const getServerSideProps = compose(larkOAuth2);
+    ```
+
+#### Tenant access token (back-end)
+
+```ts
+import { LarkApp } from 'mobx-lark';
+
+export const larkApp = new LarkApp({
+    id: process.env.LARK_APP_ID,
+    secret: process.env.LARK_APP_SECRET
+});
+```
+
+### 2. Defination
+
+For example, we use a BI Table as a database:
+
+```ts
+import { BiDataQueryOptions, BiDataTable, TableCellValue } from 'mobx-lark';
+
+import { larkClient } from '../utility/lark';
+import { LarkBaseId } from '../configuration';
+
+export type Client = Record<
+    'id' | 'name' | 'type' | 'partnership' | 'image' | 'summary' | 'address',
+    TableCellValue
+>;
+
+const CLIENT_TABLE = process.env.NEXT_PUBLIC_CLIENT_TABLE!;
+
+export class ClientModel extends BiDataTable<Client>() {
+    client = lark.client;
+
+    queryOptions: BiDataQueryOptions = { text_field_as_array: false };
+
+    constructor(appId = LarkBaseId, tableId = CLIENT_TABLE) {
+        super(appId, tableId);
+    }
+}
+```
+
+### 3. Querying
+
+Use Next.js page router for example:
+
+```tsx
+import { FC } from 'react';
+
+import { lark } from '../utility/lark';
+import { Client, ClientModel } from '../models/Client';
+
+export const getServerSideProps = async () => {
+    await lark.getAccessToken();
+
+    const clientStore = new ClientModel();
+
+    const fullList = await clientStore.getAll();
+
+    return { props: { fullList } };
+};
+
+const ClientIndexPage: FC<{ fullList: Client[] }> = ({ fullList }) => (
+    <main>
+        <h1>Client List</h1>
+        <ol>
+            {fullList.map(({ id, name }) => (
+                <li key={id}>{name}</li>
+            ))}
+        </ol>
+    </main>
+);
+
+export default ClientIndexPage;
+```
+
 ## Scaffolds
 
 1. https://github.com/idea2app/Lark-Next-Bootstrap-ts

@@ -6,6 +6,7 @@ import { isLarkError, LarkData } from '../../type';
 import { createPageStream } from '../base';
 import { User } from '../User/type';
 import {
+    BiTableBlock,
     Block,
     BlockType,
     Document,
@@ -13,8 +14,10 @@ import {
     IframeBlock,
     IframeComponentType,
     ImageBlock,
+    SheetBlock,
     TextBlock,
-    TextElement
+    TextElement,
+    TextRun
 } from './type';
 
 export * from './type';
@@ -24,6 +27,24 @@ export type FileURLResolver = (token: string) => string | Promise<string>;
 
 export abstract class DocumentModel extends BaseListModel<Document> {
     baseURI = 'docx/v1/documents';
+
+    constructor(public domain: string) {
+        super();
+    }
+
+    #createLinkElement = (
+        url: string,
+        content = url,
+        text_element_style?: TextRun['text_element_style']
+    ): TextElement => ({
+        text_run: { content, text_element_style: { ...text_element_style, link: { url } } }
+    });
+
+    #createLinkBlock = (oldBlock: Block<any, any, any>, url: string, content = url): TextBlock => ({
+        ...oldBlock,
+        block_type: BlockType.text,
+        text: { elements: [this.#createLinkElement(url, content)] }
+    });
 
     /**
      * @see {@link https://open.feishu.cn/document/server-docs/contact-v3/user/get}
@@ -51,27 +72,17 @@ export abstract class DocumentModel extends BaseListModel<Document> {
                     const Name = nickname || name,
                         Email = enterprise_email || email;
 
-                    yield {
-                        text_run: {
-                            content: Name ? `@${Name}` : Email || mobile,
-                            text_element_style: {
-                                ...text_element_style,
-                                link: { url: Email ? `mailto:${Email}` : `tel:${mobile}` }
-                            }
-                        }
-                    } as TextElement;
+                    yield this.#createLinkElement(
+                        Email ? `mailto:${Email}` : `tel:${mobile}`,
+                        Name ? `@${Name}` : Email || mobile,
+                        text_element_style
+                    );
                 } else if (file) {
                     const { file_token, text_element_style } = file;
 
                     const url = await resolveFileURL?.(file_token || '');
 
-                    if (url)
-                        yield {
-                            text_run: {
-                                content: url,
-                                text_element_style: { ...text_element_style, link: { url } }
-                            }
-                        } as TextElement;
+                    if (url) yield this.#createLinkElement(url, url, text_element_style);
                 } else yield element;
             } catch (error) {
                 if (error instanceof HTTPError && isLarkError(error.response.body))
@@ -108,6 +119,22 @@ export abstract class DocumentModel extends BaseListModel<Document> {
                 const { image } = block as ImageBlock;
 
                 image.url = await resolveFileURL?.(image.token || '');
+            } else if (block.block_type === BlockType.sheet) {
+                const [token, sheet] = (block as SheetBlock).sheet.token.split('_');
+
+                yield this.#createLinkBlock(
+                    block,
+                    `https://${this.domain}/sheets/${token}?sheet=${sheet}`
+                );
+                continue;
+            } else if (block.block_type === BlockType.bitable) {
+                const [token, table] = (block as BiTableBlock).bitable.token.split('_');
+
+                yield this.#createLinkBlock(
+                    block,
+                    `https://${this.domain}/base/${token}?table=${table}`
+                );
+                continue;
             }
             yield block;
         }
