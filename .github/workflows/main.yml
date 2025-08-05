@@ -24,15 +24,13 @@ jobs:
               run: pnpm i --frozen-lockfile
 
             - name: Build & Publish
-              run: npm publish --access public --provenance
+              run: |
+                  cat > .env <<EOF
+                  ${{ secrets.ENV_FILE }}
+                  EOF
+                  npm publish --access public --provenance
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-                  APP_ID: ${{ secrets.APP_ID }}
-                  APP_SECRET: ${{ secrets.APP_SECRET }}
-                  SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
-                  BITABLE_ID: ${{ secrets.BITABLE_ID }}
-                  BITABLE_TABLE_ID: ${{ secrets.BITABLE_TABLE_ID }}
-                  MEDIA_ID: ${{ secrets.MEDIA_ID }}
 
             - name: Deploy document
               uses: peaceiris/actions-gh-pages@v4
