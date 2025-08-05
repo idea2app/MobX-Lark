@@ -31,7 +31,7 @@
         "mobx": "^6.13.7",
         "mobx-restful": "^2.1.0",
         "regenerator-runtime": "^0.14.1",
-        "web-utility": "^4.5.0"
+        "web-utility": "^4.5.1"
     },
     "peerDependencies": {
         "react": ">=16"

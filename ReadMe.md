@@ -23,7 +23,7 @@ Unofficial [TypeScript][1] SDK for [FeiShu/Lark API][2], which is based on [MobX
     - [BI Table example](https://idea2app.feishu.cn/wiki/Jzqbwv4biiY1Ckkqf95cS97Ynig)
 - [API document](https://idea2app.github.io/MobX-Lark/)
 
-### 1. Initialization
+### 1. Initialize Lark app
 
 #### User access token (front-end)
 
@@ -64,7 +64,7 @@ export const larkApp = new LarkApp({
 });
 ```
 
-### 2. Defination
+### 2. Define a model
 
 For example, we use a BI Table as a database:
 
@@ -92,7 +92,7 @@ export class ClientModel extends BiDataTable<Client>() {
 }
 ```
 
-### 3. Querying
+### 3. Query data
 
 Use Next.js page router for example:
 
@@ -124,6 +124,27 @@ const ClientIndexPage: FC<{ fullList: Client[] }> = ({ fullList }) => (
 );
 
 export default ClientIndexPage;
+```
+
+### 4. Render a document
+
+```ts
+import { writeFile } from 'fs/promises';
+import { DocumentModel, renderBlocks } from 'mobx-lark';
+import { renderToStaticMarkup } from 'react-dom/server';
+
+import { lark } from '../utility/lark';
+
+class MyDocumentModel extends DocumentModel {
+    client = lark.client;
+}
+const documentStore = new MyDocumentModel('idea2app.feishu.cn');
+
+const blocks = await documentStore.getOneBlocks('a_docx_token');
+
+const markup = renderToStaticMarkup(renderBlocks(blocks));
+
+await writeFile('document.html', markup);
 ```
 
 ## Scaffolds
