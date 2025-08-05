@@ -1,10 +1,12 @@
 import { HTTPError } from 'koajax';
 import { BaseListModel } from 'mobx-restful';
-import { cache } from 'web-utility';
+import { cache, formatDate, uniqueID } from 'web-utility';
 
 import { isLarkError, LarkData } from '../../type';
 import { createPageStream } from '../base';
+import { TaskModel } from '../Task';
 import { User } from '../User/type';
+import { WikiNode, WikiNodeModel } from '../Wiki';
 import {
     BiTableBlock,
     Block,
@@ -14,10 +16,15 @@ import {
     IframeBlock,
     IframeComponentType,
     ImageBlock,
+    OrderedBlock,
+    QuoteContainerBlock,
     SheetBlock,
+    SubPageList,
+    TaskBlock,
     TextBlock,
     TextElement,
-    TextRun
+    TextRun,
+    WikiCatalog
 } from './type';
 
 export * from './type';
@@ -93,10 +100,33 @@ export abstract class DocumentModel extends BaseListModel<Document> {
             }
     }
 
+    async #getWikiSubDocuments(token: string) {
+        const { client } = this;
+
+        class MyWikiNodeModel extends WikiNodeModel {
+            client = client;
+        }
+        const { body } = await client.get<LarkData<{ node: WikiNode }>>(
+            `wiki/v2/spaces/get_node?token=${token}`
+        );
+        const { space_id } = body!.data!.node;
+
+        const wikiNodeStore = new MyWikiNodeModel(this.domain, space_id);
+
+        return wikiNodeStore.getAll({ parent_node_token: token });
+    }
+
     async *#resolveBlocks(
         stream: AsyncIterable<Block<any, any, any>>,
         resolveFileURL?: FileURLResolver
     ) {
+        const { client } = this;
+
+        class MyTaskModel extends TaskModel {
+            client = client;
+        }
+        const taskStore = new MyTaskModel();
+
         for await (let block of stream) {
             if (block.block_type === BlockType.text) {
                 const { text } = block as TextBlock;
@@ -134,6 +164,61 @@ export abstract class DocumentModel extends BaseListModel<Document> {
                     block,
                     `https://${this.domain}/base/${token}?table=${table}`
                 );
+                continue;
+            } else if (
+                block.block_type === BlockType.wiki_catalog ||
+                block.block_type === BlockType.sub_page_list
+            ) {
+                const parentBlock = {
+                    ...block,
+                    block_type: BlockType.quote_container,
+                    quote_container: {},
+                    children: []
+                } as QuoteContainerBlock;
+
+                yield parentBlock;
+
+                const { wiki_token } =
+                    'wiki_catalog' in block
+                        ? (block as WikiCatalog).wiki_catalog
+                        : (block as SubPageList).sub_page_list;
+
+                for (const { title, node_token } of await this.#getWikiSubDocuments(wiki_token)) {
+                    const text_run = {
+                        content: title,
+                        text_element_style: {
+                            link: { url: `https://${this.domain}/wiki/${node_token}` }
+                        }
+                    } as TextRun;
+
+                    const block_id = uniqueID();
+
+                    yield {
+                        parent_id: parentBlock.block_id,
+                        block_id,
+                        block_type: BlockType.ordered,
+                        ordered: { elements: [{ text_run }] }
+                    } as OrderedBlock;
+
+                    parentBlock.children!.push(block_id);
+                }
+                continue;
+            } else if (block.block_type === BlockType.task) {
+                const { task_id } = (block as TaskBlock).task;
+
+                const { url, summary, members, due, status } = await taskStore.getOne(task_id);
+                const content = [
+                    summary,
+                    members.map(({ name }) => `@${name}`).join(' '),
+                    due && formatDate(due.timestamp)
+                ]
+                    .filter(Boolean)
+                    .join(' ');
+                const newBlock = this.#createLinkBlock(block, url, content);
+
+                newBlock.text.style = { done: status === 'done' };
+
+                yield newBlock;
                 continue;
             }
             yield block;

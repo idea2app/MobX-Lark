@@ -16,3 +16,7 @@ export type BiTableBlock = Block<
     'bitable',
     { token: string; view_type: BiTableViewType }
 >;
+
+export type WikiCatalog = Block<BlockType.wiki_catalog, 'wiki_catalog', { wiki_token: string }>;
+
+export type SubPageList = Block<BlockType.sub_page_list, 'sub_page_list', { wiki_token: string }>;

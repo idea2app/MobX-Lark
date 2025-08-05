@@ -1,4 +1,4 @@
-import { ListModel, Stream, toggle } from 'mobx-restful';
+import { Filter, ListModel, Stream, toggle } from 'mobx-restful';
 
 import { LarkData } from '../../type';
 import { createPageStream } from '../base';
@@ -43,8 +43,19 @@ export abstract class WikiNodeModel extends Stream<WikiNode>(ListModel) {
         return body!.data!.node;
     }
 
-    async *openStream() {
-        yield* this.traverseTree(undefined, total => (this.totalCount = total));
+    async *openStream({ parent_node_token }: Filter<WikiNode>) {
+        const setCount = (total: number) => (this.totalCount = total);
+
+        yield* parent_node_token
+            ? this.traverseChildren(parent_node_token, setCount)
+            : this.traverseTree(undefined, setCount);
+    }
+
+    traverseChildren(parent_node_token?: string, onCount: (total: number) => any = () => {}) {
+        return createPageStream<WikiNode>(this.client, this.baseURI, onCount, {
+            page_size: 50,
+            parent_node_token
+        });
     }
 
     /**
@@ -58,10 +69,7 @@ export abstract class WikiNodeModel extends Stream<WikiNode>(ListModel) {
 
         const addCount = (total: number) => (totalCount += total);
 
-        const stream = createPageStream<WikiNode>(this.client, this.baseURI, addCount, {
-            page_size: 50,
-            parent_node_token: parentNode?.node_token
-        });
+        const stream = this.traverseChildren(parentNode?.node_token, addCount);
 
         for (const node of await Array.fromAsync(stream)) {
             const title = node.title.replace(/[\\/:*?"<>|]+/g, '-').trim();

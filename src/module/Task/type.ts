@@ -4,15 +4,13 @@ export type StringMap = Record<string, string>;
 
 export interface TaskOperator {
     id: string;
+    name: string;
     type: 'user' | 'app';
     role?: 'creator' | 'owner' | 'editor' | 'viewer' | 'assignee' | 'follower';
 }
 
 export interface TaskList
-    extends Record<
-        'guid' | 'name' | 'url' | 'created_at' | 'updated_at',
-        string
-    > {
+    extends Record<'guid' | 'name' | 'url' | 'created_at' | 'updated_at', string> {
     creator: TaskOperator;
     owner: TaskOperator;
     members: TaskOperator[];
@@ -26,10 +24,7 @@ export interface TaskResource {
 }
 
 export interface TaskListSection
-    extends Pick<
-        TaskList,
-        'guid' | 'name' | 'creator' | 'created_at' | 'updated_at'
-    > {
+    extends Pick<TaskList, 'guid' | 'name' | 'creator' | 'created_at' | 'updated_at'> {
     resource_type: TaskResourceType;
     is_default: boolean;
     tasklist: Pick<TaskList, 'guid' | 'name'>;
@@ -101,10 +96,7 @@ export type TaskField =
 
 export type TaskFieldValue = Pick<TaskField, 'guid' | 'type' | 'name'> &
     Partial<
-        Record<
-            `${Exclude<TaskField['type'], 'member' | 'multi_select'>}_value`,
-            string
-        > & {
+        Record<`${Exclude<TaskField['type'], 'member' | 'multi_select'>}_value`, string> & {
             member_value: TaskOperator[];
             multi_select_value: string[];
         }
@@ -137,7 +129,7 @@ export interface Task
             string
         >,
         Record<'mode' | 'source' | 'subtask_count', number> {
-    status: 'todo';
+    status: 'todo' | 'done';
     is_milestone: boolean;
     start: TaskTimeEnd;
     due: TaskTimeEnd;
@@ -157,12 +149,4 @@ export interface Task
 }
 
 export type TaskSummary = Pick<TaskList, 'guid'> &
-    Pick<
-        Task,
-        | 'summary'
-        | 'completed_at'
-        | 'start'
-        | 'due'
-        | 'members'
-        | 'subtask_count'
-    >;
+    Pick<Task, 'summary' | 'completed_at' | 'start' | 'due' | 'members' | 'subtask_count'>;
