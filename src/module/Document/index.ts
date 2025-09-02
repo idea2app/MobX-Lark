@@ -1,6 +1,7 @@
 import { HTTPError } from 'koajax';
+import memoize from 'lodash.memoize';
 import { BaseListModel } from 'mobx-restful';
-import { cache, formatDate, uniqueID } from 'web-utility';
+import { formatDate, uniqueID } from 'web-utility';
 
 import { isLarkError, LarkData } from '../../type';
 import { createPageStream } from '../base';
@@ -56,12 +57,12 @@ export abstract class DocumentModel extends BaseListModel<Document> {
     /**
      * @see {@link https://open.feishu.cn/document/server-docs/contact-v3/user/get}
      */
-    #getOneUser = cache(async (clean, user_id: string) => {
+    #getOneUser = memoize(async (user_id: string) => {
         const { body } = await this.client.get<LarkData<{ user: User }>>(
             `contact/v3/users/${user_id}`
         );
         return body!.data!.user;
-    }, 'DocumentModel.#getOneUser');
+    });
 
     async *#resolveTextElements(
         elements: TextBlock['text']['elements'],

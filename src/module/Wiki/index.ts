@@ -71,7 +71,7 @@ export abstract class WikiNodeModel extends Stream<WikiNode>(ListModel) {
 
         const stream = this.traverseChildren(parentNode?.node_token, addCount);
 
-        for (const node of await Array.fromAsync(stream)) {
+        for await (const node of stream) {
             const title = node.title.replace(/[\\/:*?"<>|]+/g, '-').trim();
 
             node.title_path = parentNode ? `${parentNode.title_path}/${title}` : title;
