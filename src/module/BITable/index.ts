@@ -1,3 +1,4 @@
+import { observable } from 'mobx';
 import { DataObject, Filter, ListModel, PageData, RESTClient, Stream, toggle } from 'mobx-restful';
 import { buildURLData, Constructor, isEmpty } from 'web-utility';
 
@@ -151,7 +152,11 @@ export function BiDataTable<T extends DataObject, F extends Filter<T> = Filter<T
     return BiDataTableModel;
 }
 
-export function BiSearch<D extends DataObject, F extends Filter<D> = Filter<D>>(
+export type BiSearchFilter<D extends DataObject> = Filter<D> & {
+    keywords?: string;
+};
+
+export function BiSearch<D extends DataObject, F extends BiSearchFilter<D> = BiSearchFilter<D>>(
     Model: Constructor<ListModel<D, F>>
 ) {
     abstract class BiSearchModel extends Model {
@@ -161,19 +166,37 @@ export function BiSearch<D extends DataObject, F extends Filter<D> = Filter<D>>(
 
         abstract searchKeys: readonly (keyof TableRecordFields)[];
 
+        @observable
+        accessor keywords = '';
+
         makeFilter(filter: F) {
             return isEmpty(filter) ? '' : makeSimpleFilter(filter, 'contains', 'OR');
         }
 
+        async getList(
+            { keywords, ...filter }: F,
+            pageIndex = this.pageIndex + 1,
+            pageSize = this.pageSize
+        ) {
+            keywords = keywords?.trim();
+
+            if (keywords) {
+                const wordList = (this.keywords = keywords).split(/[\s,]+/);
+
+                filter = Object.fromEntries(this.searchKeys.map(key => [key, wordList])) as F;
+            }
+            return super.getList(filter as F, pageIndex, pageSize);
+        }
+
+        /**
+         * @deprecated since v2.4.2, use {@link getList} instead
+         */
         async getSearchList(
             keywords: string,
             pageIndex = this.pageIndex + 1,
             pageSize = this.pageSize
         ) {
-            const wordList = keywords.split(/[\s,]+/);
-            const filterList = this.searchKeys.map(key => [key, wordList]);
-
-            return this.getList(Object.fromEntries(filterList), pageIndex, pageSize);
+            return this.getList({ keywords } as F, pageIndex, pageSize);
         }
     }
     return BiSearchModel;

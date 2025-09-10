@@ -5,7 +5,9 @@ import Turndown from 'turndown';
 import { describe, it } from 'web-utility';
 
 import {
+    BiDataQueryOptions,
     BiDataTable,
+    BiSearch,
     BiTable,
     BiTableView,
     Block,
@@ -178,17 +180,36 @@ describe('MobX Lark SDK', async () => {
         expect(list.every(({ submit_limit_once }) => typeof submit_limit_once === 'boolean'));
     });
 
+    class ExampleDataTableModel extends BiDataTable<
+        Record<'id' | 'name' | 'type', TableCellValue>
+    >() {
+        client = app.client;
+
+        queryOptions: BiDataQueryOptions = { text_field_as_array: false };
+    }
+
     await it('should get a page of records in a BITable table', async expect => {
-        class ExampleDataTableModel extends BiDataTable<
-            Record<'id' | 'name' | 'type', TableCellValue>
-        >() {
-            client = app.client;
-        }
         const table = new ExampleDataTableModel(BITABLE_ID!, BITABLE_TABLE_ID!);
 
         const [record] = await table.getList();
 
         expect(typeof record.id === 'string');
+    });
+
+    await it('should search records in a BITable table', async expect => {
+        class SearchDataTableModel extends BiSearch<Record<'id' | 'name' | 'type', TableCellValue>>(
+            ExampleDataTableModel
+        ) {
+            client = app.client;
+
+            searchKeys = ['name'];
+        }
+        const table = new SearchDataTableModel(BITABLE_ID!, BITABLE_TABLE_ID!);
+
+        const [record] = await table.getList({ keywords: 'idea ' });
+
+        expect(table.keywords === 'idea');
+        expect(typeof record.id === 'string' && record.name === 'idea2app');
     });
 
     await it('should download a file', async expect => {
