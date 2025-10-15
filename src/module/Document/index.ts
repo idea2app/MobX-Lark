@@ -1,23 +1,25 @@
 import { HTTPError } from 'koajax';
 import memoize from 'lodash.memoize';
-import { BaseListModel } from 'mobx-restful';
-import { formatDate, uniqueID } from 'web-utility';
+import { BaseListModel, ListModel, Stream, toggle } from 'mobx-restful';
+import { buildURLData, formatDate, uniqueID } from 'web-utility';
 
 import { isLarkError, LarkData } from '../../type';
 import { createPageStream } from '../base';
 import { TaskModel } from '../Task';
-import { User } from '../User/type';
+import { User, UserIdType } from '../User/type';
 import { WikiNode, WikiNodeModel } from '../Wiki';
 import {
     BiTableBlock,
     Block,
     BlockType,
     Document,
+    DocumentBlockUpdateResult,
     FileBlock,
     IframeBlock,
     IframeComponentType,
     ImageBlock,
     OrderedBlock,
+    PageBlock,
     QuoteContainerBlock,
     SheetBlock,
     SubPageList,
@@ -38,6 +40,44 @@ export abstract class DocumentModel extends BaseListModel<Document> {
 
     constructor(public domain: string) {
         super();
+    }
+
+    @toggle('downloading')
+    async getOneBlocks(id: string, resolveFileURL?: FileURLResolver) {
+        const { client, domain } = this;
+
+        class MyDocumentBlockModel extends DocumentBlockModel {
+            client = client;
+        }
+        return new MyDocumentBlockModel(domain, id).getRenderableAll(resolveFileURL);
+    }
+
+    @toggle('uploading')
+    async updateOneBlocks(id: string, markUpDown: string, user_id_type: UserIdType = 'open_id') {
+        const { client, domain } = this;
+
+        class MyDocumentBlockModel extends DocumentBlockModel {
+            client = client;
+        }
+        return new MyDocumentBlockModel(domain, id).updateAll(markUpDown, user_id_type);
+    }
+}
+
+export abstract class DocumentBlockModel extends Stream<Block<any, any, any>>(ListModel) {
+    constructor(
+        public domain: string,
+        public documentId: string
+    ) {
+        super();
+        this.baseURI = `docx/v1/documents/${documentId}/blocks`;
+    }
+
+    openStream() {
+        return createPageStream<Block<any, any, any>>(
+            this.client,
+            this.baseURI,
+            total => (this.totalCount = total)
+        );
     }
 
     #createLinkElement = (
@@ -229,12 +269,49 @@ export abstract class DocumentModel extends BaseListModel<Document> {
     /**
      * @see {@link https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/list}
      */
-    async getOneBlocks(id: string, resolveFileURL?: FileURLResolver) {
-        const stream = createPageStream<Block<any, any, any>>(
-            this.client,
-            `docx/v1/documents/${id}/blocks`,
-            total => void total
+    @toggle('downloading')
+    getRenderableAll(resolveFileURL?: FileURLResolver) {
+        return Array.fromAsync<Block<any, any, any>>(this.#resolveBlocks(this, resolveFileURL));
+    }
+
+    @toggle('downloading')
+    async convertFrom(markUpDown: string, user_id_type: UserIdType = 'open_id') {
+        type ConvertResult = {
+            first_level_block_ids: string[];
+            blocks: Block<any, any>[];
+            block_id_to_image_urls: Record<'block_id' | 'image_url', string>[];
+        };
+        const { body } = await this.client.post<LarkData<ConvertResult>>(
+            `${this.baseURI}/convert?${buildURLData({ user_id_type })}`,
+            { content_type: 'markdown', content: markUpDown }
         );
-        return Array.fromAsync(this.#resolveBlocks(stream, resolveFileURL));
+        return body!.data!;
+    }
+
+    @toggle('uploading')
+    async updateAll(markUpDown: string, user_id_type: UserIdType = 'open_id') {
+        const { first_level_block_ids, blocks } = await this.convertFrom(markUpDown, user_id_type);
+
+        let rootBlock: PageBlock;
+
+        for await (const block of this)
+            if (block.block_type === BlockType.page) {
+                rootBlock = block as PageBlock;
+                break;
+            }
+        if (rootBlock!.children?.[0])
+            await this.client.delete<LarkData<DocumentBlockUpdateResult>>(
+                `${this.baseURI}/${rootBlock!.block_id}/children/batch_delete`,
+                { start_index: 0, end_index: rootBlock!.children.length }
+            );
+        type DescendantResult = DocumentBlockUpdateResult & {
+            children: Block<any, any, any>[];
+            block_id_relations: Record<`${'temporary_' | ''}block_id`, string>[];
+        };
+        const { body } = await this.client.post<LarkData<DescendantResult>>(
+            `${this.baseURI}/${rootBlock!.block_id}/descendant?${buildURLData({ user_id_type })}`,
+            { children_id: first_level_block_ids, descendants: blocks }
+        );
+        return body!.data!;
     }
 }
