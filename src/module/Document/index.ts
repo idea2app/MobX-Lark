@@ -1,6 +1,6 @@
 import { HTTPError } from 'koajax';
 import memoize from 'lodash.memoize';
-import { BaseListModel, ListModel, Stream, toggle } from 'mobx-restful';
+import { BaseListModel, IDType, ListModel, NewData, Stream, toggle } from 'mobx-restful';
 import { buildURLData, formatDate, uniqueID } from 'web-utility';
 
 import { isLarkError, LarkData } from '../../type';
@@ -42,6 +42,29 @@ export abstract class DocumentModel extends BaseListModel<Document> {
         super();
     }
 
+    /**
+     * @see {@link https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/get}
+     */
+    @toggle('downloading')
+    async getOne(id: IDType) {
+        const { body } = await this.client.get<LarkData<{ document: Document }>>(
+            `${this.baseURI}/${id}`
+        );
+        return (this.currentOne = body!.data!.document);
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/create}
+     */
+    @toggle('uploading')
+    async updateOne(data: Partial<NewData<Document>>, id?: IDType) {
+        const { body } = await this.client.post<LarkData<{ document: Document }>>(
+            this.baseURI,
+            data
+        );
+        return (this.currentOne = body!.data!.document);
+    }
+
     @toggle('downloading')
     async getOneBlocks(id: string, resolveFileURL?: FileURLResolver) {
         const { client, domain } = this;
@@ -59,7 +82,11 @@ export abstract class DocumentModel extends BaseListModel<Document> {
         class MyDocumentBlockModel extends DocumentBlockModel {
             client = client;
         }
-        return new MyDocumentBlockModel(domain, id).updateAll(markUpDown, user_id_type);
+        const blockStore = new MyDocumentBlockModel(domain, id);
+
+        await blockStore.removeAll();
+
+        return blockStore.insert(markUpDown, 0, undefined, user_id_type);
     }
 }
 
@@ -274,6 +301,9 @@ export abstract class DocumentBlockModel extends Stream<Block<any, any, any>>(Li
         return Array.fromAsync<Block<any, any, any>>(this.#resolveBlocks(this, resolveFileURL));
     }
 
+    /**
+     * @see {@link https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/document-docx/docx-v1/document/convert}
+     */
     @toggle('downloading')
     async convertFrom(markUpDown: string, user_id_type: UserIdType = 'open_id') {
         type ConvertResult = {
@@ -282,35 +312,55 @@ export abstract class DocumentBlockModel extends Stream<Block<any, any, any>>(Li
             block_id_to_image_urls: Record<'block_id' | 'image_url', string>[];
         };
         const { body } = await this.client.post<LarkData<ConvertResult>>(
-            `${this.baseURI}/convert?${buildURLData({ user_id_type })}`,
+            `docx/v1/documents/blocks/convert?${buildURLData({ user_id_type })}`,
             { content_type: 'markdown', content: markUpDown }
         );
         return body!.data!;
     }
 
-    @toggle('uploading')
-    async updateAll(markUpDown: string, user_id_type: UserIdType = 'open_id') {
-        const { first_level_block_ids, blocks } = await this.convertFrom(markUpDown, user_id_type);
-
-        let rootBlock: PageBlock;
-
+    @toggle('downloading')
+    async getRoot() {
         for await (const block of this)
-            if (block.block_type === BlockType.page) {
-                rootBlock = block as PageBlock;
-                break;
-            }
-        if (rootBlock!.children?.[0])
+            if (block.block_type === BlockType.page) return block as PageBlock;
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document-block/batch_delete}
+     */
+    @toggle('uploading')
+    async removeAll() {
+        const rootBlock = await this.getRoot();
+
+        if (rootBlock?.children?.[0])
             await this.client.delete<LarkData<DocumentBlockUpdateResult>>(
-                `${this.baseURI}/${rootBlock!.block_id}/children/batch_delete`,
-                { start_index: 0, end_index: rootBlock!.children.length }
+                `${this.baseURI}/${rootBlock.block_id}/children/batch_delete`,
+                { start_index: 0, end_index: rootBlock.children.length }
             );
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/docs/docs/document-block/create-2}
+     */
+    @toggle('uploading')
+    async insert(
+        markUpDown: string,
+        index = -1,
+        rootBlockId?: string,
+        user_id_type: UserIdType = 'open_id'
+    ) {
+        const { first_level_block_ids: children_id, blocks } = await this.convertFrom(
+            markUpDown,
+            user_id_type
+        );
+        rootBlockId ||= (await this.getRoot())?.block_id;
+
         type DescendantResult = DocumentBlockUpdateResult & {
             children: Block<any, any, any>[];
             block_id_relations: Record<`${'temporary_' | ''}block_id`, string>[];
         };
         const { body } = await this.client.post<LarkData<DescendantResult>>(
-            `${this.baseURI}/${rootBlock!.block_id}/descendant?${buildURLData({ user_id_type })}`,
-            { children_id: first_level_block_ids, descendants: blocks }
+            `${this.baseURI}/${rootBlockId}/descendant?${buildURLData({ user_id_type })}`,
+            { index, children_id, descendants: blocks }
         );
         return body!.data!;
     }

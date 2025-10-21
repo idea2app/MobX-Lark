@@ -128,6 +128,7 @@ export abstract class TaskListModel extends Stream<TaskList, TaskListFilter>(Lis
                   update_fields: Object.keys(tasklist)
               })
             : await this.client.post<LarkData<{ tasklist: TaskList }>>(path, tasklist);
+
         return body!.data!.tasklist;
     }
 }
@@ -246,6 +247,7 @@ export abstract class TaskFieldModel extends Stream<TaskField, TaskFieldFilter>(
 
         for (const body of targets)
             await this.client.post(`${this.baseURI}/${custom_field.guid}/add`, body);
+
         return custom_field;
     }
 }
