@@ -275,13 +275,12 @@ export function BiTable() {
         /**
          * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table/list}
          */
-        async *openStream() {
-            for await (const item of createPageStream<BITable>(
+        openStream() {
+            return createPageStream<BITable>(
                 this.client,
                 this.baseURI,
                 total => (this.totalCount = total)
-            ))
-                yield item;
+            );
         }
     }
     return BiTableModel;

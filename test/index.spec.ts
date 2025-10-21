@@ -12,6 +12,7 @@ import {
     BiTableView,
     Block,
     BlockType,
+    DocumentBlockModel,
     DocumentModel,
     ImageBlock,
     LarkApp,
@@ -68,16 +69,41 @@ describe('MobX Lark SDK', async () => {
         console.log(allNodes);
     }, 10);
 
-    const blocks = await it('should get blocks of a Document', async expect => {
-        class MyDocumentModel extends DocumentModel {
-            client = app.client;
-        }
-        const documentStore = new MyDocumentModel('idea2app.feishu.cn');
+    class MyDocumentModel extends DocumentModel {
+        client = app.client;
+    }
+    const documentStore = new MyDocumentModel('idea2app.feishu.cn');
 
+    const documentId = await it('should get Markdown content of a Document', async expect => {
         const { obj_token } = await wikiNodeStore.getOne(DOCUMENT_WIKI_ID!);
 
+        const markdown = await documentStore.getOneContent(obj_token, 'markdown');
+
+        expect(!!markdown.match(/^# \W+/));
+
+        return obj_token;
+    });
+
+    await it('should convert Markdown content to blocks', async expect => {
+        class MyDocumentBlockModel extends DocumentBlockModel {
+            client = app.client;
+        }
+        const documentBlockStore = new MyDocumentBlockModel('idea2app.feishu.cn', documentId);
+
+        const { first_level_block_ids, blocks } = await documentBlockStore.convertFrom(
+            '# Test\n\nThis is a test.'
+        );
+        console.log(blocks);
+
+        expect(first_level_block_ids.length === 2);
+        expect(blocks.length === 2);
+        expect(blocks[0].block_type === BlockType.heading1);
+        expect(blocks[1].block_type === BlockType.text);
+    });
+
+    const blocks = await it('should get blocks of a Document', async expect => {
         const blocks: Block<any, any, any>[] = await documentStore.getOneBlocks(
-            obj_token,
+            documentId,
             token => `https://idea2.app/api/Lark/file/${token}`
         );
         expect('block_type' in blocks[0] && 'block_id' in blocks[0]);

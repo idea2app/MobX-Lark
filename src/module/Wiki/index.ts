@@ -1,8 +1,9 @@
 import { Filter, ListModel, Stream, toggle } from 'mobx-restful';
+import { buildURLData } from 'web-utility';
 
 import { LarkData } from '../../type';
 import { createPageStream } from '../base';
-import { Wiki, WikiNode } from './type';
+import { Wiki, WikiNode, WikiTask } from './type';
 
 export * from './type';
 
@@ -12,14 +13,13 @@ export abstract class WikiModel extends Stream<Wiki>(ListModel) {
     /**
      * @see {@link https://open.feishu.cn/document/server-docs/docs/wiki-v2/space/list}
      */
-    async *openStream() {
-        for await (const item of createPageStream<Wiki>(
+    openStream() {
+        return createPageStream<Wiki>(
             this.client,
             this.baseURI,
             total => (this.totalCount = total),
             { page_size: 50 }
-        ))
-            yield item;
+        );
     }
 }
 
@@ -81,5 +81,44 @@ export abstract class WikiNodeModel extends Stream<WikiNode>(ListModel) {
             if (node.has_child) yield* this.traverseTree(node, addCount);
         }
         onCount?.(totalCount);
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/server-docs/docs/wiki-v2/task/move_docs_to_wiki}
+     */
+    @toggle('uploading')
+    async moveDocument(
+        document: Pick<WikiNode, 'obj_type' | 'obj_token'>,
+        parent_wiki_token = '',
+        apply = true
+    ) {
+        type WikiTaskMeta = { wiki_token: string } | { task_id: string } | { applied: boolean };
+
+        const { body } = await this.client.post<LarkData<WikiTaskMeta>>(
+            `${this.baseURI}/move_docs_to_wiki`,
+            { ...document, parent_wiki_token, apply }
+        );
+        if ('applied' in body!.data!) return;
+
+        if ('wiki_token' in body!.data!) return this.getOne(body!.data!.wiki_token);
+
+        const { move_result } = await this.getOneTask(body!.data!.task_id);
+
+        const [{ status, status_msg, node }] = move_result;
+
+        if (status < 0) throw new URIError(status_msg);
+
+        return node;
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/server-docs/docs/wiki-v2/task/get}
+     */
+    @toggle('downloading')
+    async getOneTask(taskId: string, task_type = 'move') {
+        const { body } = await this.client.get<LarkData<{ task: WikiTask }>>(
+            `wiki/v2/tasks/${taskId}?${buildURLData({ task_type })}`
+        );
+        return body!.data!.task;
     }
 }

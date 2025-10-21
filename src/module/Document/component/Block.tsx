@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { uniqueID } from 'web-utility';
+import { clone, uniqueID } from 'web-utility';
 
 import { Block, BlockType } from '../type';
 import { ListBlockComponent, TextBlockComponent } from './Text';
@@ -55,7 +55,7 @@ export const blockComponentMap: Partial<Record<BlockType, FC<any>>> = {
 export const blockMap: Record<string, Block<any, any, any>> = {};
 
 export function registerBlocks<T extends Block<any, any, any>>(blocks: T[]) {
-    blocks = globalThis.structuredClone?.(blocks) || JSON.parse(JSON.stringify(blocks));
+    blocks = clone(blocks);
 
     let root: T | undefined;
 

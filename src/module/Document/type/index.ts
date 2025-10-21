@@ -13,3 +13,8 @@ export interface Document extends Record<'document_id' | 'title', string> {
         boolean
     >;
 }
+
+export interface DocumentBlockUpdateResult {
+    document_revision_id: number;
+    client_token: string;
+}
