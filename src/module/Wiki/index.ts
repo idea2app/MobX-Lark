@@ -13,14 +13,13 @@ export abstract class WikiModel extends Stream<Wiki>(ListModel) {
     /**
      * @see {@link https://open.feishu.cn/document/server-docs/docs/wiki-v2/space/list}
      */
-    async *openStream() {
-        for await (const item of createPageStream<Wiki>(
+    openStream() {
+        return createPageStream<Wiki>(
             this.client,
             this.baseURI,
             total => (this.totalCount = total),
             { page_size: 50 }
-        ))
-            yield item;
+        );
     }
 }
 

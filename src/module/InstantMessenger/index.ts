@@ -13,13 +13,12 @@ export abstract class ChatListModel extends Stream<ChatMeta>(ListModel) {
     /**
      * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/chat/list}
      */
-    async *openStream() {
-        for await (const item of createPageStream<ChatMeta>(
+    openStream() {
+        return createPageStream<ChatMeta>(
             this.client,
             this.baseURI,
             total => (this.totalCount = total)
-        ))
-            yield item;
+        );
     }
 
     /**
@@ -28,9 +27,7 @@ export abstract class ChatListModel extends Stream<ChatMeta>(ListModel) {
     @toggle('uploading')
     async updateOne({ chat_id }: NewData<ChatMeta>) {
         const { body } = await (chat_id
-            ? this.client.put<LarkData<ChatMeta>>(
-                  `${this.baseURI}/chats/${chat_id}`
-              )
+            ? this.client.put<LarkData<ChatMeta>>(`${this.baseURI}/chats/${chat_id}`)
             : this.client.post<LarkData<ChatMeta>>(
                   `${this.baseURI}/chats?${buildURLData({
                       set_bot_manager: true
@@ -50,23 +47,19 @@ export abstract class MessageListModel extends Stream<ChatMessage>(ListModel) {
     /**
      * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/list}
      */
-    async *openStream() {
-        for await (const item of createPageStream<ChatMessage>(
+    openStream() {
+        return createPageStream<ChatMessage>(
             this.client,
             this.baseURI,
             total => (this.totalCount = total)
-        ))
-            yield item;
+        );
     }
 
     /**
      * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/create
      */
     @toggle('uploading')
-    async createOne({
-        msg_type,
-        content
-    }: Omit<SendChatMessage, 'receive_id'>) {
+    async createOne({ msg_type, content }: Omit<SendChatMessage, 'receive_id'>) {
         const { body } = await this.client.post<LarkData<ChatMessage>>(
             `${this.baseURI}?${buildURLData({
                 receive_id_type: 'chat_id'

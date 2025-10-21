@@ -33,15 +33,14 @@ export abstract class TaskModel extends Stream<Task, TaskFilter>(ListModel) {
         user_id_type = 'union_id',
         ...rest
     }: TaskFilter) {
-        if (resource_type === 'my_tasks') {
-            const stream = createPageStream<Task>(
+        if (resource_type === 'my_tasks')
+            yield* createPageStream<Task>(
                 this.client,
                 this.baseURI,
                 total => (this.totalCount = total),
                 { type: resource_type, user_id_type, ...rest }
             );
-            for await (const item of stream) yield item;
-        } else {
+        else {
             const stream = createPageStream<TaskSummary>(
                 this.client,
                 `task/v2/tasklists/${resource_id}/tasks`,
@@ -89,14 +88,13 @@ export abstract class TaskListModel extends Stream<TaskList, TaskListFilter>(Lis
     /**
      * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/tasklist/list}
      */
-    async *openStream({ user_id_type = 'union_id' }: TaskListFilter) {
-        for await (const item of createPageStream<TaskList>(
+    openStream({ user_id_type = 'union_id' }: TaskListFilter) {
+        return createPageStream<TaskList>(
             this.client,
             this.baseURI,
             total => (this.totalCount = total),
             { user_id_type }
-        ))
-            yield item;
+        );
     }
 
     /**
@@ -158,7 +156,6 @@ export abstract class TaskListSectionModel extends Stream<TaskListSection, TaskL
                 user_id_type
             }
         );
-
         for await (const { guid } of stream) yield await this.getOne(guid);
     }
 
@@ -207,18 +204,17 @@ export abstract class TaskFieldModel extends Stream<TaskField, TaskFieldFilter>(
     /**
      * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/custom_field/list}
      */
-    async *openStream({
+    openStream({
         resource_type = 'tasklist',
         resource_id,
         user_id_type = 'union_id'
     }: TaskFieldFilter) {
-        for await (const item of createPageStream<TaskField>(
+        return createPageStream<TaskField>(
             this.client,
             this.baseURI,
             total => (this.totalCount = total),
             { resource_type, resource_id, user_id_type }
-        ))
-            yield item;
+        );
     }
 
     /**
