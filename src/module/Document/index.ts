@@ -65,6 +65,26 @@ export abstract class DocumentModel extends BaseListModel<Document> {
         return (this.currentOne = body!.data!.document);
     }
 
+    /**
+     * @see {@link https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/raw_content}
+     * @see {@link https://open.feishu.cn/document/docs/docs-v1/get}
+     */
+    @toggle('downloading')
+    async getOneContent(
+        doc_token: string,
+        content_type: 'text' | 'markdown' = 'markdown',
+        lang: 'zh' | 'en' | 'ja' = 'zh'
+    ) {
+        const { body } = await (content_type === 'text'
+            ? this.client.get<LarkData<{ content: string }>>(
+                  `${this.baseURI}/${doc_token}/raw_content?${buildURLData({ lang: ['zh', 'en', 'ja'].indexOf(lang) })}`
+              )
+            : this.client.get<LarkData<{ content: string }>>(
+                  `docs/v1/content?${buildURLData({ doc_type: 'docx', doc_token, content_type, lang })}`
+              ));
+        return body!.data!.content;
+    }
+
     @toggle('downloading')
     async getOneBlocks(id: string, resolveFileURL?: FileURLResolver) {
         const { client, domain } = this;

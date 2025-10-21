@@ -24,3 +24,8 @@ export interface WikiNode
      */
     title_path?: string;
 }
+
+export interface WikiTask {
+    task_id: string;
+    move_result: { status: number; status_msg: string; node: WikiNode }[];
+}

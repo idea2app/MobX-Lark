@@ -1,7 +1,7 @@
 import { Context, HTTPClient, makeFormData } from 'koajax';
 import { buildURLData, cache, sleep } from 'web-utility';
 
-import { WikiNodeModel } from './module';
+import { DocumentModel, WikiNodeModel } from './module';
 import {
     isLarkError,
     JSTicket,
@@ -209,22 +209,19 @@ export class LarkApp implements LarkAppOption {
     static documentPathPattern = /(wiki|docx)\/(\w+)/;
 
     /**
-     * @see {@link https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/docs-v1/content/get}
+     * @see {@link DocumentModel#getOneContent}
      */
     async downloadMarkdown(URI: string) {
         await this.getAccessToken();
 
         const [, type, id] = URI.match(LarkApp.documentPathPattern) || [];
 
-        const doc_token = type === 'wiki' ? await this.wiki2docx(id) : id;
+        const doc_token = type === 'wiki' ? await this.wiki2docx(id) : id,
+            { client } = this;
 
-        const { body } = await this.client.get<LarkData<{ content: string }>>(
-            `docs/v1/content?${new URLSearchParams({
-                doc_type: 'docx',
-                doc_token,
-                content_type: 'markdown'
-            })}`
-        );
-        return body!.data!.content;
+        class InternalDocumentModel extends DocumentModel {
+            client = client;
+        }
+        return new InternalDocumentModel('').getOneContent(doc_token, 'markdown');
     }
 }
