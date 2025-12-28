@@ -214,13 +214,12 @@ export class LarkApp implements LarkAppOption {
 
         let [[type, token]] = DriveFileModel.parseURI(URI),
             space_id: string | undefined,
-            parent_node_token = folder_token;
+            parent_node_token: string | undefined;
 
         if (type === 'wiki')
             ({
                 obj_type: type,
                 obj_token: token,
-                title: name,
                 space_id,
                 parent_node_token
             } = await this.wiki2drive(token));
@@ -243,7 +242,7 @@ export class LarkApp implements LarkAppOption {
 
         return wikiNodeStore.moveDocument(
             { obj_type: type, obj_token: copidFile.token } as WikiNode,
-            parent_node_token
+            folder_token || parent_node_token
         );
     }
 

@@ -167,4 +167,4 @@ await writeFile('document.html', markup);
 [4]: https://mobx.js.org/
 [5]: https://libraries.io/npm/mobx-lark
 [6]: https://github.com/idea2app/MobX-Lark/actions/workflows/main.yml
-[7]: https://nodei.co/npm/mobx-lark/
+[7]: https://npm.im/mobx-lark/
