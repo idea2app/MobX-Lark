@@ -4,7 +4,7 @@ import { buildURLData, cache, sleep } from 'web-utility';
 import {
     CopiedFile,
     DocumentModel,
-    DriveModel,
+    DriveFileModel,
     UserIdType,
     WikiNode,
     WikiNodeModel
@@ -42,7 +42,7 @@ export class LarkApp implements LarkAppOption {
     client: HTTPClient<Context>;
     accessToken = '';
 
-    driveStore: DriveModel;
+    driveFileStore: DriveFileModel;
     wikiNodeStore: WikiNodeModel;
     documentStore: DocumentModel;
 
@@ -59,7 +59,7 @@ export class LarkApp implements LarkAppOption {
 
         const { client } = this;
 
-        this.driveStore = new (class extends DriveModel {
+        this.driveFileStore = new (class extends DriveFileModel {
             client = client;
         })();
         this.wikiNodeStore = new (class extends WikiNodeModel {
@@ -176,40 +176,40 @@ export class LarkApp implements LarkAppOption {
     }, 'JS ticket');
 
     /**
-     * @see {@link DriveModel#downloadFile}
+     * @see {@link DriveFileModel#downloadOne}
      */
     async downloadFile(id: string) {
         await this.getAccessToken();
 
-        return this.driveStore.downloadFile(id);
+        return this.driveFileStore.downloadOne(id);
     }
 
     /**
-     * @see {@link DriveModel#uploadFile}
+     * @see {@link DriveFileModel#uploadOne}
      */
     async uploadFile(file: File, parent_type: UploadTargetType, parent_node: string) {
         await this.getAccessToken();
 
-        return this.driveStore.uploadFile(file, parent_type, parent_node);
+        return this.driveFileStore.uploadOne(file, parent_type, parent_node);
     }
 
     /**
-     * @see {@link DriveModel#copyFile}
+     * @see {@link DriveFileModel#copyOne}
      * @see {@link WikiNodeModel#moveDocument}
      */
     copyFile(
         URI: `${string}/wiki/${string}`,
-        name: string,
+        name?: string,
         parent_node_token?: string,
         user_id_type?: UserIdType
     ): Promise<WikiNode>;
     copyFile(
         URI: `${string}/${LarkDocumentType}/${string}`,
-        name: string,
+        name?: string,
         folder_token?: string,
         user_id_type?: UserIdType
     ): Promise<CopiedFile>;
-    async copyFile(URI: string, name: string, folder_token?: string, user_id_type?: UserIdType) {
+    async copyFile(URI: string, name?: string, folder_token?: string, user_id_type?: UserIdType) {
         await this.getAccessToken();
 
         let [type, token] = new URL(URI, 'http://localhost').pathname.split('/'),
@@ -220,11 +220,12 @@ export class LarkApp implements LarkAppOption {
             ({
                 obj_type: type,
                 obj_token: token,
+                title: name,
                 space_id,
                 parent_node_token
             } = await this.wiki2drive(token));
 
-        const copidFile = await this.driveStore.copyFile(
+        const copidFile = await this.driveFileStore.copyOne(
             type as LarkDocumentType,
             token,
             name,
