@@ -3,6 +3,9 @@ on:
     push:
         tags:
             - v*
+env:
+    PUBLISH_TAG: ${{ contains(github.ref_name, '-') && 'next' || 'latest' }}
+
 jobs:
     Test-Build-Publish-Deploy:
         runs-on: ubuntu-latest
@@ -28,11 +31,12 @@ jobs:
                   cat > .env <<EOF
                   ${{ secrets.ENV_FILE }}
                   EOF
-                  npm publish --access public --provenance
+                  npm publish --access public --provenance --tag ${{ env.PUBLISH_TAG }}
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
             - name: Deploy document
+              if: ${{ env.PUBLISH_TAG == 'latest' }}
               uses: peaceiris/actions-gh-pages@v4
               with:
                   publish_dir: ./docs

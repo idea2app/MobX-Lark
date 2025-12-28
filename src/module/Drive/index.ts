@@ -1,6 +1,6 @@
 import { makeFormData } from 'koajax';
 import { BaseListModel, RESTClient, toggle } from 'mobx-restful';
-import { buildURLData } from 'web-utility';
+import { buildURLData, splitArray } from 'web-utility';
 
 import { LarkData, LarkDocumentType, UploadTargetType } from '../../type';
 import { UserIdType } from '../User/type';
@@ -12,6 +12,12 @@ export abstract class DriveFileModel extends BaseListModel<DriveFile> {
     baseURI = 'drive/v1';
     abstract client: RESTClient;
 
+    static parseURI(path: string) {
+        const list = new URL(path, 'http://localhost').pathname.split('/').slice(1);
+
+        return splitArray(list, 2);
+    }
+
     /**
      * @see {@link https://open.feishu.cn/document/server-docs/docs/drive-v1/file/batch_query}
      *
@@ -19,7 +25,7 @@ export abstract class DriveFileModel extends BaseListModel<DriveFile> {
      */
     @toggle('downloading')
     async getOne(URI: string, user_id_type?: UserIdType) {
-        let [doc_type, doc_token] = new URL(URI, 'http://localhost').pathname.split('/');
+        let [[doc_type, doc_token]] = DriveFileModel.parseURI(URI);
 
         const { body } = await this.client.post<LarkData<{ metas: DriveFile[] }>>(
             `${this.baseURI}/metas/batch_query?${buildURLData({ user_id_type })}`,

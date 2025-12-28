@@ -198,13 +198,13 @@ export class LarkApp implements LarkAppOption {
      * @see {@link WikiNodeModel#moveDocument}
      */
     copyFile(
-        URI: `${string}/wiki/${string}`,
+        URI: `${string}wiki/${string}`,
         name?: string,
         parent_node_token?: string,
         user_id_type?: UserIdType
     ): Promise<WikiNode>;
     copyFile(
-        URI: `${string}/${LarkDocumentType}/${string}`,
+        URI: `${string}${LarkDocumentType}/${string}`,
         name?: string,
         folder_token?: string,
         user_id_type?: UserIdType
@@ -212,7 +212,7 @@ export class LarkApp implements LarkAppOption {
     async copyFile(URI: string, name?: string, folder_token?: string, user_id_type?: UserIdType) {
         await this.getAccessToken();
 
-        let [type, token] = new URL(URI, 'http://localhost').pathname.split('/'),
+        let [[type, token]] = DriveFileModel.parseURI(URI),
             space_id: string | undefined,
             parent_node_token = folder_token;
 
@@ -265,15 +265,13 @@ export class LarkApp implements LarkAppOption {
         return obj_type === 'docx' ? obj_token : '';
     }
 
-    static documentPathPattern = /(wiki|docx)\/(\w+)/;
-
     /**
      * @see {@link DocumentModel#getOneContent}
      */
     async downloadMarkdown(URI: string) {
         await this.getAccessToken();
 
-        const [, type, id] = URI.match(LarkApp.documentPathPattern) || [];
+        const [[type, id]] = DriveFileModel.parseURI(URI);
 
         const doc_token = type === 'wiki' ? (await this.wiki2drive(id)).obj_token : id;
 
