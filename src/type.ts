@@ -30,7 +30,8 @@ export type TenantAccessToken = LarkData<
 >;
 
 export interface UserMeta
-    extends LocaleUser,
+    extends
+        LocaleUser,
         Pick<User, UserIdType | 'mobile' | 'employee_no'>,
         Record<
             | `avatar_${'url' | 'thumb' | 'middle' | 'big'}`
@@ -50,6 +51,14 @@ export interface JSTicket {
 export type I18nKey = `${string}_${string}`;
 
 export type TranslationMap = Record<I18nKey, string>;
+
+export type LarkDocumentType =
+    | `doc${'' | 'x'}`
+    | 'mindnote'
+    | 'sheet'
+    | 'bitable'
+    | 'slides'
+    | 'file';
 
 export type UploadTargetType =
     | 'doc_image'

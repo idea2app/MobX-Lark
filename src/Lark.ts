@@ -1,11 +1,19 @@
-import { Context, HTTPClient, makeFormData } from 'koajax';
+import { Context, HTTPClient } from 'koajax';
 import { buildURLData, cache, sleep } from 'web-utility';
 
-import { DocumentModel, WikiNodeModel } from './module';
+import {
+    CopiedFile,
+    DocumentModel,
+    DriveModel,
+    UserIdType,
+    WikiNode,
+    WikiNodeModel
+} from './module';
 import {
     isLarkError,
     JSTicket,
     LarkData,
+    LarkDocumentType,
     TenantAccessToken,
     UploadTargetType,
     UserMeta
@@ -34,6 +42,10 @@ export class LarkApp implements LarkAppOption {
     client: HTTPClient<Context>;
     accessToken = '';
 
+    driveStore: DriveModel;
+    wikiNodeStore: WikiNodeModel;
+    documentStore: DocumentModel;
+
     constructor(option: LarkAppServerOption | LarkAppClientOption) {
         Object.assign(this, option);
 
@@ -44,6 +56,18 @@ export class LarkApp implements LarkAppOption {
             responseType: 'json'
         });
         this.boot();
+
+        const { client } = this;
+
+        this.driveStore = new (class extends DriveModel {
+            client = client;
+        })();
+        this.wikiNodeStore = new (class extends WikiNodeModel {
+            client = client;
+        })('', '');
+        this.documentStore = new (class extends DocumentModel {
+            client = client;
+        })('');
     }
 
     private boot() {
@@ -152,56 +176,90 @@ export class LarkApp implements LarkAppOption {
     }, 'JS ticket');
 
     /**
-     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/drive-v1/media/download}
+     * @see {@link DriveModel#downloadFile}
      */
     async downloadFile(id: string) {
         await this.getAccessToken();
 
-        const { headers, body } = await this.client.get<Blob>(
-            `drive/v1/medias/${id}/download`,
-            {},
-            { responseType: 'blob' }
-        );
-        const { 'Content-Disposition': CD, 'Content-Type': CT } = headers;
-
-        const [type] = (CT as string)?.split(';') || [],
-            [, fileName] = (CD as string)?.match(/filename="?(.*?)"?$/) || [];
-
-        return new File([body!], fileName, { type });
+        return this.driveStore.downloadFile(id);
     }
 
     /**
-     * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/drive-v1/media/upload_all}
+     * @see {@link DriveModel#uploadFile}
      */
     async uploadFile(file: File, parent_type: UploadTargetType, parent_node: string) {
         await this.getAccessToken();
 
-        const form = makeFormData({
-            file,
-            file_name: file.name,
-            size: file.size,
-            parent_type,
-            parent_node
-        });
-        const { body } = await this.client.post<LarkData<{ file_token: string }>>(
-            'drive/v1/medias/upload_all',
-            form
-        );
-        return body!.data!.file_token;
+        return this.driveStore.uploadFile(file, parent_type, parent_node);
     }
 
     /**
-     * @see {@link WikiNodeModel.getOne}
+     * @see {@link DriveModel#copyFile}
+     * @see {@link WikiNodeModel#moveDocument}
      */
-    async wiki2docx(id: string) {
+    copyFile(
+        URI: `${string}/wiki/${string}`,
+        name: string,
+        parent_node_token?: string,
+        user_id_type?: UserIdType
+    ): Promise<WikiNode>;
+    copyFile(
+        URI: `${string}/${LarkDocumentType}/${string}`,
+        name: string,
+        folder_token?: string,
+        user_id_type?: UserIdType
+    ): Promise<CopiedFile>;
+    async copyFile(URI: string, name: string, folder_token?: string, user_id_type?: UserIdType) {
         await this.getAccessToken();
+
+        let [type, token] = new URL(URI, 'http://localhost').pathname.split('/'),
+            space_id: string | undefined,
+            parent_node_token = folder_token;
+
+        if (type === 'wiki')
+            ({
+                obj_type: type,
+                obj_token: token,
+                space_id,
+                parent_node_token
+            } = await this.wiki2drive(token));
+
+        const copidFile = await this.driveStore.copyFile(
+            type as LarkDocumentType,
+            token,
+            name,
+            folder_token,
+            user_id_type
+        );
+        if (!space_id) return copidFile;
 
         const { client } = this;
 
         class InternalWikiNodeModel extends WikiNodeModel {
             client = client;
         }
-        const { obj_type, obj_token } = await new InternalWikiNodeModel('', '').getOne(id);
+        const wikiNodeStore = new InternalWikiNodeModel('', space_id);
+
+        return wikiNodeStore.moveDocument(
+            { obj_type: type, obj_token: token } as WikiNode,
+            parent_node_token
+        );
+    }
+
+    /**
+     * @see {@link WikiNodeModel#getOne}
+     */
+    async wiki2drive(id: string) {
+        await this.getAccessToken();
+
+        return this.wikiNodeStore.getOne(id);
+    }
+
+    /**
+     * @deprecated Use {@link LarkApp#wiki2drive} instead
+     */
+    async wiki2docx(id: string) {
+        const { obj_type, obj_token } = await this.wiki2drive(id);
 
         return obj_type === 'docx' ? obj_token : '';
     }
@@ -216,12 +274,8 @@ export class LarkApp implements LarkAppOption {
 
         const [, type, id] = URI.match(LarkApp.documentPathPattern) || [];
 
-        const doc_token = type === 'wiki' ? await this.wiki2docx(id) : id,
-            { client } = this;
+        const doc_token = type === 'wiki' ? (await this.wiki2drive(id)).obj_token : id;
 
-        class InternalDocumentModel extends DocumentModel {
-            client = client;
-        }
-        return new InternalDocumentModel('').getOneContent(doc_token, 'markdown');
+        return this.documentStore.getOneContent(doc_token, 'markdown');
     }
 }
