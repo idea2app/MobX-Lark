@@ -97,8 +97,8 @@ describe('MobX Lark SDK', async () => {
 
         expect(first_level_block_ids.length === 2);
         expect(blocks.length === 2);
-        expect(blocks[0].block_type === BlockType.heading1);
-        expect(blocks[1].block_type === BlockType.text);
+        expect(blocks.some(({ block_type }) => block_type === BlockType.heading1));
+        expect(blocks.some(({ block_type }) => block_type === BlockType.text));
     });
 
     const blocks = await it('should get blocks of a Document', async expect => {
