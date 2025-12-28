@@ -5,4 +5,5 @@ export * from './Task';
 export * from './Document';
 export * from './SpreadSheet';
 export * from './BITable';
+export * from './Drive';
 export * from './Wiki';

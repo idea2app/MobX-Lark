@@ -150,11 +150,12 @@ await writeFile('document.html', markup);
 ## Scaffolds
 
 1. https://github.com/idea2app/Lark-Next-Bootstrap-ts
+2. https://github.com/idea2app/Lark-Next-Shadcn-ts
 
 ## User cases
 
 1. [idea2app web-site](https://github.com/idea2app/idea2app.github.io/tree/main/models)
-2. [KaiYuanShe web-site](https://github.com/kaiyuanshe/kaiyuanshe.github.io/tree/main/models)
+2. [Open-Source-Bazaar web-site](https://github.com/Open-Source-Bazaar/Open-Source-Bazaar.github.io/tree/main/models)
 
 ## Related with
 
@@ -166,4 +167,4 @@ await writeFile('document.html', markup);
 [4]: https://mobx.js.org/
 [5]: https://libraries.io/npm/mobx-lark
 [6]: https://github.com/idea2app/MobX-Lark/actions/workflows/main.yml
-[7]: https://nodei.co/npm/mobx-lark/
+[7]: https://npm.im/mobx-lark/
