@@ -242,7 +242,7 @@ export class LarkApp implements LarkAppOption {
         const wikiNodeStore = new InternalWikiNodeModel('', space_id);
 
         return wikiNodeStore.moveDocument(
-            { obj_type: type, obj_token: token } as WikiNode,
+            { obj_type: type, obj_token: copidFile.token } as WikiNode,
             parent_node_token
         );
     }
