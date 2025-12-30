@@ -60,6 +60,27 @@ export type LarkDocumentType =
     | 'slides'
     | 'file';
 
+export type LarkDocumentPathType =
+    | `doc${'' | 'x'}`
+    | 'mindnote'
+    | 'sheets'
+    | 'base'
+    | 'slides'
+    | 'file';
+
+export const LarkDocumentPathTypeMap: Record<LarkDocumentType, LarkDocumentPathType> = {
+    doc: 'doc',
+    docx: 'docx',
+    mindnote: 'mindnote',
+    sheet: 'sheets',
+    bitable: 'base',
+    slides: 'slides',
+    file: 'file'
+};
+
+export const getLarkDocumentType = (path: LarkDocumentPathType) =>
+    Object.entries(LarkDocumentPathTypeMap).find(([, p]) => p === path)![0] as LarkDocumentType;
+
 export type UploadTargetType =
     | 'doc_image'
     | 'docx_image'

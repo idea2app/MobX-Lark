@@ -10,9 +10,11 @@ import {
     WikiNodeModel
 } from './module';
 import {
+    getLarkDocumentType,
     isLarkError,
     JSTicket,
     LarkData,
+    LarkDocumentPathType,
     LarkDocumentType,
     TenantAccessToken,
     UploadTargetType,
@@ -204,7 +206,7 @@ export class LarkApp implements LarkAppOption {
         user_id_type?: UserIdType
     ): Promise<WikiNode>;
     copyFile(
-        URI: `${string}${LarkDocumentType}/${string}`,
+        URI: `${string}${LarkDocumentPathType}/${string}`,
         name?: string,
         folder_token?: string,
         user_id_type?: UserIdType
@@ -223,6 +225,9 @@ export class LarkApp implements LarkAppOption {
                 space_id,
                 parent_node_token
             } = await this.wiki2drive(token));
+        else {
+            type = getLarkDocumentType(type as LarkDocumentPathType);
+        }
 
         const copidFile = await this.driveFileStore.copyOne(
             type as LarkDocumentType,

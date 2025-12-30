@@ -2,7 +2,7 @@ import { makeFormData } from 'koajax';
 import { BaseListModel, RESTClient, toggle } from 'mobx-restful';
 import { buildURLData, splitArray } from 'web-utility';
 
-import { LarkData, LarkDocumentType, UploadTargetType } from '../../type';
+import { LarkData, LarkDocumentPathTypeMap, LarkDocumentType, UploadTargetType } from '../../type';
 import { UserIdType } from '../User/type';
 import { CopiedFile, DriveFile } from './type';
 
@@ -94,7 +94,9 @@ export abstract class DriveFileModel extends BaseListModel<DriveFile> {
         folder_token?: string,
         user_id_type?: UserIdType
     ) {
-        name ||= (await this.getOne(`${type}/${file_token}`, user_id_type)).title + ' (copy)';
+        name ||=
+            (await this.getOne(`${LarkDocumentPathTypeMap[type]}/${file_token}`, user_id_type))
+                .title + ' (copy)';
         folder_token ||= (await this.getRootFolder()).token;
 
         const { body } = await this.client.post<LarkData<{ file: CopiedFile }>>(
