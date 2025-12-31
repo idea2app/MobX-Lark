@@ -10,3 +10,19 @@ export type DriveFile = Record<
 >;
 
 export type CopiedFile = Record<'token' | 'type' | 'name' | 'parent_token' | 'url', string>;
+
+export type DriveFileType =
+    | `doc${'' | 'x'}`
+    | 'sheet'
+    | 'file'
+    | 'wiki'
+    | 'bitable'
+    | 'folder'
+    | 'mindnote'
+    | 'slides';
+
+export interface TransferOwnerRequest {
+    owner_id: string;
+    remove_old_owner?: boolean;
+    cancel_notification?: boolean;
+}
