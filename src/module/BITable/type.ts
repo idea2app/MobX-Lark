@@ -15,12 +15,20 @@ export interface TableView extends Record<'view_id' | 'view_name', string> {
 }
 
 export interface TableFormView
-    extends Record<'name' | 'description' | 'shared_url', string>,
+    extends
+        Record<'name' | 'description' | 'shared_url', string>,
         Record<'shared' | 'submit_limit_once', boolean> {
     shared_limit: 'tenant_editable';
 }
 
 export type LarkFormData = LarkData<{ form: TableFormView }>;
+
+export interface BiTableSchema {
+    tables: BITable[];
+    tableIdMap: Record<string, string>;
+    forms: Record<string, TableFormView[]>;
+    formLinkMap: Record<string, Record<string, string>>;
+}
 
 export interface TableCellText {
     type: 'text';
@@ -36,14 +44,17 @@ export interface TableCellLink extends Record<'link' | 'text', string> {
     type: 'url';
 }
 
-export interface TableCellMedia
-    extends Record<'file_token' | 'name' | `${'' | 'tmp_'}url`, string> {
+export interface TableCellMedia extends Record<
+    'file_token' | 'name' | `${'' | 'tmp_'}url`,
+    string
+> {
     type: `${string}/${string}`;
     size: number;
 }
 
 export interface TableCellAttachment
-    extends Pick<TableCellMedia, 'name' | 'size'>,
+    extends
+        Pick<TableCellMedia, 'name' | 'size'>,
         Record<'id' | 'attachmentToken', string>,
         Record<'height' | 'timeStamp' | 'width', number> {
     mimeType: TableCellMedia['type'];
@@ -96,8 +107,10 @@ export type TableCellValue =
 
 export type TableRecordFields = Record<string, TableCellValue>;
 
-export interface TableRecord<T extends TableRecordFields>
-    extends Record<'id' | 'record_id', string> {
+export interface TableRecord<T extends TableRecordFields> extends Record<
+    'id' | 'record_id',
+    string
+> {
     created_by: TableCellUser;
     created_time: number;
     last_modified_by?: TableCellUser;
