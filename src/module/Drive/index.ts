@@ -4,7 +4,7 @@ import { buildURLData, splitArray } from 'web-utility';
 
 import { LarkData, LarkDocumentPathTypeMap, LarkDocumentType, UploadTargetType } from '../../type';
 import { UserIdType } from '../User/type';
-import { CopiedFile, DriveFile } from './type';
+import { CopiedFile, DriveFile, DriveFileType, TransferOwner, TransferOption } from './type';
 
 export * from './type';
 
@@ -104,5 +104,21 @@ export abstract class DriveFileModel extends BaseListModel<DriveFile> {
             { name, type, folder_token }
         );
         return body!.data!.file;
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/server-docs/docs/permission/permission-member/transfer_owner}
+     */
+    @toggle('uploading')
+    async transferOwner(
+        type: DriveFileType,
+        token: string,
+        newOwner: TransferOwner,
+        option = {} as TransferOption
+    ) {
+        await this.client.post<LarkData>(
+            `${this.baseURI}/permissions/${token}/members/transfer_owner?${buildURLData({ ...option, type })}`,
+            newOwner
+        );
     }
 }

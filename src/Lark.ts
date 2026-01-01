@@ -2,9 +2,13 @@ import { Context, HTTPClient } from 'koajax';
 import { buildURLData, cache, sleep } from 'web-utility';
 
 import {
+    BiTable,
+    BiTableSchema,
+    BiTableView,
     CopiedFile,
     DocumentModel,
     DriveFileModel,
+    TableFormView,
     UserIdType,
     WikiNode,
     WikiNodeModel
@@ -280,5 +284,30 @@ export class LarkApp implements LarkAppOption {
         const doc_token = type === 'wiki' ? (await this.wiki2drive(id)).obj_token : id;
 
         return this.documentStore.getOneContent(doc_token, 'markdown');
+    }
+
+    async getBiTableSchema(appId: string) {
+        const { client } = this;
+
+        class InternalTableModel extends BiTable() {
+            client = client;
+        }
+        class InternalFormModel extends BiTableView('form') {
+            client = client;
+        }
+        const tables = await new InternalTableModel(appId).getAll(),
+            forms: Record<string, TableFormView[]> = {};
+
+        for (const { name, table_id } of tables)
+            forms[name] = await new InternalFormModel(appId, table_id).getAll();
+
+        const tableIdMap = Object.fromEntries(tables.map(({ name, table_id }) => [name, table_id])),
+            formLinkMap = Object.fromEntries(
+                Object.entries(forms).map(([name, list]) => [
+                    name,
+                    Object.fromEntries(list.map(({ name, shared_url }) => [name, shared_url]))
+                ])
+            );
+        return { tables, tableIdMap, forms, formLinkMap } as BiTableSchema;
     }
 }
