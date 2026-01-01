@@ -4,7 +4,7 @@ import { buildURLData, splitArray } from 'web-utility';
 
 import { LarkData, LarkDocumentPathTypeMap, LarkDocumentType, UploadTargetType } from '../../type';
 import { UserIdType } from '../User/type';
-import { CopiedFile, DriveFile, DriveFileType, TransferOwnerRequest } from './type';
+import { CopiedFile, DriveFile, DriveFileType, TransferOwner, TransferOption } from './type';
 
 export * from './type';
 
@@ -111,15 +111,14 @@ export abstract class DriveFileModel extends BaseListModel<DriveFile> {
      */
     @toggle('uploading')
     async transferOwner(
-        token: string,
         type: DriveFileType,
-        request: TransferOwnerRequest,
-        user_id_type?: UserIdType
+        token: string,
+        newOwner: TransferOwner,
+        option = {} as TransferOption
     ) {
-        const { body } = await this.client.post<LarkData>(
-            `${this.baseURI}/permissions/${token}/members/transfer_owner?${buildURLData({ type, user_id_type })}`,
-            request
+        await this.client.post<LarkData>(
+            `${this.baseURI}/permissions/${token}/members/transfer_owner?${buildURLData({ ...option, type })}`,
+            newOwner
         );
-        return body!.data;
     }
 }

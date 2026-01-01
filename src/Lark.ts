@@ -5,8 +5,6 @@ import {
     CopiedFile,
     DocumentModel,
     DriveFileModel,
-    DriveFileType,
-    TransferOwnerRequest,
     UserIdType,
     WikiNode,
     WikiNodeModel
@@ -282,19 +280,5 @@ export class LarkApp implements LarkAppOption {
         const doc_token = type === 'wiki' ? (await this.wiki2drive(id)).obj_token : id;
 
         return this.documentStore.getOneContent(doc_token, 'markdown');
-    }
-
-    /**
-     * @see {@link DriveFileModel#transferOwner}
-     */
-    async transferFileOwner(
-        token: string,
-        type: DriveFileType,
-        request: TransferOwnerRequest,
-        user_id_type?: UserIdType
-    ) {
-        await this.getAccessToken();
-
-        return this.driveFileStore.transferOwner(token, type, request, user_id_type);
     }
 }
