@@ -24,6 +24,7 @@ export interface TableFormView
 export type LarkFormData = LarkData<{ form: TableFormView }>;
 
 export interface BiTableSchema {
+    appId: string;
     tables: BITable[];
     tableIdMap: Record<string, string>;
     forms: Record<string, TableFormView[]>;
@@ -60,11 +61,9 @@ export interface TableCellAttachment
     mimeType: TableCellMedia['type'];
 }
 
-export interface TableCellUser extends LocaleUser {
-    id: string;
-}
+export type TableCellUser = LocaleUser & Record<'id' | 'avatar_url', string>;
 
-export type TableCellGroup = Record<'id' | 'name' | 'avatar_url', string>;
+export type TableCellGroup = Pick<TableCellUser, 'id' | 'name' | 'avatar_url'>;
 
 export interface TableCellMetion extends Record<'mentionType' | 'text', string> {
     type: 'mention';

@@ -286,7 +286,7 @@ export class LarkApp implements LarkAppOption {
         return this.documentStore.getOneContent(doc_token, 'markdown');
     }
 
-    async getBiTableSchema(appId: string) {
+    async getBiTableSchema(appId: string): Promise<BiTableSchema> {
         const { client } = this;
 
         class InternalTableModel extends BiTable() {
@@ -308,6 +308,6 @@ export class LarkApp implements LarkAppOption {
                     Object.fromEntries(list.map(({ name, shared_url }) => [name, shared_url]))
                 ])
             );
-        return { tables, tableIdMap, forms, formLinkMap } as BiTableSchema;
+        return { appId, tables, tableIdMap, forms, formLinkMap };
     }
 }
