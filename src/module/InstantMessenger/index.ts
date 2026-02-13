@@ -3,7 +3,7 @@ import { buildURLData } from 'web-utility';
 
 import { LarkData } from '../../type';
 import { createPageStream } from '../base';
-import { ChatMessage, ChatMeta, SendChatMessage } from './type';
+import { ChatMessage, ChatMeta, CreateChatOption, SendChatMessage } from './type';
 
 export * from './type';
 
@@ -22,16 +22,16 @@ export abstract class ChatListModel extends Stream<ChatMeta>(ListModel) {
     }
 
     /**
-     * @see https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/chat/create
+     * @see {@link https://open.feishu.cn/document/server-docs/group/chat/create}
+     * @see {@link https://open.feishu.cn/document/server-docs/group/chat/update-2}
      */
     @toggle('uploading')
-    async updateOne({ chat_id }: NewData<ChatMeta>) {
+    async updateOne({ chat_id, ...data }: NewData<ChatMeta>, option: CreateChatOption = {}) {
         const { body } = await (chat_id
-            ? this.client.put<LarkData<ChatMeta>>(`${this.baseURI}/chats/${chat_id}`)
+            ? this.client.put<LarkData<ChatMeta>>(`${this.baseURI}/${chat_id}`, data)
             : this.client.post<LarkData<ChatMeta>>(
-                  `${this.baseURI}/chats?${buildURLData({
-                      set_bot_manager: true
-                  })}`
+                  `${this.baseURI}?${buildURLData(option)}`,
+                  data
               ));
         return (this.currentOne = body!.data!);
     }
