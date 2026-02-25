@@ -31,12 +31,10 @@ export interface MailMessage {
     labels?: string[];
 }
 
-export interface SendMailMessage {
-    subject: string;
-    to: MailAddress[];
-    cc?: MailAddress[];
-    bcc?: MailAddress[];
-    head_from?: MailAddress;
-    body: MailBody;
-    attachments?: Pick<MailAttachment, 'attachment_id'>[];
-}
+export type MailMessageSummary = Pick<MailMessage, 'message_id'>;
+
+export type SendMailMessage = Pick<MailMessage, 'subject' | 'to'> &
+    Partial<Pick<MailMessage, 'cc' | 'bcc' | 'head_from' | 'reply_to'>> &
+    Required<Pick<MailMessage, 'body'>> & {
+        attachments?: Pick<MailAttachment, 'attachment_id'>[];
+    };
