@@ -1,6 +1,7 @@
 export * from './base';
 export * from './User/type';
 export * from './InstantMessenger';
+export * from './Mail';
 export * from './Task';
 export * from './Document';
 export * from './SpreadSheet';

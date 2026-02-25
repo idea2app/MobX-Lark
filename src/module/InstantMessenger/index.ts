@@ -26,7 +26,10 @@ export abstract class ChatListModel extends Stream<ChatMeta>(ListModel) {
      * @see {@link https://open.feishu.cn/document/server-docs/group/chat/update-2}
      */
     @toggle('uploading')
-    async updateOne({ chat_id, ...data }: NewData<ChatMeta>, option: CreateChatOption = {}) {
+    async updateOne(
+        { chat_id, ...data }: Partial<NewData<ChatMeta>>,
+        option: CreateChatOption = {}
+    ) {
         const { body } = await (chat_id
             ? this.client.put<LarkData<ChatMeta>>(`${this.baseURI}/${chat_id}`, data)
             : this.client.post<LarkData<ChatMeta>>(
