@@ -3,38 +3,37 @@ export interface MailAddress {
     name?: string;
 }
 
-export interface MailBody {
-    content: string;
-    content_type?: 'html' | 'plain_text';
+export enum MailAttachmentType {
+    Normal = 1,
+    Large = 2
 }
 
 export interface MailAttachment {
-    attachment_id: string;
-    name: string;
-    size: number;
+    attachment_type: MailAttachmentType;
+    id: string;
+    cid?: string;
+    filename: string;
+    is_inline: boolean;
 }
 
-export interface MailMessage {
-    message_id: string;
-    time: string;
-    snippet: string;
-    subject: string;
-    from: MailAddress;
-    to: MailAddress[];
-    cc?: MailAddress[];
-    bcc?: MailAddress[];
-    head_from?: MailAddress;
-    reply_to?: MailAddress[];
-    body?: MailBody;
-    attachments?: MailAttachment[];
-    external?: boolean;
-    labels?: string[];
+export enum MailMessageState {
+    Received = 1,
+    Sent = 2,
+    Draft = 3
 }
 
-export type MailMessageSummary = Pick<MailMessage, 'message_id'>;
-
-export type SendMailMessage = Pick<MailMessage, 'subject' | 'to'> &
-    Partial<Pick<MailMessage, 'cc' | 'bcc' | 'head_from' | 'reply_to'>> &
-    Required<Pick<MailMessage, 'body'>> & {
-        attachments?: Pick<MailAttachment, 'attachment_id'>[];
+export type MailMessage = Record<
+    | `${'smtp_' | ''}message_id`
+    | 'thread_id'
+    | 'internal_date'
+    | 'subject'
+    | `body_${'plain_text' | 'html'}`,
+    string
+> &
+    Record<'to' | 'cc' | 'bcc', MailAddress[]> & {
+        dedupe_key?: string;
+        message_state: MailMessageState;
+        head_from: MailAddress;
+        raw?: string;
+        attachments: MailAttachment[];
     };

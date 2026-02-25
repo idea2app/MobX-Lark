@@ -10,7 +10,7 @@ export type LarkData<D extends Record<string, any> = {}, E extends Record<string
     };
 };
 
-export type LarkPageData<D extends Record<string, any> = {}> = LarkData<{
+export type LarkPageData<D = {}> = LarkData<{
     page_token: string;
     items: D[];
     has_more: boolean;

@@ -2,14 +2,17 @@ import { Filter, IDType, ListModel, NewData, Stream, toggle } from 'mobx-restful
 
 import { LarkData } from '../../type';
 import { createPageStream } from '../base';
-import { MailMessage, MailMessageSummary, SendMailMessage } from './type';
+import { MailMessage } from './type';
 
 export * from './type';
 
-export type MailMessageFilter = Filter<MailMessage>;
+export type MailMessageFilter = Filter<MailMessage> & {
+    folder_id?: string;
+    only_unread?: boolean;
+};
 
 export abstract class MailMessageModel extends Stream<MailMessage, MailMessageFilter>(ListModel) {
-    baseURI: string;
+    baseURI = '';
 
     constructor(public mailboxId: string) {
         super();
@@ -19,14 +22,14 @@ export abstract class MailMessageModel extends Stream<MailMessage, MailMessageFi
     /**
      * @see {@link https://open.feishu.cn/document/mail-v1/user_mailbox-message/list}
      */
-    async *openStream(filter: MailMessageFilter = {}) {
-        const stream = createPageStream<MailMessageSummary>(
+    async *openStream(filter: MailMessageFilter = { folder_id: 'INBOX' }) {
+        const stream = createPageStream<string>(
             this.client,
             this.baseURI,
             total => (this.totalCount = total),
             filter
         );
-        for await (const { message_id } of stream) yield await this.getOne(message_id);
+        for await (const message_id of stream) yield this.getOne(message_id);
     }
 
     /**
@@ -44,11 +47,11 @@ export abstract class MailMessageModel extends Stream<MailMessage, MailMessageFi
      * @see {@link https://open.feishu.cn/document/server-docs/mail-v1/user_mailbox-message/send}
      */
     @toggle('uploading')
-    async updateOne(mail: NewData<MailMessage>) {
-        const { body } = await this.client.post<LarkData<{ message: MailMessage }>>(
-            `${this.baseURI}/send`,
-            mail as SendMailMessage
-        );
-        return (this.currentOne = body!.data!.message);
+    async updateOne(mail: Partial<NewData<MailMessage>>) {
+        const { body } = await this.client.post<
+            LarkData<Record<`${'message' | 'thread'}_id`, string>>
+        >(`${this.baseURI}/send`, mail);
+
+        return (this.currentOne = await this.getOne(body!.data!.message_id));
     }
 }

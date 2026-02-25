@@ -3,7 +3,7 @@ import { buildURLData } from 'web-utility';
 
 import { LarkPageData } from '../type';
 
-export async function* createPageStream<T extends DataObject>(
+export async function* createPageStream<T = DataObject>(
     client: RESTClient,
     path: string,
     onCount: (total: number) => any,
