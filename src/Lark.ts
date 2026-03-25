@@ -7,6 +7,7 @@ import {
     BiTableView,
     CopiedFile,
     DocumentModel,
+    DocumentAIModel,
     DriveFileModel,
     TableFormView,
     UserIdType,
@@ -51,6 +52,7 @@ export class LarkApp implements LarkAppOption {
     driveFileStore: DriveFileModel;
     wikiNodeStore: WikiNodeModel;
     documentStore: DocumentModel;
+    documentAIStore: DocumentAIModel;
 
     constructor(option: LarkAppServerOption | LarkAppClientOption) {
         Object.assign(this, option);
@@ -74,6 +76,9 @@ export class LarkApp implements LarkAppOption {
         this.documentStore = new (class extends DocumentModel {
             client = client;
         })('');
+        this.documentAIStore = new (class extends DocumentAIModel {
+            client = client;
+        })();
     }
 
     private boot() {
