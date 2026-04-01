@@ -18,7 +18,7 @@ export interface TableFormView
     extends
         Record<'name' | 'description' | 'shared_url', string>,
         Record<'shared' | 'submit_limit_once', boolean> {
-    shared_limit: 'tenant_editable';
+    shared_limit: 'off' | `${'tenant' | 'anyone'}_editable`;
 }
 
 export type LarkFormData = LarkData<{ form: TableFormView }>;
