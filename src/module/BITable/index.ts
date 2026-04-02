@@ -50,6 +50,8 @@ export function BiDataTable<T extends DataObject, F extends Filter<T> = Filter<T
             this.baseURI = `bitable/v1/apps/${appId}/tables/${tableId}/records`;
         }
 
+        keyMap?: Partial<Record<keyof T, string>>;
+
         extractFields({ fields, ...meta }: TableRecord<T>): T {
             return { ...meta, ...fields };
         }
@@ -58,6 +60,22 @@ export function BiDataTable<T extends DataObject, F extends Filter<T> = Filter<T
          * @deprecated
          */
         normalize = this.extractFields;
+
+        mapFields(record: TableRecord<T>): T {
+            const data = this.normalize(record);
+
+            if (!this.keyMap) return data;
+
+            const result = { ...data } as Record<string, unknown>;
+
+            for (const [typeKey, headerName] of Object.entries(this.keyMap))
+                if (headerName !== undefined && headerName in result) {
+                    result[typeKey] = result[headerName];
+                    delete result[headerName];
+                }
+
+            return result as T;
+        }
 
         wrapFields(fields: F) {
             return fields as unknown as T;
@@ -71,7 +89,7 @@ export function BiDataTable<T extends DataObject, F extends Filter<T> = Filter<T
             const { body } = await this.client.get<TableRecordData<T>>(
                 `${this.baseURI}/${id}?${buildURLData(this.queryOptions)}`
             );
-            return (this.currentOne = this.normalize(body!.data!.record));
+            return (this.currentOne = this.mapFields(body!.data!.record));
         }
 
         /**
@@ -89,7 +107,7 @@ export function BiDataTable<T extends DataObject, F extends Filter<T> = Filter<T
                 : this.client.post<TableRecordData<T>>(this.baseURI, {
                       fields
                   }));
-            return (this.currentOne = this.normalize(body!.data!.record));
+            return (this.currentOne = this.mapFields(body!.data!.record));
         }
 
         makeFilter(filter: F) {
@@ -124,7 +142,7 @@ export function BiDataTable<T extends DataObject, F extends Filter<T> = Filter<T
                 total => (this.totalCount = total),
                 { ...searchParams, ...this.queryOptions }
             );
-            for await (const item of stream) yield this.normalize(item);
+            for await (const item of stream) yield this.mapFields(item);
         }
 
         async getViewList(

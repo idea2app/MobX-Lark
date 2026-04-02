@@ -214,6 +214,30 @@ describe('MobX Lark SDK', async () => {
         queryOptions: BiDataQueryOptions = { text_field_as_array: false };
     }
 
+    it('should map field names using keyMap in BiDataTable', expect => {
+        class MappedDataTableModel extends BiDataTable<
+            Record<'id' | 'name' | 'type', TableCellValue>
+        >() {
+            client = app.client;
+
+            keyMap = { name: '商品名称', type: '类型' };
+        }
+        const table = new MappedDataTableModel('appId', 'tableId');
+
+        const record = table.mapFields({
+            id: 'rec1',
+            record_id: 'rec1',
+            created_by: {} as any,
+            created_time: 0,
+            fields: { 商品名称: 'Widget', 类型: 'product' } as any
+        });
+
+        expect(record.name === 'Widget');
+        expect(record.type === 'product');
+        expect(!('商品名称' in record));
+        expect(!('类型' in record));
+    });
+
     await it('should get a page of records in a BITable table', async expect => {
         const table = new ExampleDataTableModel(BITABLE_ID!, BITABLE_TABLE_ID!);
 
