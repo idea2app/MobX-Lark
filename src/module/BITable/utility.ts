@@ -1,10 +1,13 @@
 import { DataObject } from 'mobx-restful';
-import {
-    TableCellLink,
-    TableCellLocation,
-    TableCellRelation,
-    TableCellText
-} from './type';
+import { TableCellLink, TableCellLocation, TableCellRelation, TableCellText } from './type';
+
+export const mapKeys = <I extends DataObject, O extends DataObject>(
+    data: I,
+    map: Partial<Record<keyof I, PropertyKey>>
+) =>
+    Object.fromEntries(
+        Object.entries(data).map(([key, value]) => [map[key as keyof I] || key, value])
+    ) as O;
 
 export type FilterOperator = '<' | '<=' | '=' | '!=' | '=>' | '>' | 'contains';
 
@@ -34,9 +37,7 @@ export function makeSimpleFilter(
     return list[1] ? `${relation}(${list})` : list[0];
 }
 
-export const normalizeText = (
-    value: TableCellText | TableCellLink | TableCellRelation
-) =>
+export const normalizeText = (value: TableCellText | TableCellLink | TableCellRelation) =>
     (value && typeof value === 'object' && 'text' in value && value.text) || '';
 
 export const normalizeTextArray = (list: TableCellText[]) =>
@@ -50,8 +51,7 @@ export const normalizeTextArray = (list: TableCellText[]) =>
         ['']
     );
 export function coordinateOf(location: TableCellLocation): [number, number] {
-    const [longitude, latitude] =
-        (location as TableCellLocation)?.location.split(',') || [];
+    const [longitude, latitude] = (location as TableCellLocation)?.location.split(',') || [];
 
     return [+latitude, +longitude];
 }

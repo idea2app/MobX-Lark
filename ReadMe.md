@@ -86,6 +86,8 @@ export class ClientModel extends BiDataTable<Client>() {
 
     queryOptions: BiDataQueryOptions = { text_field_as_array: false };
 
+    keyMap = { name: '名称', type: '类型' } as const;
+
     constructor(appId = LarkBaseId, tableId = CLIENT_TABLE) {
         super(appId, tableId);
     }
