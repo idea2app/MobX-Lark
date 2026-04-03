@@ -32,7 +32,7 @@
         "mobx": "^6.15.0",
         "mobx-restful": "^2.1.4",
         "regenerator-runtime": "^0.14.1",
-        "web-utility": "^4.6.4"
+        "web-utility": "^4.6.5"
     },
     "peerDependencies": {
         "react": ">=16"
@@ -54,7 +54,7 @@
         "react": "^19.2.4",
         "react-dom": "^19.2.4",
         "ts-node": "^10.9.2",
-        "turndown": "^7.2.3",
+        "turndown": "^7.2.4",
         "typedoc": "^0.28.18",
         "typedoc-plugin-mdn-links": "^5.1.1",
         "typescript": "~5.8.3"
