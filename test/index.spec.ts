@@ -212,6 +212,8 @@ describe('MobX Lark SDK', async () => {
         client = app.client;
 
         queryOptions: BiDataQueryOptions = { text_field_as_array: false };
+
+        keyMap = { name: '名称', type: '类型' };
     }
 
     await it('should get a page of records in a BITable table', async expect => {
@@ -227,6 +229,8 @@ describe('MobX Lark SDK', async () => {
             ExampleDataTableModel
         ) {
             client = app.client;
+
+            keyMap = { name: '名称', type: '类型' };
 
             searchKeys = ['name'];
         }

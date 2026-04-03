@@ -13,7 +13,7 @@ import {
     TableRecordFields,
     TableView
 } from './type';
-import { makeSimpleFilter } from './utility';
+import { makeSimpleFilter, mapKeys } from './utility';
 
 export * from './type';
 export * from './utility';
@@ -31,13 +31,13 @@ export interface BiDataQueryOptions {
 /**
  * @see {@link https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/bitable-overview}
  */
-export function BiDataTable<T extends DataObject, F extends Filter<T> = Filter<T>>(
+export function BiDataTable<D extends DataObject, F extends Filter<D> = Filter<D>>(
     Base = ListModel
 ) {
-    abstract class BiDataTableModel extends Stream<T, F>(Base) {
-        requiredKeys: readonly (keyof T)[] = [];
+    abstract class BiDataTableModel extends Stream<D, F>(Base) {
+        requiredKeys: readonly (keyof D)[] = [];
 
-        sort: Partial<Record<keyof T, 'ASC' | 'DESC'>> = {};
+        sort: Partial<Record<keyof D, 'ASC' | 'DESC'>> = {};
 
         queryOptions: BiDataQueryOptions = {
             text_field_as_array: true,
@@ -50,7 +50,15 @@ export function BiDataTable<T extends DataObject, F extends Filter<T> = Filter<T
             this.baseURI = `bitable/v1/apps/${appId}/tables/${tableId}/records`;
         }
 
-        extractFields({ fields, ...meta }: TableRecord<T>): T {
+        keyMap?: Partial<Record<keyof D, string>>;
+
+        get nameMap() {
+            return this.keyMap
+                ? Object.fromEntries(Object.entries(this.keyMap).map(([key, name]) => [name, key]))
+                : {};
+        }
+
+        extractFields({ fields, ...meta }: TableRecord<D>): D {
             return { ...meta, ...fields };
         }
 
@@ -59,8 +67,19 @@ export function BiDataTable<T extends DataObject, F extends Filter<T> = Filter<T
          */
         normalize = this.extractFields;
 
+        /**
+         * @protected
+         */
+        mapFields({ fields, ...meta }: TableRecord<DataObject>) {
+            const { nameMap } = this;
+
+            const mappedData = isEmpty(nameMap) ? (fields as D) : (mapKeys(fields, nameMap) as D);
+
+            return this.normalize({ fields: mappedData, ...meta });
+        }
+
         wrapFields(fields: F) {
-            return fields as unknown as T;
+            return fields as unknown as D;
         }
 
         /**
@@ -68,10 +87,10 @@ export function BiDataTable<T extends DataObject, F extends Filter<T> = Filter<T
          */
         @toggle('downloading')
         async getOne(id: string) {
-            const { body } = await this.client.get<TableRecordData<T>>(
+            const { body } = await this.client.get<TableRecordData<D>>(
                 `${this.baseURI}/${id}?${buildURLData(this.queryOptions)}`
             );
-            return (this.currentOne = this.normalize(body!.data!.record));
+            return (this.currentOne = this.mapFields(body!.data!.record));
         }
 
         /**
@@ -80,29 +99,31 @@ export function BiDataTable<T extends DataObject, F extends Filter<T> = Filter<T
          */
         @toggle('uploading')
         async updateOne(data: F, id?: string) {
-            const fields = this.wrapFields(data);
+            const rawData = this.wrapFields(data);
+
+            const fields = isEmpty(this.keyMap) ? rawData : (mapKeys(rawData, this.keyMap) as D);
 
             const { body } = await (id
-                ? this.client.put<TableRecordData<T>>(`${this.baseURI}/${id}`, {
-                      fields
-                  })
-                : this.client.post<TableRecordData<T>>(this.baseURI, {
-                      fields
-                  }));
-            return (this.currentOne = this.normalize(body!.data!.record));
+                ? this.client.put<TableRecordData<D>>(`${this.baseURI}/${id}`, { fields })
+                : this.client.post<TableRecordData<D>>(this.baseURI, { fields }));
+
+            return (this.currentOne = this.mapFields(body!.data!.record));
+        }
+
+        mapFilter(filter: DataObject) {
+            return isEmpty(this.keyMap) ? (filter as F) : (mapKeys(filter, this.keyMap) as F);
         }
 
         makeFilter(filter: F) {
-            return [
+            const requiredFilter =
                 this.requiredKeys[0] &&
-                    makeSimpleFilter(
-                        Object.fromEntries(this.requiredKeys.map(key => [key, ''])),
-                        '!='
-                    ),
-                !isEmpty(filter) && makeSimpleFilter(filter)
-            ]
-                .filter(Boolean)
-                .join('&&');
+                makeSimpleFilter(
+                    this.mapFilter(Object.fromEntries(this.requiredKeys.map(key => [key, '']))),
+                    '!='
+                );
+            const customFilter = !isEmpty(filter) && makeSimpleFilter(this.mapFilter(filter));
+
+            return [requiredFilter, customFilter].filter(Boolean).join('&&');
         }
 
         /**
@@ -118,13 +139,13 @@ export function BiDataTable<T extends DataObject, F extends Filter<T> = Filter<T
                           Object.entries(this.sort).map(([key, order]) => `${key} ${order}`)
                       )
                   };
-            const stream = createPageStream<TableRecord<T>>(
+            const stream = createPageStream<TableRecord<DataObject>>(
                 this.client,
                 this.baseURI,
                 total => (this.totalCount = total),
                 { ...searchParams, ...this.queryOptions }
             );
-            for await (const item of stream) yield this.normalize(item);
+            for await (const item of stream) yield this.mapFields(item);
         }
 
         async getViewList(
@@ -157,12 +178,11 @@ export type BiSearchFilter<D extends DataObject> = Filter<D> & {
 };
 
 export function BiSearch<D extends DataObject, F extends BiSearchFilter<D> = BiSearchFilter<D>>(
-    Model: Constructor<ListModel<D, F>>
+    Model: ReturnType<typeof BiDataTable<D, F>>
 ) {
     abstract class BiSearchModel extends Model {
         declare baseURI: string;
         declare client: RESTClient;
-        declare loadPage: (pageIndex: number, pageSize: number, filter: F) => Promise<PageData<D>>;
 
         abstract searchKeys: readonly (keyof TableRecordFields)[];
 
@@ -170,7 +190,9 @@ export function BiSearch<D extends DataObject, F extends BiSearchFilter<D> = BiS
         accessor keywords = '';
 
         makeFilter(filter: F) {
-            return isEmpty(filter) ? '' : makeSimpleFilter(filter, 'contains', 'OR');
+            return isEmpty(filter)
+                ? ''
+                : makeSimpleFilter(this.mapFilter(filter), 'contains', 'OR');
         }
 
         async getList(
