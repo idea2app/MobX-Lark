@@ -67,3 +67,48 @@ export interface VehicleInvoice {
         | `total_price${'' | '_little'}`;
     value: string;
 }
+
+export interface OcrText {
+    text: string;
+    /** Array of corner points (top-left, top-right, bottom-right, bottom-left) for the text bounding box */
+    positions: { x: number; y: number }[];
+}
+
+export interface BankCard {
+    type: 'bank_card_number' | 'bank_card_date_of_expiry';
+    value: string;
+}
+
+export interface ResumeEntity {
+    type:
+        | 'name'
+        | 'gender'
+        | 'date_of_birth'
+        | 'marital_status'
+        | 'nationality'
+        | 'job_title'
+        | 'email'
+        | 'phone'
+        | 'address'
+        | `${'education' | 'work_experience' | 'project_experience' | 'award'}_history`
+        | 'self_description'
+        | 'skills'
+        | 'certificates'
+        | 'languages';
+    value: string;
+}
+
+export interface ContractEntity {
+    type:
+        | 'contract_name'
+        | 'contract_type'
+        | 'contract_amount'
+        | 'contract_period'
+        | 'sign_date'
+        | 'effective_date'
+        | 'expiration_date'
+        | 'terms_of_payment'
+        | `party_${'a' | 'b'}`
+        | `party_${'a' | 'b'}_signatory`;
+    value: string;
+}
