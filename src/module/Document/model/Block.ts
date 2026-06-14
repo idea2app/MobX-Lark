@@ -156,7 +156,9 @@ export abstract class DocumentBlockModel extends Stream<Block<any, any, any>>(Li
             } else if (block.block_type === BlockType.image) {
                 const { image } = block as ImageBlock;
 
-                image.url = await resolveFileURL?.(image.token || '');
+                if (image.token) {
+                    image.url = await resolveFileURL?.(image.token);
+                }
             } else if (block.block_type === BlockType.sheet) {
                 const [token, sheet] = (block as SheetBlock).sheet.token.split('_');
 
