@@ -37,13 +37,16 @@ export const styleOf = ({
     backgroundColor: background_color && BackgroundColorMap[BackgroundColor[background_color]]
 });
 
+const HTML_ENTITIES: Record<string, string> = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'"
+};
+
 export const decodeHTMLEntities = (text: string) =>
-    text
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'");
+    text.replace(/&amp;|&lt;|&gt;|&quot;|&#39;/g, entity => HTML_ENTITIES[entity] ?? entity);
 
 export const TextRunComponent: FC<TextRun> = ({ content, text_element_style }) => {
     const {
@@ -76,7 +79,7 @@ export const TextRunComponent: FC<TextRun> = ({ content, text_element_style }) =
                 color: text_color && TextColorMap[text_color],
                 backgroundColor: background_color && BackgroundColorMap[background_color]
             }}
-            href={link?.url && decodeHTMLEntities(link.url)}
+            href={link?.url ? decodeHTMLEntities(link.url) : undefined}
         >
             {decodeHTMLEntities(content + '')}
         </Tag>
