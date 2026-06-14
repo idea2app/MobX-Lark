@@ -9,7 +9,8 @@ import {
     GridBlockComponent,
     GridColumnBlockComponent,
     TableBlockComponent,
-    TableCellBlockComponent
+    TableCellBlockComponent,
+    ViewBlockComponent
 } from './Layout';
 import { FileBlockComponent, IframeBlockComponent, ImageBlockComponent } from './Media';
 import {
@@ -45,6 +46,7 @@ export const blockComponentMap: Partial<Record<BlockType, FC<any>>> = {
     [BlockType.table_cell]: TableCellBlockComponent,
     [BlockType.iframe]: IframeBlockComponent,
     [BlockType.image]: ImageBlockComponent,
+    [BlockType.view]: ViewBlockComponent,
     [BlockType.file]: FileBlockComponent,
     [BlockType.agenda]: AgendaBlockComponent,
     [BlockType.agenda_item]: AgendaItemBlockComponent,

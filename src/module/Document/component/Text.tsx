@@ -45,12 +45,12 @@ const HTML_ENTITIES: Record<string, string> = {
     '&#39;': "'"
 };
 
-export const decodeHTMLEntities = (text: string) =>
-    text.replace(/&amp;|&lt;|&gt;|&quot;|&#39;/g, entity => HTML_ENTITIES[entity] ?? entity);
+export const decodeHTMLEntities = (text: string): string => {
+    if (typeof DOMParser !== 'undefined')
+        return new DOMParser().parseFromString(text, 'text/html').body.textContent ?? text;
 
-const SAFE_LINK_PATTERN = /^(?:https?|mailto|tel):/i;
-
-export const safeURL = (url: string) => (SAFE_LINK_PATTERN.test(url) ? url : undefined);
+    return text.replace(/&amp;|&lt;|&gt;|&quot;|&#39;/g, entity => HTML_ENTITIES[entity] ?? entity);
+};
 
 export const TextRunComponent: FC<TextRun> = ({ content, text_element_style }) => {
     const {
@@ -83,7 +83,7 @@ export const TextRunComponent: FC<TextRun> = ({ content, text_element_style }) =
                 color: text_color && TextColorMap[text_color],
                 backgroundColor: background_color && BackgroundColorMap[background_color]
             }}
-            href={link?.url ? safeURL(decodeHTMLEntities(link.url)) : undefined}
+            href={link?.url ? decodeHTMLEntities(link.url) : undefined}
         >
             {decodeHTMLEntities(content + '')}
         </Tag>

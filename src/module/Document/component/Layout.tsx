@@ -8,12 +8,17 @@ import {
     GridColumnBlock,
     QuoteContainerBlock,
     TableBlock,
-    TableCellBlock
+    TableCellBlock,
+    ViewBlock
 } from '../type';
 import { blockMap, ChildrenRenderer } from './Block';
 import { BackgroundColorMap, TextColorMap } from './constant';
 
 export const DividerBlockComponent: FC<DividerBlock> = () => <hr />;
+
+export const ViewBlockComponent: FC<ViewBlock> = ({ children }) => (
+    <ChildrenRenderer>{children}</ChildrenRenderer>
+);
 
 export const CalloutBlockComponent: FC<QuoteContainerBlock | CalloutBlock> = ({
     children,
@@ -106,7 +111,8 @@ export const TableBlockComponent: FC<TableBlock> = ({ table, children }) => {
 };
 
 export interface TableCellBlockComponentProps
-    extends Pick<TdHTMLAttributes<HTMLTableCellElement>, 'width' | 'colSpan' | 'rowSpan'>,
+    extends
+        Pick<TdHTMLAttributes<HTMLTableCellElement>, 'width' | 'colSpan' | 'rowSpan'>,
         TableCellBlock {
     is?: 'th' | 'td';
 }
