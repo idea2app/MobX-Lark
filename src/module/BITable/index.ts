@@ -177,10 +177,12 @@ export type BiSearchFilter<D extends DataObject> = Filter<D> & {
     keywords?: string;
 };
 
-export function BiSearch<D extends DataObject, F extends BiSearchFilter<D> = BiSearchFilter<D>>(
-    Model: ReturnType<typeof BiDataTable<D, F>>
-) {
-    abstract class BiSearchModel extends Model {
+export function BiSearch<
+    D extends DataObject,
+    F extends BiSearchFilter<D> = BiSearchFilter<D>,
+    M extends ReturnType<typeof BiDataTable<D, F>> = ReturnType<typeof BiDataTable<D, F>>
+>(Model: M) {
+    abstract class BiSearchModel extends (Model as ReturnType<typeof BiDataTable<D, F>>) {
         declare baseURI: string;
         declare client: RESTClient;
 

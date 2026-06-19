@@ -68,47 +68,129 @@ export interface VehicleInvoice {
     value: string;
 }
 
-export interface OcrText {
+export interface BankCardEntity {
+    type: 'card_number' | 'date_of_expiry';
+    value: string;
+}
+
+export type ResumePeriod = Record<'start_date' | 'start_time' | 'end_date' | 'end_time', string>;
+
+export interface ResumeEducation
+    extends ResumePeriod, Record<'school' | 'major' | 'degree', string> {
+    qualification: number;
+}
+
+export interface ResumeCareer
+    extends ResumePeriod, Record<'company' | 'title' | 'type_str' | 'job_description', string> {
+    type: number;
+}
+
+export type ResumeProject = ResumePeriod & Record<'name' | 'title' | 'description', string>;
+
+export interface ResumeLanguage {
+    level: number;
+    description: string;
+}
+
+export type ResumeAward = Record<'award' | 'date' | 'description', string>;
+
+export type ResumeCertificate = Record<'name' | 'desc', string>;
+
+export type ResumeCompetition = Record<'name' | 'desc', string>;
+
+export interface Resume
+    extends
+        Record<
+            | 'file_md5'
+            | 'content'
+            | 'new_content'
+            | 'name'
+            | 'email'
+            | 'mobile'
+            | 'country_code'
+            | 'date_of_birth'
+            | 'current_location'
+            | 'home_location'
+            | 'self_evaluation',
+            string
+        >,
+        Record<'willing_positions' | 'willing_locations' | 'urls' | 'social_links', string[]> {
+    mobile_is_virtual: boolean;
+    educations: ResumeEducation[];
+    careers: ResumeCareer[];
+    projects: ResumeProject[];
+    work_year: number | null;
+    gender: number;
+    languages: ResumeLanguage[];
+    awards: ResumeAward[];
+    certificates: ResumeCertificate[];
+    competitions: ResumeCompetition[];
+}
+
+export interface ContractPrice {
+    contract_price: number;
+    contract_price_original: string;
     text: string;
-    /** Array of corner points (top-left, top-right, bottom-right, bottom-left) for the text bounding box */
-    positions: { x: number; y: number }[];
 }
 
-export interface BankCard {
-    type: 'bank_card_number' | 'bank_card_date_of_expiry';
-    value: string;
+export type ContractInitialTerm = Record<'initial_time' | 'initial_unit', string>;
+
+export interface ContractTime extends Record<
+    | 'time_start'
+    | 'time_end'
+    | 'original_time_start'
+    | 'original_time_end'
+    | 'text_start'
+    | 'text_end'
+    | 'text_initial_term',
+    string
+> {
+    initial_term: ContractInitialTerm;
 }
 
-export interface ResumeEntity {
-    type:
-        | 'name'
-        | 'gender'
-        | 'date_of_birth'
-        | 'marital_status'
-        | 'nationality'
-        | 'job_title'
-        | 'email'
-        | 'phone'
-        | 'address'
-        | `${'education' | 'work_experience' | 'project_experience' | 'award'}_history`
-        | 'self_description'
-        | 'skills'
-        | 'certificates'
-        | 'languages';
-    value: string;
+export interface ContractCopy extends Record<'original_copy' | 'key' | 'text', string> {
+    copy_num: number;
 }
 
-export interface ContractEntity {
-    type:
-        | 'contract_name'
-        | 'contract_type'
-        | 'contract_amount'
-        | 'contract_period'
-        | 'sign_date'
-        | 'effective_date'
-        | 'expiration_date'
-        | 'terms_of_payment'
-        | `party_${'a' | 'b'}`
-        | `party_${'a' | 'b'}_signatory`;
-    value: string;
+export type ContractCurrency = Record<'currency_name' | 'currency_text', string>;
+
+export type ContractBodyType = 'buy' | 'sell' | 'third';
+
+export type ContractBodyEntity = Record<
+    'address' | 'contacts' | 'email' | 'phone' | 'id_number' | 'legal_representative' | 'party',
+    string
+>;
+
+export interface ContractBodyInfo {
+    body_type: ContractBodyType;
+    value: ContractBodyEntity;
+}
+
+export type ContractBankType = 'buy_bank' | 'sell_bank' | 'third_bank' | 'unceratin_bank';
+
+export type ContractBankEntity = Record<
+    | 'account_name'
+    | 'bank_name'
+    | 'account_number'
+    | 'phone'
+    | 'contacts'
+    | 'tax_number'
+    | 'address'
+    | 'id_number'
+    | 'email',
+    string
+>;
+
+export interface ContractBankInfo {
+    bank_type: ContractBankType;
+    value: ContractBankEntity;
+}
+
+export interface Contract extends Record<'file_id' | 'header', string> {
+    price: ContractPrice;
+    time: ContractTime;
+    copy: ContractCopy;
+    currency: ContractCurrency;
+    body_info: ContractBodyInfo[];
+    bank_info: ContractBankInfo[];
 }

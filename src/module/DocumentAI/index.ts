@@ -1,12 +1,11 @@
-import { makeFormData } from 'koajax';
+import { makeFormData, readAs } from 'koajax';
 import { BaseModel, RESTClient, toggle } from 'mobx-restful';
 
 import { LarkData } from '../../type';
 import {
-    BankCard,
-    ContractEntity,
-    OcrText,
-    ResumeEntity,
+    BankCardEntity,
+    Contract,
+    Resume,
     TaxiInvoice,
     TrainInvoice,
     VatInvoice,
@@ -70,16 +69,18 @@ export abstract class DocumentAIModel extends BaseModel {
 
     /**
      * @see {@link https://open.feishu.cn/document/server-docs/ai/optical_char_recognition-v1/basic_recognize}
-     * @param image Base64-encoded image string
      */
     @toggle('uploading')
-    async recognizeText(image: string) {
-        const { body } = await this.client.post<LarkData<{ texts: OcrText[] }>>(
-            'optical_char_recognition/v1/image/basic_recognize',
-            { image }
-        );
+    async recognizeText(image: File) {
+        const URI = (await readAs(image, 'dataURL').result) as string;
 
-        return body!.data!.texts;
+        const [, base64] = URI.split(',');
+
+        const { body } = await this.client.post<LarkData<{ text_list: string[] }>>(
+            'optical_char_recognition/v1/image/basic_recognize',
+            { image: base64 }
+        );
+        return body!.data!.text_list;
     }
 
     /**
@@ -88,10 +89,10 @@ export abstract class DocumentAIModel extends BaseModel {
     @toggle('uploading')
     async recognizeBankCard(file: File) {
         const { body } = await this.client.post<
-            LarkData<{ bank_cards: { entities: BankCard[] }[] }>
+            LarkData<{ bank_card: { entities: BankCardEntity[] } }>
         >(`${this.baseURI}/bank_card/recognize`, makeFormData({ file }));
 
-        return body!.data!.bank_cards;
+        return body!.data!.bank_card.entities;
     }
 
     /**
@@ -99,10 +100,10 @@ export abstract class DocumentAIModel extends BaseModel {
      */
     @toggle('uploading')
     async parseResume(file: File) {
-        const { body } = await this.client.post<
-            LarkData<{ resumes: { entities: ResumeEntity[] }[] }>
-        >(`${this.baseURI}/resume/parse`, makeFormData({ file }));
-
+        const { body } = await this.client.post<LarkData<{ resumes: Resume[] }>>(
+            `${this.baseURI}/resume/parse`,
+            makeFormData({ file })
+        );
         return body!.data!.resumes;
     }
 
@@ -110,11 +111,15 @@ export abstract class DocumentAIModel extends BaseModel {
      * @see {@link https://open.feishu.cn/document/server-docs/ai/document_ai-v1/contract/field_extraction}
      */
     @toggle('uploading')
-    async extractContractFields(file: File) {
-        const { body } = await this.client.post<
-            LarkData<{ contracts: { entities: ContractEntity[] }[] }>
-        >(`${this.baseURI}/contract/field_extraction`, makeFormData({ file }));
-
-        return body!.data!.contracts;
+    async extractContract(
+        file: File,
+        ocr_mode: 'unused' | 'force' | 'auto' = 'auto',
+        pdf_page_limit = 100
+    ) {
+        const { body } = await this.client.post<LarkData<Contract>>(
+            `${this.baseURI}/contract/field_extraction`,
+            makeFormData({ file, ocr_mode, pdf_page_limit })
+        );
+        return body!.data!;
     }
 }

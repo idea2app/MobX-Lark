@@ -25,12 +25,10 @@ jobs:
 
             - name: Event Message serialization
               id: message
+              env:
+                  GITHUB_CONTEXT: ${{ toJSON(github) }}
               run: |
-                  YAML=$(
-                  cat <<JSON | deno run -A .github/scripts/transform-message.ts
-                  ${{ toJSON(github) }}
-                  JSON
-                  )
+                  YAML=$(printf '%s' "$GITHUB_CONTEXT" | deno run --allow-all .github/scripts/transform-message.ts)
                   {
                     echo 'content<<EOF'
                     echo "$YAML"
