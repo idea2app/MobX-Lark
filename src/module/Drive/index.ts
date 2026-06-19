@@ -17,6 +17,9 @@ import {
 
 export * from './type';
 
+const MemberPermissionBaseURI = 'drive/v1/permissions';
+const PublicPermissionBaseURI = 'drive/v2/permissions';
+
 export abstract class DriveFileModel extends BaseListModel<DriveFile> {
     baseURI = 'drive/v1';
     abstract client: RESTClient;
@@ -124,10 +127,8 @@ export abstract class DriveFileModel extends BaseListModel<DriveFile> {
         token: string,
         permission: PublicPermissionPatch
     ) {
-        const baseURI = this.baseURI.replace('/v1', '/v2');
-
         const { body } = await this.client.patch<LarkData<{ permission_public: PermissionPublic }>>(
-            `${baseURI}/permissions/${token}/public?${buildURLData({ type })}`,
+            `${PublicPermissionBaseURI}/${token}/public?${buildURLData({ type })}`,
             permission
         );
 
@@ -140,7 +141,7 @@ export abstract class DriveFileModel extends BaseListModel<DriveFile> {
     @toggle('uploading')
     async createPublicPassword(type: PublicFileType, token: string) {
         const { body } = await this.client.post<LarkData<{ password: string }>>(
-            `${this.baseURI}/permissions/${token}/public/password?${buildURLData({ type })}`
+            `${MemberPermissionBaseURI}/${token}/public/password?${buildURLData({ type })}`
         );
 
         return body!.data!.password;
@@ -157,7 +158,7 @@ export abstract class DriveFileModel extends BaseListModel<DriveFile> {
         option = {} as TransferOption
     ) {
         await this.client.post<LarkData>(
-            `${this.baseURI}/permissions/${token}/members/transfer_owner?${buildURLData({ ...option, type })}`,
+            `${MemberPermissionBaseURI}/${token}/members/transfer_owner?${buildURLData({ ...option, type })}`,
             newOwner
         );
     }
