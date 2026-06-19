@@ -16,22 +16,18 @@ export type CopiedFile = Record<'type' | `${'parent_' | ''}token` | 'name' | 'ur
 export type DriveFileType = LarkDocumentType | 'minutes' | 'folder' | 'wiki';
 export type PublicFileType = Exclude<DriveFileType, 'folder'>;
 
-export type PublicPermissionLevel = 'anyone_can_view' | 'anyone_can_edit' | 'only_full_access';
-export type PublicCommentEntity = 'anyone_can_view' | 'anyone_can_edit';
+type PublicEditableLevel = 'view' | 'edit';
+type PublicLinkAccessLevel = 'readable' | 'editable';
+type PublicLinkShareScope = 'tenant' | 'partner_tenant' | 'anyone';
+
+export type PublicPermissionLevel = `anyone_can_${PublicEditableLevel}` | 'only_full_access';
+export type PublicCommentEntity = `anyone_can_${PublicEditableLevel}`;
 export type PublicShareEntity = 'anyone' | 'same_tenant';
 export type PublicCollaboratorEntity =
-    | 'collaborator_can_view'
-    | 'collaborator_can_edit'
+    | `collaborator_can_${PublicEditableLevel}`
     | 'collaborator_full_access';
 export type PublicExternalAccessEntity = 'open' | 'closed' | 'allow_share_partner_tenant';
-export type PublicLinkShareEntity =
-    | 'tenant_readable'
-    | 'tenant_editable'
-    | 'partner_tenant_readable'
-    | 'partner_tenant_editable'
-    | 'anyone_readable'
-    | 'anyone_editable'
-    | 'closed';
+export type PublicLinkShareEntity = `${PublicLinkShareScope}_${PublicLinkAccessLevel}` | 'closed';
 
 export interface PermissionPublic {
     external_access_entity: PublicExternalAccessEntity;
