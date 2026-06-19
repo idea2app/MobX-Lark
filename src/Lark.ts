@@ -39,7 +39,7 @@ export interface LarkAppClientOption extends LarkAppBaseOption {
     accessToken: string;
 }
 
-export interface LarkAppOption extends LarkAppServerOption, LarkAppClientOption {}
+export type LarkAppOption = LarkAppServerOption & LarkAppClientOption;
 
 export class LarkApp implements LarkAppOption {
     host = 'https://open.feishu.cn/open-apis/';

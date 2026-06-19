@@ -1,3 +1,5 @@
+import { Gender } from '../User/type';
+
 export type InvoiceEntityType =
     | `invoice_${'code' | 'no' | 'special_seal'}`
     | `seller_${'name' | 'taxpayer_no'}_in_seal`;
@@ -66,4 +68,131 @@ export interface VehicleInvoice {
         | 'price'
         | `total_price${'' | '_little'}`;
     value: string;
+}
+
+export interface BankCardEntity {
+    type: 'card_number' | 'date_of_expiry';
+    value: string;
+}
+
+export type ResumePeriod = Record<`${'start' | 'end'}_${'date' | 'time'}`, string>;
+
+export enum EducationQualification {
+    PrimarySchool = 1,
+    JuniorHighSchool = 2,
+    VocationalHighSchool = 3,
+    HighSchool = 4,
+    AssociateDegree = 5,
+    BachelorDegree = 6,
+    MasterDegree = 7,
+    Doctorate = 8,
+    Other = 9
+}
+
+export interface ResumeEducation
+    extends ResumePeriod, Record<'school' | 'major' | 'degree', string> {
+    qualification: EducationQualification;
+}
+
+export enum CareerType {
+    Internship = 1,
+    FullTime = 2
+}
+
+export interface ResumeCareer
+    extends ResumePeriod, Record<'company' | 'title' | 'type_str' | 'job_description', string> {
+    type: CareerType;
+}
+
+export type ResumeProject = ResumePeriod & Record<'name' | 'title' | 'description', string>;
+
+export interface ResumeLanguage {
+    level: number;
+    description: string;
+}
+
+export type ResumeAward = Record<'award' | 'date' | 'description', string>;
+
+export type ResumeCertificate = Record<'name' | 'desc', string>;
+
+export type ResumeCompetition = ResumeCertificate;
+
+export interface Resume
+    extends
+        Record<
+            | 'file_md5'
+            | `${'' | 'new_'}content`
+            | 'name'
+            | 'email'
+            | 'mobile'
+            | 'country_code'
+            | 'date_of_birth'
+            | `${'current' | 'home'}_location`
+            | 'self_evaluation',
+            string
+        >,
+        Record<`willing_${'positions' | 'locations'}` | 'urls' | 'social_links', string[]> {
+    mobile_is_virtual: boolean;
+    educations: ResumeEducation[];
+    careers: ResumeCareer[];
+    projects: ResumeProject[];
+    work_year: number | null;
+    gender: Gender;
+    languages: ResumeLanguage[];
+    awards: ResumeAward[];
+    certificates: ResumeCertificate[];
+    competitions: ResumeCompetition[];
+}
+
+export interface ContractPrice {
+    contract_price: number;
+    contract_price_original: string;
+    text: string;
+}
+
+export type ContractInitialTerm = Record<`initial_${'time' | 'unit'}`, string>;
+
+export interface ContractTime extends Record<
+    `${'' | 'original_'}time_${'start' | 'end'}` | `text_${'start' | 'end' | 'initial_term'}`,
+    string
+> {
+    initial_term: ContractInitialTerm;
+}
+
+export interface ContractCopy extends Record<'original_copy' | 'key' | 'text', string> {
+    copy_num: number;
+}
+
+export type ContractCurrency = Record<`currency_${'name' | 'text'}`, string>;
+
+export type ContractBodyType = 'buy' | 'sell' | 'third';
+
+export type ContractContact = Record<
+    'contacts' | 'id_number' | 'phone' | 'email' | 'address',
+    string
+>;
+export type ContractBodyEntity = ContractContact & Record<'legal_representative' | 'party', string>;
+
+export interface ContractBodyInfo {
+    body_type: ContractBodyType;
+    value: ContractBodyEntity;
+}
+
+export type ContractBankType = `${'buy' | 'sell' | 'third' | 'uncertain'}_bank`;
+
+export type ContractBankEntity = ContractContact &
+    Record<'bank_name' | `account_${'name' | 'number'}` | 'tax_number', string>;
+
+export interface ContractBankInfo {
+    bank_type: ContractBankType;
+    value: ContractBankEntity;
+}
+
+export interface Contract extends Record<'file_id' | 'header', string> {
+    price: ContractPrice;
+    time: ContractTime;
+    copy: ContractCopy;
+    currency: ContractCurrency;
+    body_info: ContractBodyInfo[];
+    bank_info: ContractBankInfo[];
 }
