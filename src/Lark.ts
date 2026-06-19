@@ -9,6 +9,8 @@ import {
     DocumentAIModel,
     DocumentModel,
     DriveFileModel,
+    PublishedFile,
+    PublicFileType,
     TableFormView,
     UserIdType,
     WikiNode,
@@ -289,6 +291,30 @@ export class LarkApp implements LarkAppOption {
         const doc_token = type === 'wiki' ? (await this.wiki2drive(id)).obj_token : id;
 
         return this.documentStore.getOneContent(doc_token, 'markdown');
+    }
+
+    async publishFile(
+        URI: string,
+        enablePassword = false,
+        editable = false
+    ): Promise<PublishedFile> {
+        await this.getAccessToken();
+
+        const [[pathType, token]] = DriveFileModel.parseURI(URI),
+            type: PublicFileType =
+                pathType === 'wiki'
+                    ? pathType
+                    : getLarkDocumentType(pathType as LarkDocumentPathType);
+
+        const permissionPublic = await this.driveFileStore.updatePublicPermission(type, token, {
+                external_access_entity: 'open',
+                link_share_entity: editable ? 'anyone_editable' : 'anyone_readable'
+            }),
+            password = enablePassword
+                ? await this.driveFileStore.createPublicPassword(type, token)
+                : undefined;
+
+        return { permissionPublic, password };
     }
 
     async getBiTableSchema(appId: string): Promise<BiTableSchema> {
