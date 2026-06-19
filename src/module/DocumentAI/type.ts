@@ -166,7 +166,7 @@ export interface ContractBodyInfo {
     value: ContractBodyEntity;
 }
 
-export type ContractBankType = 'buy_bank' | 'sell_bank' | 'third_bank' | 'unceratin_bank';
+export type ContractBankType = 'buy_bank' | 'sell_bank' | 'third_bank' | 'uncertain_bank';
 
 export type ContractBankEntity = Record<
     | 'account_name'
