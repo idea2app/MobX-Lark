@@ -124,8 +124,10 @@ export abstract class DriveFileModel extends BaseListModel<DriveFile> {
         token: string,
         permission: PublicPermissionPatch
     ) {
+        const baseURI = this.baseURI.replace('/v1', '/v2');
+
         const { body } = await this.client.patch<LarkData<{ permission_public: PermissionPublic }>>(
-            `drive/v2/permissions/${token}/public?${buildURLData({ type })}`,
+            `${baseURI}/permissions/${token}/public?${buildURLData({ type })}`,
             permission
         );
 
