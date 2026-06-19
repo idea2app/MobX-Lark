@@ -1,3 +1,5 @@
+import { Gender } from '../User/type';
+
 export type InvoiceEntityType =
     | `invoice_${'code' | 'no' | 'special_seal'}`
     | `seller_${'name' | 'taxpayer_no'}_in_seal`;
@@ -73,16 +75,33 @@ export interface BankCardEntity {
     value: string;
 }
 
-export type ResumePeriod = Record<'start_date' | 'start_time' | 'end_date' | 'end_time', string>;
+export type ResumePeriod = Record<`${'start' | 'end'}_${'date' | 'time'}`, string>;
+
+export enum EducationQualification {
+    PrimarySchool = 1,
+    JuniorHighSchool = 2,
+    VocationalHighSchool = 3,
+    HighSchool = 4,
+    AssociateDegree = 5,
+    BachelorDegree = 6,
+    MasterDegree = 7,
+    Doctorate = 8,
+    Other = 9
+}
 
 export interface ResumeEducation
     extends ResumePeriod, Record<'school' | 'major' | 'degree', string> {
-    qualification: number;
+    qualification: EducationQualification;
+}
+
+export enum CareerType {
+    Internship = 1,
+    FullTime = 2
 }
 
 export interface ResumeCareer
     extends ResumePeriod, Record<'company' | 'title' | 'type_str' | 'job_description', string> {
-    type: number;
+    type: CareerType;
 }
 
 export type ResumeProject = ResumePeriod & Record<'name' | 'title' | 'description', string>;
@@ -96,31 +115,29 @@ export type ResumeAward = Record<'award' | 'date' | 'description', string>;
 
 export type ResumeCertificate = Record<'name' | 'desc', string>;
 
-export type ResumeCompetition = Record<'name' | 'desc', string>;
+export type ResumeCompetition = ResumeCertificate;
 
 export interface Resume
     extends
         Record<
             | 'file_md5'
-            | 'content'
-            | 'new_content'
+            | `${'' | 'new_'}content`
             | 'name'
             | 'email'
             | 'mobile'
             | 'country_code'
             | 'date_of_birth'
-            | 'current_location'
-            | 'home_location'
+            | `${'current' | 'home'}_location`
             | 'self_evaluation',
             string
         >,
-        Record<'willing_positions' | 'willing_locations' | 'urls' | 'social_links', string[]> {
+        Record<`willing_${'positions' | 'locations'}` | 'urls' | 'social_links', string[]> {
     mobile_is_virtual: boolean;
     educations: ResumeEducation[];
     careers: ResumeCareer[];
     projects: ResumeProject[];
     work_year: number | null;
-    gender: number;
+    gender: Gender;
     languages: ResumeLanguage[];
     awards: ResumeAward[];
     certificates: ResumeCertificate[];
@@ -133,16 +150,10 @@ export interface ContractPrice {
     text: string;
 }
 
-export type ContractInitialTerm = Record<'initial_time' | 'initial_unit', string>;
+export type ContractInitialTerm = Record<`initial_${'time' | 'unit'}`, string>;
 
 export interface ContractTime extends Record<
-    | 'time_start'
-    | 'time_end'
-    | 'original_time_start'
-    | 'original_time_end'
-    | 'text_start'
-    | 'text_end'
-    | 'text_initial_term',
+    `${'' | 'original_'}time_${'start' | 'end'}` | `text_${'start' | 'end' | 'initial_term'}`,
     string
 > {
     initial_term: ContractInitialTerm;
@@ -152,34 +163,25 @@ export interface ContractCopy extends Record<'original_copy' | 'key' | 'text', s
     copy_num: number;
 }
 
-export type ContractCurrency = Record<'currency_name' | 'currency_text', string>;
+export type ContractCurrency = Record<`currency_${'name' | 'text'}`, string>;
 
 export type ContractBodyType = 'buy' | 'sell' | 'third';
 
-export type ContractBodyEntity = Record<
-    'address' | 'contacts' | 'email' | 'phone' | 'id_number' | 'legal_representative' | 'party',
+export type ContractContact = Record<
+    'contacts' | 'id_number' | 'phone' | 'email' | 'address',
     string
 >;
+export type ContractBodyEntity = ContractContact & Record<'legal_representative' | 'party', string>;
 
 export interface ContractBodyInfo {
     body_type: ContractBodyType;
     value: ContractBodyEntity;
 }
 
-export type ContractBankType = 'buy_bank' | 'sell_bank' | 'third_bank' | 'uncertain_bank';
+export type ContractBankType = `${'buy' | 'sell' | 'third' | 'uncertain'}_bank`;
 
-export type ContractBankEntity = Record<
-    | 'account_name'
-    | 'bank_name'
-    | 'account_number'
-    | 'phone'
-    | 'contacts'
-    | 'tax_number'
-    | 'address'
-    | 'id_number'
-    | 'email',
-    string
->;
+export type ContractBankEntity = ContractContact &
+    Record<'bank_name' | `account_${'name' | 'number'}` | 'tax_number', string>;
 
 export interface ContractBankInfo {
     bank_type: ContractBankType;
