@@ -9,3 +9,4 @@ export * from './BITable';
 export * from './Drive';
 export * from './Wiki';
 export * from './DocumentAI';
+export * from './Permission';

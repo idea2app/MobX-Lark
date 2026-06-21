@@ -9,6 +9,7 @@ import {
     DocumentAIModel,
     DocumentModel,
     DriveFileModel,
+    PermissionModel,
     TableFormView,
     UserIdType,
     WikiNode,
@@ -53,6 +54,7 @@ export class LarkApp implements LarkAppOption {
     wikiNodeStore: WikiNodeModel;
     documentStore: DocumentModel;
     documentAIStore: DocumentAIModel;
+    permissionStore: PermissionModel;
 
     constructor(option: LarkAppServerOption | LarkAppClientOption) {
         Object.assign(this, option);
@@ -77,6 +79,9 @@ export class LarkApp implements LarkAppOption {
             client = client;
         })('');
         this.documentAIStore = new (class extends DocumentAIModel {
+            client = client;
+        })();
+        this.permissionStore = new (class extends PermissionModel {
             client = client;
         })();
     }
@@ -314,5 +319,45 @@ export class LarkApp implements LarkAppOption {
                 ])
             );
         return { appId, tables, tableIdMap, forms, formLinkMap };
+    }
+
+    /**
+     * Publish a document with public access settings & optional password protection
+     *
+     * @param URI - Document URI (e.g. `docx/xxx` or `wiki/xxx`)
+     * @param enablePassword - Whether to enable password protection
+     * @param editable - Whether anyone with the link can edit
+     *
+     * @see {@link PermissionModel#updatePermissions}
+     * @see {@link PermissionModel#setPassword}
+     */
+    async publishFile(
+        URI: string,
+        enablePassword = false,
+        editable = false
+    ): Promise<{ password?: string }> {
+        await this.getAccessToken();
+
+        let [[type, token]] = DriveFileModel.parseURI(URI);
+
+        if (type === 'wiki') {
+            ({ obj_type: type, obj_token: token } = await this.wiki2drive(token));
+        } else {
+            type = getLarkDocumentType(type as LarkDocumentPathType);
+        }
+        await this.permissionStore.updatePermissions(token, type, {
+            external_access_entity: 'open',
+            link_share_entity: editable ? 'anyone_editable' : 'anyone_readable',
+            security_entity: editable ? 'anyone_can_edit' : 'anyone_can_view',
+            comment_entity: 'anyone_can_view',
+            share_entity: 'anyone',
+            manage_collaborator_entity: 'collaborator_can_edit',
+            copy_entity: 'anyone_can_view'
+        });
+        if (!enablePassword) return {};
+
+        const password = await this.permissionStore.setPassword(token, type);
+
+        return { password };
     }
 }
