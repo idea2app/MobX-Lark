@@ -4,7 +4,15 @@ import { buildURLData, splitArray } from 'web-utility';
 
 import { LarkData, LarkDocumentPathTypeMap, LarkDocumentType, UploadTargetType } from '../../type';
 import { UserIdType } from '../User/type';
-import { CopiedFile, DriveFile, DriveFileType, TransferOwner, TransferOption } from './type';
+import {
+    CopiedFile,
+    DriveFile,
+    DriveFileType,
+    PasswordResponse,
+    PublicPermission,
+    TransferOwner,
+    TransferOption
+} from './type';
 
 export * from './type';
 
@@ -120,5 +128,28 @@ export abstract class DriveFileModel extends BaseListModel<DriveFile> {
             `${this.baseURI}/permissions/${token}/members/transfer_owner?${buildURLData({ ...option, type })}`,
             newOwner
         );
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/server-docs/docs/permission/permission-public/patch-2}
+     */
+    @toggle('uploading')
+    async updatePermission(token: string, type: DriveFileType, permission: PublicPermission) {
+        const { body } = await this.client.patch<LarkData>(
+            `drive/v2/permissions/${token}/public?${buildURLData({ type })}`,
+            permission
+        );
+        return body!.data;
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/server-docs/docs/permission/permission-public/permission-public-password/create}
+     */
+    @toggle('uploading')
+    async enablePassword(token: string, type: DriveFileType) {
+        const { body } = await this.client.post<LarkData<PasswordResponse>>(
+            `drive/v1/permissions/${token}/public/password?${buildURLData({ type })}`
+        );
+        return body!.data!.password;
     }
 }

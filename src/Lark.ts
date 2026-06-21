@@ -9,6 +9,7 @@ import {
     DocumentAIModel,
     DocumentModel,
     DriveFileModel,
+    DriveFileType,
     TableFormView,
     UserIdType,
     WikiNode,
@@ -289,6 +290,25 @@ export class LarkApp implements LarkAppOption {
         const doc_token = type === 'wiki' ? (await this.wiki2drive(id)).obj_token : id;
 
         return this.documentStore.getOneContent(doc_token, 'markdown');
+    }
+
+    /**
+     * @see {@link DriveFileModel#updatePermission}
+     * @see {@link DriveFileModel#enablePassword}
+     */
+    async publishFile(URI: string, enablePassword = false, editable = false) {
+        await this.getAccessToken();
+
+        let [[type, token]] = DriveFileModel.parseURI(URI);
+
+        if (type === 'wiki') ({ obj_type: type, obj_token: token } = await this.wiki2drive(token));
+        else type = getLarkDocumentType(type as LarkDocumentPathType);
+
+        await this.driveFileStore.updatePermission(token, type as DriveFileType, {
+            external_access_entity: 'open',
+            link_share_entity: editable ? 'tenant_editable' : 'tenant_readable'
+        });
+        if (enablePassword) await this.driveFileStore.enablePassword(token, type as DriveFileType);
     }
 
     async getBiTableSchema(appId: string): Promise<BiTableSchema> {
