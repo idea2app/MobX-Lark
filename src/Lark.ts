@@ -297,11 +297,7 @@ export class LarkApp implements LarkAppOption {
      * @see {@link DriveFileModel#updatePublicPermission}
      * @see {@link DriveFileModel#createPublicPassword}
      */
-    async publishFile(
-        URI: string,
-        enablePassword = false,
-        editable = false
-    ): Promise<PublishedFile> {
+    async publishFile(URI: string, enablePassword = false, editable = false) {
         await this.getAccessToken();
 
         const [[pathType, token]] = DriveFileModel.parseURI(URI);
@@ -319,7 +315,7 @@ export class LarkApp implements LarkAppOption {
                 ? await this.driveFileStore.createPublicPassword(type, token)
                 : undefined;
 
-        return { permission, password };
+        return { permission, password } as PublishedFile;
     }
 
     async getBiTableSchema(appId: string): Promise<BiTableSchema> {

@@ -43,7 +43,7 @@ export interface PublicPermission {
 export type PublicPermissionPatch = Partial<Omit<PublicPermission, 'lock_switch'>>;
 
 export interface PublishedFile {
-    permission: Partial<PublicPermission>;
+    permission: PublicPermission;
     password?: string;
 }
 
