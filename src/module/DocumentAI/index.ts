@@ -103,12 +103,15 @@ export abstract class DocumentAIModel extends BaseModel {
      */
     @toggle('uploading')
     async recognizeIDCard(file: File) {
-        const { body } = await this.client.post<LarkData<{ id_card: IDCard }>>(
-            `${this.baseURI}/id_card/recognize`,
-            makeFormData({ file })
-        );
+        const { body } = await this.client.post<
+            LarkData<{
+                id_card: Omit<IDCard, 'corners'> & { corners?: number[]; conners?: number[] };
+            }>
+        >(`${this.baseURI}/id_card/recognize`, makeFormData({ file }));
 
-        return body!.data!.id_card;
+        const { conners, ...idCard } = body!.data!.id_card;
+
+        return { ...idCard, corners: idCard.corners || conners || [] };
     }
 
     /**
