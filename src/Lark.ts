@@ -9,8 +9,8 @@ import {
     DocumentAIModel,
     DocumentModel,
     DriveFileModel,
-    PublishedFile,
     PublicFileType,
+    PublishedFile,
     TableFormView,
     UserIdType,
     WikiNode,
@@ -293,6 +293,10 @@ export class LarkApp implements LarkAppOption {
         return this.documentStore.getOneContent(doc_token, 'markdown');
     }
 
+    /**
+     * @see {@link DriveFileModel#updatePublicPermission}
+     * @see {@link DriveFileModel#createPublicPassword}
+     */
     async publishFile(
         URI: string,
         enablePassword = false,
@@ -300,21 +304,22 @@ export class LarkApp implements LarkAppOption {
     ): Promise<PublishedFile> {
         await this.getAccessToken();
 
-        const [[pathType, token]] = DriveFileModel.parseURI(URI),
-            type: PublicFileType =
-                pathType === 'wiki'
-                    ? pathType
-                    : getLarkDocumentType(pathType as LarkDocumentPathType);
+        const [[pathType, token]] = DriveFileModel.parseURI(URI);
+        const type: PublicFileType =
+            pathType === 'wiki' ? pathType : getLarkDocumentType(pathType as LarkDocumentPathType);
 
-        const permissionPublic = await this.driveFileStore.updatePublicPermission(type, token, {
+        const permission = await this.driveFileStore.updatePublicPermission(type, token, {
                 external_access_entity: 'open',
-                link_share_entity: editable ? 'anyone_editable' : 'anyone_readable'
+                link_share_entity: editable ? 'anyone_editable' : 'anyone_readable',
+                copy_entity: 'anyone_can_view',
+                security_entity: 'anyone_can_view',
+                comment_entity: 'anyone_can_view'
             }),
             password = enablePassword
                 ? await this.driveFileStore.createPublicPassword(type, token)
                 : undefined;
 
-        return { permissionPublic, password };
+        return { permission, password };
     }
 
     async getBiTableSchema(appId: string): Promise<BiTableSchema> {

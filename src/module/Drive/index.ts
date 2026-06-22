@@ -8,17 +8,14 @@ import {
     CopiedFile,
     DriveFile,
     DriveFileType,
-    PermissionPublic,
     PublicFileType,
+    PublicPermission,
     PublicPermissionPatch,
     TransferOption,
     TransferOwner
 } from './type';
 
 export * from './type';
-
-const MemberPermissionBaseURI = 'drive/v1/permissions';
-const PublicPermissionBaseURI = 'drive/v2/permissions';
 
 export abstract class DriveFileModel extends BaseListModel<DriveFile> {
     baseURI = 'drive/v1';
@@ -127,11 +124,10 @@ export abstract class DriveFileModel extends BaseListModel<DriveFile> {
         token: string,
         permission: PublicPermissionPatch
     ) {
-        const { body } = await this.client.patch<LarkData<{ permission_public: PermissionPublic }>>(
-            `${PublicPermissionBaseURI}/${token}/public?${buildURLData({ type })}`,
+        const { body } = await this.client.patch<LarkData<{ permission_public: PublicPermission }>>(
+            `${this.baseURI}/../v2/permissions/${token}/public?${buildURLData({ type })}`,
             permission
         );
-
         return body!.data!.permission_public;
     }
 
@@ -141,9 +137,8 @@ export abstract class DriveFileModel extends BaseListModel<DriveFile> {
     @toggle('uploading')
     async createPublicPassword(type: PublicFileType, token: string) {
         const { body } = await this.client.post<LarkData<{ password: string }>>(
-            `${MemberPermissionBaseURI}/${token}/public/password?${buildURLData({ type })}`
+            `${this.baseURI}/permissions/${token}/public/password?${buildURLData({ type })}`
         );
-
         return body!.data!.password;
     }
 
@@ -158,7 +153,7 @@ export abstract class DriveFileModel extends BaseListModel<DriveFile> {
         option = {} as TransferOption
     ) {
         await this.client.post<LarkData>(
-            `${MemberPermissionBaseURI}/${token}/members/transfer_owner?${buildURLData({ ...option, type })}`,
+            `${this.baseURI}/permissions/${token}/members/transfer_owner?${buildURLData({ ...option, type })}`,
             newOwner
         );
     }

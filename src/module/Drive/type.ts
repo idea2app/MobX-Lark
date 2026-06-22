@@ -18,10 +18,10 @@ export type PublicFileType = Exclude<DriveFileType, 'folder'>;
 
 type PublicEditableLevel = 'view' | 'edit';
 type PublicLinkAccessLevel = 'readable' | 'editable';
-type PublicLinkShareScope = 'tenant' | 'partner_tenant' | 'anyone';
+type PublicLinkShareScope = `${'' | 'partner_'}tenant` | 'anyone';
 
-export type PublicPermissionLevel = `anyone_can_${PublicEditableLevel}` | 'only_full_access';
 export type PublicCommentEntity = `anyone_can_${PublicEditableLevel}`;
+export type PublicPermissionLevel = PublicCommentEntity | 'only_full_access';
 export type PublicShareEntity = 'anyone' | 'same_tenant';
 export type PublicCollaboratorEntity =
     | `collaborator_can_${PublicEditableLevel}`
@@ -29,7 +29,7 @@ export type PublicCollaboratorEntity =
 export type PublicExternalAccessEntity = 'open' | 'closed' | 'allow_share_partner_tenant';
 export type PublicLinkShareEntity = `${PublicLinkShareScope}_${PublicLinkAccessLevel}` | 'closed';
 
-export interface PermissionPublic {
+export interface PublicPermission {
     external_access_entity: PublicExternalAccessEntity;
     security_entity: PublicPermissionLevel;
     comment_entity: PublicCommentEntity;
@@ -40,10 +40,10 @@ export interface PermissionPublic {
     lock_switch: boolean;
 }
 
-export type PublicPermissionPatch = Partial<Omit<PermissionPublic, 'lock_switch'>>;
+export type PublicPermissionPatch = Partial<Omit<PublicPermission, 'lock_switch'>>;
 
 export interface PublishedFile {
-    permissionPublic: Partial<PermissionPublic>;
+    permission: Partial<PublicPermission>;
     password?: string;
 }
 
