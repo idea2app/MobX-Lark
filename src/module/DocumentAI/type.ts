@@ -93,6 +93,7 @@ export interface IDCard {
     entities: IDCardEntity[];
     side: 0 | 1;
     conners: number[];
+    corners?: number[];
 }
 
 export interface BusinessCardEntity {
