@@ -4,7 +4,10 @@ import { BaseModel, RESTClient, toggle } from 'mobx-restful';
 import { LarkData } from '../../type';
 import {
     BankCardEntity,
+    BusinessCard,
+    BusinessLicense,
     Contract,
+    IDCard,
     Resume,
     TaxiInvoice,
     TrainInvoice,
@@ -93,6 +96,45 @@ export abstract class DocumentAIModel extends BaseModel {
         >(`${this.baseURI}/bank_card/recognize`, makeFormData({ file }));
 
         return body!.data!.bank_card.entities;
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/ai/document_ai-v1/id_card/recognize}
+     */
+    @toggle('uploading')
+    async recognizeIDCard(file: File) {
+        const { body } = await this.client.post<LarkData<{ id_card: IDCard }>>(
+            `${this.baseURI}/id_card/recognize`,
+            makeFormData({ file })
+        );
+
+        return body!.data!.id_card;
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/server-docs/ai/document_ai-v1/business_card/recognize}
+     */
+    @toggle('uploading')
+    async recognizeBusinessCard(file: File) {
+        const { body } = await this.client.post<LarkData<{ business_cards: BusinessCard[] }>>(
+            `${this.baseURI}/business_card/recognize`,
+            makeFormData({ file })
+        );
+
+        return body!.data!.business_cards;
+    }
+
+    /**
+     * @see {@link https://open.feishu.cn/document/ai/document_ai-v1/business_license/recognize}
+     */
+    @toggle('uploading')
+    async recognizeBusinessLicense(file: File) {
+        const { body } = await this.client.post<LarkData<{ business_license: BusinessLicense }>>(
+            `${this.baseURI}/business_license/recognize`,
+            makeFormData({ file })
+        );
+
+        return body!.data!.business_license;
     }
 
     /**

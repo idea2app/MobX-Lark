@@ -75,6 +75,67 @@ export interface BankCardEntity {
     value: string;
 }
 
+export interface IDCardEntity {
+    type:
+        | 'identity_code'
+        | 'identity_name'
+        | 'address'
+        | 'valid_date_start'
+        | 'valid_date_end'
+        | 'gender'
+        | 'race'
+        | 'issued_by'
+        | 'birth';
+    value: string;
+}
+
+export interface IDCard {
+    entities: IDCardEntity[];
+    side: 0 | 1;
+    conners: number[];
+}
+
+export interface BusinessCardEntity {
+    type:
+        | 'contact_names'
+        | 'company_names'
+        | 'departments'
+        | 'job_titles'
+        | 'emails'
+        | 'websites'
+        | 'addresses'
+        | 'mobile_phones'
+        | 'work_phones'
+        | 'other_phones'
+        | 'faxes';
+    value: string;
+}
+
+export interface BusinessCard {
+    entities: BusinessCardEntity[];
+}
+
+export interface BusinessLicenseEntity {
+    type:
+        | 'certificate_type'
+        | 'unified_social_credit_code'
+        | 'company_name'
+        | 'company_type'
+        | 'domicile'
+        | 'legal_representative'
+        | 'registered_capital'
+        | 'established_time'
+        | 'established_date'
+        | 'business_scope'
+        | 'website'
+        | 'approval_date';
+    value: string;
+}
+
+export interface BusinessLicense {
+    entities: BusinessLicenseEntity[];
+}
+
 export type ResumePeriod = Record<`${'start' | 'end'}_${'date' | 'time'}`, string>;
 
 export enum EducationQualification {
