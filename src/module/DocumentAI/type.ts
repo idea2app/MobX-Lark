@@ -124,8 +124,8 @@ export interface BusinessLicenseEntity {
         | 'domicile'
         | 'legal_representative'
         | 'registered_capital'
-        | 'established_time'
-        | 'established_date'
+        | 'established_time' // 成立日期
+        | 'established_date' // 营业期限
         | 'business_scope'
         | 'website'
         | 'approval_date';
