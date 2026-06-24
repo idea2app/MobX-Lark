@@ -77,36 +77,36 @@ export interface BankCardEntity {
 
 export interface IDCardEntity {
     type:
-        | 'identity_code'
-        | 'identity_name'
-        | 'address'
-        | 'valid_date_start'
-        | 'valid_date_end'
+        | `identity_${'code' | 'name'}`
+        | 'birth'
         | 'gender'
         | 'race'
+        | 'address'
         | 'issued_by'
-        | 'birth';
+        | `valid_date_${'start' | 'end'}`;
     value: string;
+}
+
+export enum IDCardSide {
+    Cover = 0,
+    Profile = 1
 }
 
 export interface IDCard {
     entities: IDCardEntity[];
-    side: 0 | 1;
+    side: IDCardSide;
     corners: number[];
 }
 
 export interface BusinessCardEntity {
     type:
-        | 'contact_names'
-        | 'company_names'
+        | `${'contact' | 'company'}_names`
         | 'departments'
         | 'job_titles'
         | 'emails'
         | 'websites'
         | 'addresses'
-        | 'mobile_phones'
-        | 'work_phones'
-        | 'other_phones'
+        | `${'mobile' | 'work' | 'other'}_phones`
         | 'faxes';
     value: string;
 }
@@ -119,16 +119,14 @@ export interface BusinessLicenseEntity {
     type:
         | 'certificate_type'
         | 'unified_social_credit_code'
-        | 'company_name'
-        | 'company_type'
+        | `company_${'name' | 'type'}`
         | 'domicile'
         | 'legal_representative'
         | 'registered_capital'
-        | 'established_time' // 成立日期
-        | 'established_date' // 营业期限
+        | `established_${'time' | 'date'}` // 成立日期、营业期限
         | 'business_scope'
-        | 'website'
-        | 'approval_date';
+        | 'approval_date'
+        | 'website';
     value: string;
 }
 
