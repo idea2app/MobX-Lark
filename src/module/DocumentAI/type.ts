@@ -75,6 +75,65 @@ export interface BankCardEntity {
     value: string;
 }
 
+export interface IDCardEntity {
+    type:
+        | `identity_${'code' | 'name'}`
+        | 'birth'
+        | 'gender'
+        | 'race'
+        | 'address'
+        | 'issued_by'
+        | `valid_date_${'start' | 'end'}`;
+    value: string;
+}
+
+export enum IDCardSide {
+    Cover = 0,
+    Profile = 1
+}
+
+export interface IDCard {
+    entities: IDCardEntity[];
+    side: IDCardSide;
+    corners: number[];
+}
+
+export interface BusinessCardEntity {
+    type:
+        | `${'contact' | 'company'}_names`
+        | 'departments'
+        | 'job_titles'
+        | 'emails'
+        | 'websites'
+        | 'addresses'
+        | `${'mobile' | 'work' | 'other'}_phones`
+        | 'faxes';
+    value: string;
+}
+
+export interface BusinessCard {
+    entities: BusinessCardEntity[];
+}
+
+export interface BusinessLicenseEntity {
+    type:
+        | 'certificate_type'
+        | 'unified_social_credit_code'
+        | `company_${'name' | 'type'}`
+        | 'domicile'
+        | 'legal_representative'
+        | 'registered_capital'
+        | `established_${'time' | 'date'}` // 成立日期、营业期限
+        | 'business_scope'
+        | 'approval_date'
+        | 'website';
+    value: string;
+}
+
+export interface BusinessLicense {
+    entities: BusinessLicenseEntity[];
+}
+
 export type ResumePeriod = Record<`${'start' | 'end'}_${'date' | 'time'}`, string>;
 
 export enum EducationQualification {
