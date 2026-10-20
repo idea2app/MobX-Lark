@@ -123,7 +123,7 @@ export class LarkApp implements LarkAppOption {
     getTenantAccessToken = cache(async clean => {
         const { id, secret } = this;
 
-        console.assert(id && secret, 'Id & Secret of Lark App are required');
+        console.assert(!!id && !!secret, 'Id & Secret of Lark App are required');
 
         const { body } = await this.client.post<TenantAccessToken>(
             'auth/v3/tenant_access_token/internal',

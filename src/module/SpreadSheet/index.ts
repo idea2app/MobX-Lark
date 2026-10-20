@@ -40,10 +40,9 @@ export abstract class SpreadSheetModel<
             ),
             { sheetId } = this;
 
-        const sheet = body!.data!.sheets.find(
-            ({ sheetId: ID }) => ID === sheetId
-        );
-        console.assert(sheet, `Sheet "${sheetId}" is not found`);
+        const sheet = body!.data!.sheets.find(({ sheetId: ID }) => ID === sheetId);
+
+        console.assert(!!sheet, `Sheet "${sheetId}" is not found`);
 
         return (this.meta = sheet!);
     }

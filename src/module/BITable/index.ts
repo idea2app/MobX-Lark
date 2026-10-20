@@ -45,9 +45,13 @@ export function BiDataTable<D extends DataObject, F extends Filter<D> = Filter<D
         };
         currentViewId?: string;
 
-        constructor(appId: string, tableId: string) {
+        constructor(
+            public baseId: string,
+            public tableId: string,
+            public viewId?: string
+        ) {
             super();
-            this.baseURI = `bitable/v1/apps/${appId}/tables/${tableId}/records`;
+            this.baseURI = `bitable/v1/apps/${baseId}/tables/${tableId}/records`;
         }
 
         keyMap?: Partial<Record<keyof D, string>>;
@@ -130,15 +134,15 @@ export function BiDataTable<D extends DataObject, F extends Filter<D> = Filter<D
          * @see {@link https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-record/list}
          */
         async *openStream(filter: F) {
-            const view_id = this.currentViewId;
-            const searchParams = view_id
-                ? { view_id }
-                : {
-                      filter: this.makeFilter(filter),
-                      sort: JSON.stringify(
-                          Object.entries(this.sort).map(([key, order]) => `${key} ${order}`)
-                      )
-                  };
+            let searchParams: Partial<Record<'filter' | 'sort' | 'view_id', string>> = {
+                filter: this.makeFilter(filter),
+                sort: JSON.stringify(
+                    Object.entries(this.sort).map(([key, order]) => `${key} ${order}`)
+                )
+            };
+            if (!searchParams.filter?.trim() && isEmpty(this.sort))
+                searchParams = { view_id: this.currentViewId || this.viewId };
+
             const stream = createPageStream<TableRecord<DataObject>>(
                 this.client,
                 this.baseURI,
@@ -232,7 +236,7 @@ export type BiSearchModelClass = Constructor<BiSearchModel>;
 
 export function BiTableView<
     T extends TableView['view_type'],
-    D extends T extends 'form' ? TableFormView : TableView
+    D extends (T extends 'form' ? TableFormView : TableView)
 >(type = 'grid' as T) {
     abstract class BiTableViewModel extends Stream<D>(ListModel) {
         constructor(appId: string, tableId: string) {
